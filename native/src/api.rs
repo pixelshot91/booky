@@ -2,6 +2,7 @@ use std::process::Command;
 use itertools::Itertools;
 use crate::{babelio, common, google_books, leboncoin};
 use crate::common::{Ad, BookMetaData};
+use crate::publisher::Publisher;
 
 pub fn get_metadata_from_images(imgs_path: Vec<String>) -> Ad {
     let isbns: Vec<String> = imgs_path
@@ -81,11 +82,11 @@ pub fn get_metadata_from_images(imgs_path: Vec<String>) -> Ad {
         price_cent: 1000,
         imgs_path,
     }
+}
 
-    /*let publisher = leboncoin::Leboncoin {};
-
-
-    publisher::Publisher::publish(&publisher, ad);*/
+pub fn publish_ad(ad: Ad) -> () {
+    let lbc_publisher = leboncoin::Leboncoin {};
+    Publisher::publish(&lbc_publisher, ad);
 }
 
 fn book_format_title_and_author(book: &BookMetaData) -> String {

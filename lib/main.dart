@@ -34,8 +34,10 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void initState() {
     super.initState();
-    ad = api.getMetadataFromImages(
-        imgsPath: ['/home/julien/Perso/LeBonCoin/chain_automatisation/test_images/20230204_194746.jpg']);
+    ad = api.getMetadataFromImages(imgsPath: [
+      '/run/user/1000/gvfs/mtp:host=SAMSUNG_SAMSUNG_Android_RFCRA1CG6KT/Internal storage/DCIM/Camera/20230220_182059.jpg',
+      '/run/user/1000/gvfs/mtp:host=SAMSUNG_SAMSUNG_Android_RFCRA1CG6KT/Internal storage/DCIM/Camera/20230220_182113.jpg'
+    ]);
   }
 
   @override
@@ -164,7 +166,8 @@ class _AdPageState extends State<AdPage> {
               onPressed: ad.priceCent == null
                   ? null
                   : () {
-                      print('Try to publish');
+                      print('Try to publish...');
+                      api.publishAd(ad: ad);
                     },
               child: const Text("Publish"))
         ],
