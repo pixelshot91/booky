@@ -8,3 +8,4 @@ mod image_tools;
 mod publisher;
 mod jwt_decoder;
 mod leboncoin;
+mod config;
