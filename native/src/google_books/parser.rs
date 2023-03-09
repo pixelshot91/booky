@@ -85,6 +85,8 @@ mod structs {
         pub authors: Vec<&'a str>,
         pub publisher: Option<&'a str>,
         pub published_date: &'a str,
+        // Should be an owned String in case the description contain escape characters like (\")
+        // TODO: change all &str to String
         pub description: Option<String>,
         pub industry_identifiers: Vec<IndustryIdentifier<'a>>,
         pub reading_modes: ReadingModes,
