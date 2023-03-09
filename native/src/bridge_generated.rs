@@ -19,26 +19,24 @@ use std::sync::Arc;
 
 // Section: imports
 
+use crate::common::Ad;
+
 // Section: wire functions
 
-fn wire_platform_impl(port_: MessagePort) {
+fn wire_get_metadata_from_images_impl(
+    port_: MessagePort,
+    imgs_path: impl Wire2Api<Vec<String>> + UnwindSafe,
+) {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap(
         WrapInfo {
-            debug_name: "platform",
+            debug_name: "get_metadata_from_images",
             port: Some(port_),
             mode: FfiCallMode::Normal,
         },
-        move || move |task_callback| Ok(platform()),
-    )
-}
-fn wire_rust_release_mode_impl(port_: MessagePort) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap(
-        WrapInfo {
-            debug_name: "rust_release_mode",
-            port: Some(port_),
-            mode: FfiCallMode::Normal,
+        move || {
+            let api_imgs_path = imgs_path.wire2api();
+            move |task_callback| Ok(get_metadata_from_images(api_imgs_path))
         },
-        move || move |task_callback| Ok(rust_release_mode()),
     )
 }
 // Section: wrapper structs
@@ -63,23 +61,28 @@ where
         (!self.is_null()).then(|| self.wire2api())
     }
 }
+
+impl Wire2Api<u8> for u8 {
+    fn wire2api(self) -> u8 {
+        self
+    }
+}
+
 // Section: impl IntoDart
 
-impl support::IntoDart for Platform {
+impl support::IntoDart for Ad {
     fn into_dart(self) -> support::DartAbi {
-        match self {
-            Self::Unknown => 0,
-            Self::Android => 1,
-            Self::Ios => 2,
-            Self::Windows => 3,
-            Self::Unix => 4,
-            Self::MacIntel => 5,
-            Self::MacApple => 6,
-            Self::Wasm => 7,
-        }
+        vec![
+            self.title.into_dart(),
+            self.description.into_dart(),
+            self.price_cent.into_dart(),
+            self.imgs_path.into_dart(),
+        ]
         .into_dart()
     }
 }
+impl support::IntoDartExceptPrimitive for Ad {}
+
 // Section: executor
 
 support::lazy_static! {
