@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 
 import 'ffi.dart' if (dart.library.html) 'ffi_web.dart';
@@ -13,37 +15,15 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // Try running your application with "flutter run". You'll see the
-        // application has a blue toolbar. Then, without quitting the app, try
-        // changing the primarySwatch below to Colors.green and then invoke
-        // "hot reload" (press "r" in the console where you ran "flutter run",
-        // or simply save your changes to "hot reload" in a Flutter IDE).
-        // Notice that the counter didn't reset back to zero; the application
-        // is not restarted.
-        primarySwatch: Colors.blue,
-      ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      title: 'BookAdPublisher',
+      theme: ThemeData(primarySwatch: Colors.blue),
+      home: const MyHomePage(),
     );
   }
 }
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({Key? key, required this.title}) : super(key: key);
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
+  const MyHomePage();
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
@@ -54,20 +34,18 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void initState() {
     super.initState();
-    ad = api.getMetadataFromImages(imgsPath: [
-      '/home/julien/Perso/LeBonCoin/chain_automatisation/test_images/20230204_194746.jpg'
-    ]); //.then((ad) => print('ad = $ad'));
+    ad = api.getMetadataFromImages(
+        imgsPath: ['/home/julien/Perso/LeBonCoin/chain_automatisation/test_images/20230204_194746.jpg']);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.title),
+        title: const Text('Create an automatic online book ad from picture'),
       ),
       body: Center(
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             // To render the results of a Future, a FutureBuilder is used which
             // turns a Future into an AsyncSnapshot, which can be used to
@@ -113,7 +91,7 @@ extension DoubleExt on double {
 }
 
 class AdPage extends StatefulWidget {
-  AdPage({super.key, required Ad ad}) : initialAd = ad;
+  const AdPage({required Ad ad}) : initialAd = ad;
 
   final Ad initialAd;
 
@@ -132,37 +110,65 @@ class _AdPageState extends State<AdPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        TextFormField(
-          initialValue: ad.title,
-          onChanged: (newText) {
-            setState(() {
-              ad.title = newText;
-            });
-          },
-        ),
-        TextFormField(
-          initialValue: ad.description,
-          maxLines: 20,
-          onChanged: (newText) {
-            setState(() {
-              ad.description = newText;
-            });
-          },
-        ),
-        TextFormField(
-          initialValue: ad.priceCent /*?*/ .divide(100).toString(),
-          onChanged: (newText) => setState(() => ad.priceCent = double.tryParse(newText)! /*?*/ .multiply(100).round()),
-        ),
-        ElevatedButton(
-            onPressed: ad.priceCent == null
-                ? null
-                : () {
-                    print('Try to publish');
-                  },
-            child: const Text("Publish"))
-      ],
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Column(
+        children: [
+          TextFormField(
+            initialValue: ad.title,
+            onChanged: (newText) => setState(() => ad.title = newText),
+            decoration: const InputDecoration(
+              icon: Icon(Icons.title),
+              labelText: 'Ad title',
+            ),
+            style: const TextStyle(fontSize: 30),
+          ),
+          TextFormField(
+            initialValue: ad.description,
+            maxLines: 20,
+            onChanged: (newText) => setState(() => ad.description = newText),
+            decoration: const InputDecoration(
+              icon: Icon(Icons.text_snippet),
+              labelText: 'Ad description',
+            ),
+          ),
+          TextFormField(
+            initialValue: ad.priceCent /*?*/ .divide(100).toString(),
+            onChanged: (newText) =>
+                setState(() => ad.priceCent = double.tryParse(newText)! /*?*/ .multiply(100).round()),
+            decoration: const InputDecoration(
+              icon: Icon(Icons.euro),
+              labelText: 'Price',
+            ),
+            style: const TextStyle(fontSize: 20),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8.0),
+            child: Row(children: [
+              const Icon(
+                Icons.image,
+                color: Colors.grey,
+              ),
+              const SizedBox(width: 16),
+              ...ad.imgsPath
+                  .map((imgPath) => Image.file(
+                        File(imgPath),
+                        height: 200,
+                        isAntiAlias: true,
+                        filterQuality: FilterQuality.medium,
+                      ))
+                  .toList(),
+            ]),
+          ),
+          ElevatedButton(
+              onPressed: ad.priceCent == null
+                  ? null
+                  : () {
+                      print('Try to publish');
+                    },
+              child: const Text("Publish"))
+        ],
+      ),
     );
   }
 }
