@@ -306,7 +306,7 @@ pub fn upload_file(img_path: &Path) -> String {
 
     let form = reqwest::blocking::multipart::Form::new()
         .file("file", img_path)
-        .unwrap();
+        .expect(&format!("Could not find file at path: {:?}", img_path));
 
     let client = reqwest::blocking::Client::new();
     let res = client

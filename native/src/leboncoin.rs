@@ -30,6 +30,7 @@ impl Publisher for Leboncoin {
                 }
             })
             .collect_vec();
+        // let img_lbc_refs = vec![];
 
         let send_answer: String = request::send(ad, img_lbc_refs);
         let ad_id = parser::parse_send(&send_answer);

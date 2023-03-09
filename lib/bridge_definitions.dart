@@ -12,6 +12,10 @@ abstract class Native {
   Future<Ad> getMetadataFromImages({required List<String> imgsPath, dynamic hint});
 
   FlutterRustBridgeTaskConstMeta get kGetMetadataFromImagesConstMeta;
+
+  Future<void> publishAd({required Ad ad, dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta get kPublishAdConstMeta;
 }
 
 class Ad {

@@ -39,6 +39,19 @@ fn wire_get_metadata_from_images_impl(
         },
     )
 }
+fn wire_publish_ad_impl(port_: MessagePort, ad: impl Wire2Api<Ad> + UnwindSafe) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap(
+        WrapInfo {
+            debug_name: "publish_ad",
+            port: Some(port_),
+            mode: FfiCallMode::Normal,
+        },
+        move || {
+            let api_ad = ad.wire2api();
+            move |task_callback| Ok(publish_ad(api_ad))
+        },
+    )
+}
 // Section: wrapper structs
 
 // Section: static checks
@@ -62,6 +75,11 @@ where
     }
 }
 
+impl Wire2Api<i32> for i32 {
+    fn wire2api(self) -> i32 {
+        self
+    }
+}
 impl Wire2Api<u8> for u8 {
     fn wire2api(self) -> u8 {
         self

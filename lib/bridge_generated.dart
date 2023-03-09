@@ -43,6 +43,23 @@ class NativeImpl implements Native {
         argNames: ["imgsPath"],
       );
 
+  Future<void> publishAd({required Ad ad, dynamic hint}) {
+    var arg0 = _platform.api2wire_box_autoadd_ad(ad);
+    return _platform.executeNormal(FlutterRustBridgeTask(
+      callFfi: (port_) => _platform.inner.wire_publish_ad(port_, arg0),
+      parseSuccessData: _wire2api_unit,
+      constMeta: kPublishAdConstMeta,
+      argValues: [ad],
+      hint: hint,
+    ));
+  }
+
+  FlutterRustBridgeTaskConstMeta get kPublishAdConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "publish_ad",
+        argNames: ["ad"],
+      );
+
   void dispose() {
     _platform.dispose();
   }
@@ -79,9 +96,18 @@ class NativeImpl implements Native {
   Uint8List _wire2api_uint_8_list(dynamic raw) {
     return raw as Uint8List;
   }
+
+  void _wire2api_unit(dynamic raw) {
+    return;
+  }
 }
 
 // Section: api2wire
+
+@protected
+int api2wire_i32(int raw) {
+  return raw;
+}
 
 @protected
 int api2wire_u8(int raw) {
@@ -110,6 +136,13 @@ class NativePlatform extends FlutterRustBridgeBase<NativeWire> {
   }
 
   @protected
+  ffi.Pointer<wire_Ad> api2wire_box_autoadd_ad(Ad raw) {
+    final ptr = inner.new_box_autoadd_ad_0();
+    _api_fill_to_wire_ad(raw, ptr.ref);
+    return ptr;
+  }
+
+  @protected
   ffi.Pointer<wire_uint_8_list> api2wire_uint_8_list(Uint8List raw) {
     final ans = inner.new_uint_8_list_0(raw.length);
     ans.ref.ptr.asTypedList(raw.length).setAll(0, raw);
@@ -118,6 +151,18 @@ class NativePlatform extends FlutterRustBridgeBase<NativeWire> {
 // Section: finalizer
 
 // Section: api_fill_to_wire
+
+  void _api_fill_to_wire_ad(Ad apiObj, wire_Ad wireObj) {
+    wireObj.title = api2wire_String(apiObj.title);
+    wireObj.description = api2wire_String(apiObj.description);
+    wireObj.price_cent = api2wire_i32(apiObj.priceCent);
+    wireObj.imgs_path = api2wire_StringList(apiObj.imgsPath);
+  }
+
+  void _api_fill_to_wire_box_autoadd_ad(
+      Ad apiObj, ffi.Pointer<wire_Ad> wireObj) {
+    _api_fill_to_wire_ad(apiObj, wireObj.ref);
+  }
 }
 
 // ignore_for_file: camel_case_types, non_constant_identifier_names, avoid_positional_boolean_parameters, annotate_overrides, constant_identifier_names
@@ -232,6 +277,23 @@ class NativeWire implements FlutterRustBridgeWireBase {
   late final _wire_get_metadata_from_images = _wire_get_metadata_from_imagesPtr
       .asFunction<void Function(int, ffi.Pointer<wire_StringList>)>();
 
+  void wire_publish_ad(
+    int port_,
+    ffi.Pointer<wire_Ad> ad,
+  ) {
+    return _wire_publish_ad(
+      port_,
+      ad,
+    );
+  }
+
+  late final _wire_publish_adPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Void Function(
+              ffi.Int64, ffi.Pointer<wire_Ad>)>>('wire_publish_ad');
+  late final _wire_publish_ad = _wire_publish_adPtr
+      .asFunction<void Function(int, ffi.Pointer<wire_Ad>)>();
+
   ffi.Pointer<wire_StringList> new_StringList_0(
     int len,
   ) {
@@ -245,6 +307,16 @@ class NativeWire implements FlutterRustBridgeWireBase {
       'new_StringList_0');
   late final _new_StringList_0 = _new_StringList_0Ptr
       .asFunction<ffi.Pointer<wire_StringList> Function(int)>();
+
+  ffi.Pointer<wire_Ad> new_box_autoadd_ad_0() {
+    return _new_box_autoadd_ad_0();
+  }
+
+  late final _new_box_autoadd_ad_0Ptr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<wire_Ad> Function()>>(
+          'new_box_autoadd_ad_0');
+  late final _new_box_autoadd_ad_0 =
+      _new_box_autoadd_ad_0Ptr.asFunction<ffi.Pointer<wire_Ad> Function()>();
 
   ffi.Pointer<wire_uint_8_list> new_uint_8_list_0(
     int len,
@@ -290,6 +362,17 @@ class wire_StringList extends ffi.Struct {
 
   @ffi.Int32()
   external int len;
+}
+
+class wire_Ad extends ffi.Struct {
+  external ffi.Pointer<wire_uint_8_list> title;
+
+  external ffi.Pointer<wire_uint_8_list> description;
+
+  @ffi.Int32()
+  external int price_cent;
+
+  external ffi.Pointer<wire_StringList> imgs_path;
 }
 
 typedef DartPostCObjectFnType = ffi.Pointer<
