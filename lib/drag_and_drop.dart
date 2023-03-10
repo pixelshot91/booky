@@ -6,7 +6,8 @@ import 'package:super_clipboard/super_clipboard.dart';
 import 'package:super_drag_and_drop/super_drag_and_drop.dart';
 
 class SelectImages extends StatelessWidget {
-  const SelectImages();
+  const SelectImages({required this.onSelect});
+  final void Function(List<String> paths) onSelect;
 
   @override
   Widget build(BuildContext context) => Scaffold(
@@ -18,7 +19,7 @@ class SelectImages extends StatelessWidget {
             border: Border.all(color: Colors.blueGrey.shade200),
             borderRadius: BorderRadius.circular(14),
           ),
-          child: _DropZone(),
+          child: _DropZone(onSelect: onSelect),
         ),
       );
 }
@@ -39,6 +40,9 @@ extension _ReadValue on DataReader {
 }
 
 class _DropZone extends StatefulWidget {
+  const _DropZone({required this.onSelect});
+  final void Function(List<String> paths) onSelect;
+
   @override
   State<StatefulWidget> createState() => _DropZoneState();
 }
@@ -100,13 +104,67 @@ class _DropZoneState extends State<_DropZone> {
   }
 
   Future<void> _onPerformDrop(PerformDropEvent event) async {
+    final pathsRaw = await event.session.items.first.dataReader!.readValue(Formats.plainText);
+    final paths = pathsRaw!.split('\n');
+    final imgsPath = paths.where((e) => e.isNotEmpty).map((rawPath) {
+      print('A${rawPath}B');
+      var path = rawPath;
+      const mtpPrefix = 'mtp://';
+      if (rawPath.startsWith(mtpPrefix)) {
+        final p = rawPath.substring(mtpPrefix.length).trim();
+        // final deviceName = p.substring(0, p.indexOf('/'));
+        // final pathInDevice = p.substring(p.indexOf('/'));
+        path = '/run/user/1000/gvfs/mtp:host=' + p.replaceAll('%20', ' ');
+      }
+      print('path = $path');
+      return path;
+    }).toList();
+    // The good way would be to read the Format.uri
+    // But it convert the device name to lowercase
+    // Because the device name can be mixed case it is thus not possible to retrieve the original device name
+    /*print('len = ${event.session.items}');
+    final futureImgPaths = event.session.items.map((item) async {
+      final dataReader = item.dataReader!;
+
+      for (final f in Formats.standardFormats.whereType<ValueFormat>()) {
+        print('f($f) = ${await dataReader.readValue(f)}');
+      }
+
+      /*final format = dataReader!.getFormats([Formats.plainText]).first;
+      switch (format) {
+        case Formats.plainText:
+          final text = (await dataReader.readValue(Formats.plainText))!;
+          break;
+      }*/
+      print('plainText = ${await dataReader.readValue(Formats.plainText)}');
+      final uri = await dataReader.readValue(Formats.uri);
+      // print('uri = ${uri?.uri.toFilePath(windows: false)}');
+
+      // final text = (await dataReader.readValue(Formats.plainText))!;
+      final text = uri!.uri.toString();
+      print('text is $text');
+      const mtpPrefix = 'mtp://';
+      var path = text;
+      if (text.startsWith(mtpPrefix)) {
+        final p = text.substring(mtpPrefix.length);
+        final deviceName = p.substring(0, p.indexOf('/'));
+        final pathInDevice = p.substring(p.indexOf('/'));
+        path = '/run/user/1000/gvfs/mtp:host=' + deviceName.toUpperCase() + pathInDevice.replaceAll('%20', ' ');
+      }
+      print('path = $path');
+      return path;
+    }).toList();*/
+
+    // final imgPaths = await Future.wait(futureImgPaths);
+    widget.onSelect(imgsPath);
+    /*
     final dataReader = event.session.items.first.dataReader!;
     final sugg = await dataReader.getSuggestedName();
     print('sugg = $sugg');
 
     final formats = dataReader.getFormats(Formats.standardFormats);
     print("PerformDropEvent = ${formats}");
-    formats.forEach((format) async {
+    final imgsPaths = formats.map((format) async {
       switch (format) {
         case Formats.plainText:
           final text = (await dataReader.readValue(Formats.plainText))!;
@@ -121,7 +179,7 @@ class _DropZoneState extends State<_DropZone> {
         default:
           print('format not handled');
       }
-    });
+    });*/
   }
 
   void _onDropLeave(DropEvent event) {

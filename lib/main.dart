@@ -9,22 +9,35 @@ void main() {
   runApp(const MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({Key? key}) : super(key: key);
 
-  // This widget is the root of your application.
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  List<String> imgsPaths = [];
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'BookAdPublisher',
       theme: ThemeData(primarySwatch: Colors.blue),
-      home: const drag_and_drop.SelectImages(),
+      home: imgsPaths.isEmpty
+          ? drag_and_drop.SelectImages(onSelect: (List<String> paths) {
+              setState(() {
+                imgsPaths = paths;
+              });
+            })
+          : MyHomePage(imgsPaths),
     );
   }
 }
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage();
+  const MyHomePage(this.imgsPaths);
+  final List<String> imgsPaths;
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
@@ -35,10 +48,7 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void initState() {
     super.initState();
-    ad = api.getMetadataFromImages(imgsPath: [
-      '/run/user/1000/gvfs/mtp:host=SAMSUNG_SAMSUNG_Android_RFCRA1CG6KT/Internal storage/DCIM/Camera/20230220_182059.jpg',
-      '/run/user/1000/gvfs/mtp:host=SAMSUNG_SAMSUNG_Android_RFCRA1CG6KT/Internal storage/DCIM/Camera/20230220_182113.jpg'
-    ]);
+    ad = api.getMetadataFromImages(imgsPath: widget.imgsPaths);
   }
 
   @override
