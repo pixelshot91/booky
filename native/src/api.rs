@@ -16,6 +16,11 @@ pub fn get_metadata_from_images(imgs_path: Vec<String>) -> Ad {
                 .arg("-in=".to_string() + &picture_path)
                 .output()
                 .expect("failed to execute process");
+            if !output.status.success() {
+                println!("stdout is {:?}", std::str::from_utf8(&output.stdout).unwrap());
+                println!("stderr is {:?}", std::str::from_utf8(&output.stderr).unwrap());
+                panic!("output.status is {}", output.status)
+            }
             let output = std::str::from_utf8(&output.stdout).unwrap();
             println!("output is {:?}", output);
             output
