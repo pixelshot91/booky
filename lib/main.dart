@@ -18,7 +18,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'BookAdPublisher',
       theme: ThemeData(primarySwatch: Colors.blue),
-      home: const drag_and_drop.MyHomePage(title: 'title'),
+      home: const drag_and_drop.SelectImages(),
     );
   }
 }
