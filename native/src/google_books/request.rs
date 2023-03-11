@@ -7,3 +7,7 @@ pub fn search_by_isbn(client: &reqwest::blocking::Client, isbn: &str) -> String 
         .unwrap();
     resp.text().unwrap()
 }
+pub fn get_volume(client: &reqwest::blocking::Client, url: &str) -> String {
+    let resp = client.get(url).send().unwrap();
+    resp.text().unwrap()
+}
