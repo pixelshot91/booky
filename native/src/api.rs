@@ -56,7 +56,7 @@ pub fn get_metadata_from_images(imgs_path: Vec<String>) -> Ad {
         .collect();
     let books_titles = books.iter().map(book_format_title_and_author).join("\n");
     let blurbs = books
-        .iter()
+        .iter().filter(|b| b.blurb.is_some())
         .map(|b| {
             format!(
                 "{}:\n{}\n",
@@ -69,7 +69,11 @@ pub fn get_metadata_from_images(imgs_path: Vec<String>) -> Ad {
 
     let custom_message = leboncoin::personal_info::CUSTOM_MESSAGE;
 
-    let mut ad_description = books_titles + "\n\nRésumé:\n" + &blurbs + "\n" + &custom_message;
+    let mut ad_description = books_titles;
+    if !blurbs.is_empty() {
+        ad_description += &("\n\nRésumé:\n".to_owned() + &blurbs);
+    }
+    ad_description += &("\n\n".to_owned() + &custom_message);
     if !keywords.is_empty() {
         ad_description = ad_description + "\n\nMots-clés:\n" + &keywords;
     }
@@ -81,7 +85,7 @@ pub fn get_metadata_from_images(imgs_path: Vec<String>) -> Ad {
         title: if books.len() == 1 {
             books.first().unwrap().title.clone()
         } else {
-            todo!()
+            "".to_string()
         },
         description: ad_description,
         price_cent: 1000,

@@ -14,15 +14,18 @@ impl common::Provider for Babelio {
         let book_page = request::get_book_page(&cached_client, book_url);
         let blurb_res = parser::extract_blurb(&book_page);
 
-        let raw_blurb = match blurb_res {
-            parser::BlurbRes::SmallBlurb(blurb) => blurb,
-            parser::BlurbRes::BigBlurb(id_obj) => {
-                request::get_book_blurb_see_more(&cached_client, &id_obj)
-            }
-        };
-
         let mut res = parser::extract_title_author_keywords(&book_page);
-        res.blurb = parser::parse_blurb(&raw_blurb);
+
+        if let Some(blurb_res) = blurb_res {
+            let raw_blurb = match blurb_res {
+                parser::BlurbRes::SmallBlurb(blurb) => blurb,
+                parser::BlurbRes::BigBlurb(id_obj) => {
+                    request::get_book_blurb_see_more(&cached_client, &id_obj)
+                }
+            };
+            res.blurb = parser::parse_blurb(&raw_blurb);
+        }
+
         Some(res)
     }
 }
