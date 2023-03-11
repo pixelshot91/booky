@@ -7,27 +7,18 @@ pub enum BlurbRes {
     BigBlurb(String),
 }
 
-pub fn extract_blurb(html: &str) -> BlurbRes {
+pub fn extract_blurb(html: &str) -> Option<BlurbRes> {
     let doc = scraper::Html::parse_document(html);
 
-    let selector = scraper::Selector::parse("#d_bio").expect(
-        format!(
-            "Response should contain a element whose id is 'd_bio', html is {:?}",
-            html
-        )
-        .as_str(),
-    );
+    let selector = scraper::Selector::parse("#d_bio").expect("#d_bio should be a valid CSS selector");
     let mut res = doc.select(&selector);
 
-    let d_bio = res.next().expect(
-        format!(
-            "There should be exactly one element with id 'd_bio', html {:?}",
-            html
-        )
-        .as_str(),
-    );
+    let d_bio = match res.next() {
+        None => return None,
+        Some(e) => e,
+    };
 
-    // Some books do not folow the general strucuture: https://www.babelio.com/livres/Pullman--la-croisee-des-mondes-tome-2--La-tour-des-anges/59278
+    // Some books do not follow the general structure: https://www.babelio.com/livres/Pullman--la-croisee-des-mondes-tome-2--La-tour-des-anges/59278
     // It looks like a bug from Babelio because the style span do not close
     // So I must use a css-style selector instead of going down the DOM tree
     let s = scraper::Selector::parse("a[onclick^=\"javascript\"]").unwrap();
@@ -43,13 +34,13 @@ pub fn extract_blurb(html: &str) -> BlurbRes {
                 .rev()
                 .nth(1)
                 .expect("d_bio should have a second to last children (the style span)");
-            BlurbRes::SmallBlurb(
+            Some(BlurbRes::SmallBlurb(
                 dbio_second_to_last_child
                     .value()
                     .as_text()
                     .unwrap()
                     .to_string(),
-            )
+            ))
         }
         Some(on_click_element) => {
             let on_click = on_click_element
@@ -63,7 +54,7 @@ pub fn extract_blurb(html: &str) -> BlurbRes {
                 .next()
                 .expect("The onclick should match with the regex");
             let id_obj = &single_capture[1];
-            BlurbRes::BigBlurb(String::from(id_obj))
+            Some(BlurbRes::BigBlurb(String::from(id_obj)))
         }
     }
 }
@@ -167,7 +158,7 @@ mod tests {
     fn extract_id_obj_from_file() {
         let html = std::fs::read_to_string("src/babelio/test/get_book.html").unwrap();
         let id_obj = extract_blurb(&html);
-        assert_eq!(id_obj, BlurbRes::BigBlurb("827593".to_string()));
+        assert_eq!(id_obj, Some(BlurbRes::BigBlurb("827593".to_string())));
     }
     #[test]
     pub fn extract_title_author_keywords_from_file() {
