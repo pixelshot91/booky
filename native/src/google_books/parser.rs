@@ -2,11 +2,14 @@ use itertools::Itertools;
 
 use crate::common;
 
-pub fn extract_metadata_from_isbn_response(html: &str) -> common::BookMetaData {
-    let owned_string = html.to_string();
-    let s: structs::Root = serde_json::from_str(&owned_string).unwrap();
-    let first_book = &s.items[0].volume_info;
+pub fn extract_self_link_from_isbn_response(html: &str) -> String {
+    let s: structs::Root = serde_json::from_str(html).unwrap();
+    s.items[0].self_link.to_string()
+}
 
+pub fn extract_metadata_from_self_link_response(html: &str) -> common::BookMetaData {
+    let s: structs::Item = serde_json::from_str(html).unwrap();
+    let first_book = &s.volume_info;
     common::BookMetaData {
         title: first_book.title.to_string(),
         authors: first_book
@@ -18,7 +21,7 @@ pub fn extract_metadata_from_isbn_response(html: &str) -> common::BookMetaData {
             })
             .collect_vec(),
 
-        blurb: first_book.description.to_owned(),
+        blurb: first_book.description.clone(),
         ..Default::default()
     }
 }
