@@ -1,5 +1,5 @@
 use crate::common::{html_select, BookMetaData};
-use itertools::Itertools;
+use itertools::{Itertools};
 
 #[derive(PartialEq, Debug)]
 pub enum BlurbRes {
@@ -10,7 +10,8 @@ pub enum BlurbRes {
 pub fn extract_blurb(html: &str) -> Option<BlurbRes> {
     let doc = scraper::Html::parse_document(html);
 
-    let selector = scraper::Selector::parse("#d_bio").expect("#d_bio should be a valid CSS selector");
+    let selector =
+        scraper::Selector::parse("#d_bio").expect("#d_bio should be a valid CSS selector");
     let mut res = doc.select(&selector);
 
     let d_bio = match res.next() {
@@ -59,16 +60,18 @@ pub fn extract_blurb(html: &str) -> Option<BlurbRes> {
     }
 }
 
-pub fn extract_title_author_keywords(html: &str) -> BookMetaData {
+pub fn extract_title_author_keywords(html: &str) -> Option<BookMetaData> {
     let doc = scraper::Html::parse_document(html);
 
     let book_select = html_select("div[itemscope][itemtype=\"https://schema.org/Book\"]");
     let res = doc.select(&book_select);
-    let book_scope = res.exactly_one().expect(format!(
-        "Response should contain a element whose with id is itemscope and itemtype=\"https://schema.org/Book\", html is {:?}",
-        html
-    )
-    .as_str());
+    let book_scope = match res.exactly_one() {
+        Ok(book_scope) => book_scope,
+        Err(_) => {
+            eprintln!("Response should contain a element whose with id is itemscope and itemtype=\"https://schema.org/Book\"");
+            return None;
+        }
+    };
     let title_select = html_select("[itemprop=\"name\"]");
     let mut res2 = book_scope.select(&title_select).into_iter();
     let title = res2
@@ -138,12 +141,12 @@ pub fn extract_title_author_keywords(html: &str) -> BookMetaData {
             )
         })
         .collect();
-    BookMetaData {
+    Some(BookMetaData {
         title,
         authors,
         keywords,
         ..Default::default()
-    }
+    })
 }
 
 pub fn parse_blurb(raw_blurb: &str) -> Option<String> {
@@ -166,7 +169,7 @@ mod tests {
         let title_author_keywords = extract_title_author_keywords(&html);
         assert_eq!(
             title_author_keywords,
-            BookMetaData {
+            Some(BookMetaData {
                 title: "Le nom de la bête".to_string(),
                 authors: vec![crate::common::Author {
                     first_name: "Daniel".to_string(),
@@ -197,7 +200,7 @@ mod tests {
                 ]
                 .map(|s| s.to_string())
                 .to_vec(),
-            }
+            })
         );
     }
 }

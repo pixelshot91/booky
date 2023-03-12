@@ -12,11 +12,9 @@ impl common::Provider for Babelio {
         };
         let book_url = request::get_book_url(&cached_client, isbn)?;
         let book_page = request::get_book_page(&cached_client, book_url);
-        let blurb_res = parser::extract_blurb(&book_page);
+        let mut res = parser::extract_title_author_keywords(&book_page)?;
 
-        let mut res = parser::extract_title_author_keywords(&book_page);
-
-        if let Some(blurb_res) = blurb_res {
+        if let Some(blurb_res) = parser::extract_blurb(&book_page) {
             let raw_blurb = match blurb_res {
                 parser::BlurbRes::SmallBlurb(blurb) => blurb,
                 parser::BlurbRes::BigBlurb(id_obj) => {
