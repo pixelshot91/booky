@@ -2,9 +2,9 @@ use itertools::Itertools;
 
 use crate::common;
 
-pub fn extract_self_link_from_isbn_response(html: &str) -> String {
+pub fn extract_self_link_from_isbn_response(html: &str) -> Option<String> {
     let s: structs::Root = serde_json::from_str(html).unwrap();
-    s.items[0].self_link.to_string()
+    s.items.map(|items| items[0].self_link.to_string())
 }
 
 pub fn extract_metadata_from_self_link_response(html: &str) -> common::BookMetaData {
@@ -38,7 +38,7 @@ mod tests {
         let self_link = extract_self_link_from_isbn_response(&html);
         assert_eq!(
             self_link,
-            "https://www.googleapis.com/books/v1/volumes/DQUFSQAACAAJ"
+            Some("https://www.googleapis.com/books/v1/volumes/DQUFSQAACAAJ".to_string())
         )
     }
 
@@ -64,7 +64,7 @@ mod structs {
     pub struct Root<'a> {
         pub kind: &'a str,
         pub total_items: i64,
-        pub items: Vec<Item<'a>>,
+        pub items: Option<Vec<Item<'a>>>,
     }
 
     #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
