@@ -29,6 +29,7 @@ class ISBNDecodingStep implements BookyStep {
 class MetadataCollectingStep implements BookyStep {
   List<String> imgsPaths = [];
   Set<String> isbns = {};
+  MetadataCollectingStep({required this.imgsPaths, required this.isbns});
 }
 
 class AdEditingStep implements BookyStep {
