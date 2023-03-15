@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_rust_bridge_template/main.dart';
 
+import 'common.dart';
+
 class ISBNDecodingWidget extends StatefulWidget {
   const ISBNDecodingWidget({required this.step, required this.onSubmit});
   final ISBNDecodingStep step;
