@@ -1,9 +1,25 @@
-use std::process::Command;
-use itertools::Itertools;
-use crate::{babelio, common, google_books, leboncoin};
+use crate::babelio::Babelio;
+use crate::common::Provider;
 use crate::common::{Ad, BookMetaData};
+use crate::google_books::GoogleBooks;
 use crate::publisher::Publisher;
+use crate::{babelio, common, google_books, leboncoin};
+use itertools::Itertools;
+use std::process::Command;
 
+enum ProviderEnum {
+    Babelio,
+    GoogleBooks,
+}
+
+pub fn get_metadata_from_provider(provider: ProviderEnum, isbn: String) -> Option<BookMetaData> {
+    match provider {
+        ProviderEnum::Babelio => babelio::Babelio {}.get_book_metadata_from_isbn(&isbn),
+        ProviderEnum::GoogleBooks => google_books::GoogleBooks {}.get_book_metadata_from_isbn(&isbn),
+    }
+}
+
+/*
 pub fn get_metadata_from_images(imgs_path: Vec<String>) -> Ad {
     let isbns: Vec<String> = imgs_path
         .clone()
@@ -39,19 +55,16 @@ pub fn get_metadata_from_images(imgs_path: Vec<String>) -> Ad {
         Box::new(google_books::GoogleBooks {}),
     ];
 
-    let books: Vec<common::BookMetaData> = isbns
+    let books: Vec<Option<common::BookMetaData>> = isbns
         .iter()
         .map(|isbn| {
             for provider in &book_metadata_providers {
                 let res = provider.get_book_metadata_from_isbn(&isbn);
                 if let Some(r) = res {
-                    return r;
+                    return Some(r);
                 }
             }
-            panic!("No provider find any information on book {}", isbn)
-            /* book_metadata_providers[0]
-            .get_book_metadata_from_isbn(&isbn)
-            .unwrap() */
+            None
         })
         .collect();
     let books_titles = books.iter().map(book_format_title_and_author).join("\n");
@@ -91,13 +104,13 @@ pub fn get_metadata_from_images(imgs_path: Vec<String>) -> Ad {
         price_cent: 1000,
         imgs_path,
     }
-}
+}*/
 
 pub fn publish_ad(ad: Ad) -> () {
     let lbc_publisher = leboncoin::Leboncoin {};
     Publisher::publish(&lbc_publisher, ad);
 }
-
+/*
 fn book_format_title_and_author(book: &BookMetaData) -> String {
     format!(
         "\"{}\" {}",
@@ -119,3 +132,4 @@ fn vec_fmt(vec: Vec<String>) -> String {
         _ => panic!("More than 2 authors"),
     }
 }
+*/

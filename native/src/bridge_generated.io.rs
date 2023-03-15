@@ -2,8 +2,12 @@ use super::*;
 // Section: wire functions
 
 #[no_mangle]
-pub extern "C" fn wire_get_metadata_from_images(port_: i64, imgs_path: *mut wire_StringList) {
-    wire_get_metadata_from_images_impl(port_, imgs_path)
+pub extern "C" fn wire_get_metadata_from_provider(
+    port_: i64,
+    provider: i32,
+    isbn: *mut wire_uint_8_list,
+) {
+    wire_get_metadata_from_provider_impl(port_, provider, isbn)
 }
 
 #[no_mangle]

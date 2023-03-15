@@ -9,9 +9,9 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge.dart';
 import 'package:meta/meta.dart';
 
 abstract class Native {
-  Future<Ad> getMetadataFromImages({required List<String> imgsPath, dynamic hint});
+  Future<BookMetaData?> getMetadataFromProvider({required ProviderEnum provider, required String isbn, dynamic hint});
 
-  FlutterRustBridgeTaskConstMeta get kGetMetadataFromImagesConstMeta;
+  FlutterRustBridgeTaskConstMeta get kGetMetadataFromProviderConstMeta;
 
   Future<void> publishAd({required Ad ad, dynamic hint});
 
@@ -30,4 +30,33 @@ class Ad {
     required this.priceCent,
     required this.imgsPath,
   });
+}
+
+class Author {
+  final String firstName;
+  final String lastName;
+
+  const Author({
+    required this.firstName,
+    required this.lastName,
+  });
+}
+
+class BookMetaData {
+  String title;
+  List<Author> authors;
+  String? blurb;
+  List<String> keywords;
+
+  BookMetaData({
+    required this.title,
+    required this.authors,
+    this.blurb,
+    required this.keywords,
+  });
+}
+
+enum ProviderEnum {
+  Babelio,
+  GoogleBooks,
 }
