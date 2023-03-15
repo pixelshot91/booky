@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 
 import 'ad_editing.dart';
@@ -59,17 +57,10 @@ class _MyAppState extends State<MyApp> {
               step: step as MetadataCollectingStep,
               onSubmit: (AdEditingStep newStep) => setState(() => step = newStep)),
           AdEditingStep() => AdEditingWidget(
-              step: step as AdEditingStep, onSubmit: (bool publishSuccess) => setState(() => step = newStep)),
+              step: step as AdEditingStep,
+              onSubmit: (bool publishSuccess) => print('onSubmit with bool = $publishSuccess')),
           BookyStep() => throw UnimplementedError('Not possible')
-        }
-        /* imgsPaths.isEmpty
-          ? drag_and_drop.SelectImages(onSelect: (List<String> paths) {
-              setState(() {
-                imgsPaths = paths;
-              });
-            })
-          : MyHomePage(imgsPaths),*/
-        );
+        });
   }
 }
 
@@ -121,9 +112,9 @@ class _MyHomePageState extends State<MyHomePage> {
                 }
 
                 final ad = snap.data;
-                if (ad == null) return const Text("Extracting info from images");
+                if (ad == null) return const Text('Extracting info from images');
 
-                return AdPage(ad: ad);
+                return const Text('extract finish');
               },
             )
           ],
@@ -139,19 +130,4 @@ extension IntExt on int {
 
 extension DoubleExt on double {
   double multiply(double other) => this * other;
-}
-
-class ImageWidget extends StatelessWidget {
-  const ImageWidget(this.imgPath);
-  final String imgPath;
-
-  @override
-  Widget build(BuildContext context) {
-    return Image.file(
-      File(imgPath),
-      height: 200,
-      isAntiAlias: true,
-      filterQuality: FilterQuality.medium,
-    );
-  }
 }

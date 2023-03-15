@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_rust_bridge_template/main.dart';
 import 'package:flutter_rust_bridge_template/personal_info.dart' as personal_info;
 
+import 'common.dart';
 import 'ffi.dart' if (dart.library.html) 'ffi_web.dart';
 
 class AdEditingWidget extends StatefulWidget {
-  const AdEditingWidget({required this.step});
+  const AdEditingWidget({required this.step, required this.onSubmit});
   final AdEditingStep step;
+  final void Function(bool newStep) onSubmit;
 
   @override
   State<AdEditingWidget> createState() => _AdEditingWidgetState();
@@ -14,8 +16,8 @@ class AdEditingWidget extends StatefulWidget {
 
 String vecFmt(List<String> vec) {
   if (vec.length == 0) return '';
-  if (vec.length == 1) return "de ${vec[0]}";
-  if (vec.length == 2) return "de ${vec[0]} et ${vec[1]}";
+  if (vec.length == 1) return 'de ${vec[0]}';
+  if (vec.length == 2) return 'de ${vec[0]} et ${vec[1]}';
   throw UnimplementedError('More than 2 authors');
 }
 
@@ -94,7 +96,7 @@ class _AdEditingWidgetState extends State<AdEditingWidget> {
                       print('Try to publish...');
                       api.publishAd(ad: ad);
                     },
-              child: const Text("Publish"))
+              child: const Text('Publish'))
         ],
       ),
     );
