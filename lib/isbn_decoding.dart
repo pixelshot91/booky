@@ -15,7 +15,7 @@ class ISBNDecodingWidget extends StatefulWidget {
 }
 
 class _ISBNDecodingWidgetState extends State<ISBNDecodingWidget> {
-  Map<String, List<String>> isbns = {};
+  Map<String, Future<List<String>>> isbns = {};
 
   @override
   void initState() {
@@ -23,7 +23,7 @@ class _ISBNDecodingWidgetState extends State<ISBNDecodingWidget> {
     super.initState();
     print('initState');
     widget.step.imgsPaths.forEach((imgPath) {
-      Future.microtask(() async {
+      isbns[imgPath] = Future(() async {
         final decoder_process = await Process.run(
             '/home/julien/Perso/LeBonCoin/chain_automatisation/book_metadata_finder/detect_barcode',
             ['-in=' + imgPath]);
@@ -32,46 +32,45 @@ class _ISBNDecodingWidgetState extends State<ISBNDecodingWidget> {
           print('stderr is ${decoder_process.stderr}');
           throw Exception('decoder status is ${decoder_process.exitCode}');
         }
-        // final s = String.fromCharCodes((decoder_process.stdout as List<int>));
         final s = decoder_process.stdout as String;
-        print('s = $s');
-        setState(() {
-          isbns[imgPath] = s.split(' ');
-        });
+        return s.split(' ').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
       });
     });
-/*
-    let output = Command::new(
-    "/home/julien/Perso/LeBonCoin/chain_automatisation/book_metadata_finder/detect_barcode",
-    )
-        .arg("-in=".to_string() + &picture_path)
-        .output()
-        .expect("failed to execute process");
-    if !output.status.success() {
-    println!("stdout is {:?}", std::str::from_utf8(&output.stdout).unwrap());
-    println!("stderr is {:?}", std::str::from_utf8(&output.stderr).unwrap());
-    panic!("output.status is {}", output.status)
-    }
-    let output = std::str::from_utf8(&output.stdout).unwrap();
-    println!("output is {:?}", output);
-    output
-        .split_ascii_whitespace()
-        .map(|x| x.to_string())
-        .collect_vec()*/
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Row(
-        children: widget.step.imgsPaths
-            .map((imgPath) => Column(
-                  children: [
-                    ImageWidget(imgPath),
-                    ...isbns[imgPath]!.map((isbn) => Text(isbn)).toList(),
-                  ],
-                ))
-            .toList(),
+        children: [
+          ...widget.step.imgsPaths
+              .map((imgPath) => Column(
+                    children: [
+                      ImageWidget(imgPath),
+                      FutureBuilder(
+                          future: isbns[imgPath]!,
+                          builder: (context, snap) {
+                            if (snap.hasData == false) {
+                              return const CircularProgressIndicator();
+                            }
+                            return Column(children: snap.data!.map((isbn) => Text(isbn)).toList());
+                          })
+                    ],
+                  ))
+              .toList(),
+          Spacer(),
+          FutureBuilder(
+              future: Future.wait(isbns.values),
+              builder: (context, snap) {
+                return ElevatedButton(
+                    onPressed: () {
+                      final isbnSet = snap.data!.expand((e) => e).toSet();
+                      print('isbnSet = $isbnSet');
+                      widget.onSubmit(MetadataCollectingStep(imgsPaths: widget.step.imgsPaths, isbns: isbnSet));
+                    },
+                    child: const Text('Validate ISBNs'));
+              })
+        ],
       ),
     );
   }

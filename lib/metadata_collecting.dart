@@ -50,27 +50,29 @@ class _MetadataCollectingWidgetState extends State<MetadataCollectingWidget> {
             children: [
               // ImageWidget(imgPath),
               Text('ISBN: $isbn'),
-              Column(
-                children: [
-                  TextFormField(
-                    initialValue: manual.title,
-                    onChanged: (newText) => setState(() => manual.title = newText),
-                    decoration: const InputDecoration(
-                      icon: Icon(Icons.title),
-                      labelText: 'Book title',
+              Expanded(
+                child: Column(
+                  children: [
+                    TextFormField(
+                      initialValue: manual.title,
+                      onChanged: (newText) => setState(() => manual.title = newText),
+                      decoration: const InputDecoration(
+                        icon: Icon(Icons.title),
+                        labelText: 'Book title',
+                      ),
+                      style: const TextStyle(fontSize: 30),
                     ),
-                    style: const TextStyle(fontSize: 30),
-                  ),
-                  TextFormField(
-                    initialValue: manual.blurb,
-                    onChanged: (newText) => setState(() => manual.blurb = newText),
-                    decoration: const InputDecoration(
-                      icon: Icon(Icons.person),
-                      labelText: 'Book blurb',
+                    TextFormField(
+                      initialValue: manual.blurb,
+                      onChanged: (newText) => setState(() => manual.blurb = newText),
+                      decoration: const InputDecoration(
+                        icon: Icon(Icons.person),
+                        labelText: 'Book blurb',
+                      ),
+                      style: const TextStyle(fontSize: 30),
                     ),
-                    style: const TextStyle(fontSize: 30),
-                  ),
-                ],
+                  ],
+                ),
               ),
               ...metadata[isbn]!.mdFromProviders.entries.map((entry) => Text(entry.key.name)
                   /*FutureBuilder(
