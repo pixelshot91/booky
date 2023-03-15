@@ -116,6 +116,10 @@ class _DropZoneState extends State<_DropZone> {
         // final pathInDevice = p.substring(p.indexOf('/'));
         path = '/run/user/1000/gvfs/mtp:host=' + p.replaceAll('%20', ' ');
       }
+      const filePrefix = 'file://';
+      if (rawPath.startsWith(filePrefix)) {
+        path = rawPath.substring(filePrefix.length).trim();
+      }
       print('path = $path');
       return path;
     }).toList();
