@@ -37,62 +37,53 @@ class _MetadataCollectingWidgetState extends State<MetadataCollectingWidget> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Column(
-        children: widget.step.isbns.map((isbn) {
-          // metadata[isbn].
-          // if (metadata[isbn] == null) {
-          //   metadata.a
-          // }
-          // if
-          final manual = metadata[isbn]!.manual;
-
-          return Row(
-            children: [
-              // ImageWidget(imgPath),
-              Text('ISBN: $isbn'),
-              Expanded(
-                child: Column(
-                  children: [
-                    TextFormField(
-                      initialValue: manual.title,
-                      onChanged: (newText) => setState(() => manual.title = newText),
-                      decoration: const InputDecoration(
-                        icon: Icon(Icons.title),
-                        labelText: 'Book title',
-                      ),
-                      style: const TextStyle(fontSize: 30),
+      body: SingleChildScrollView(
+        child: Column(
+          children: widget.step.isbns.map((isbn) {
+            final manual = metadata[isbn]!.manual;
+            return Card(
+              margin: EdgeInsets.all(10),
+              child: Row(
+                children: [
+                  Text('ISBN: $isbn'),
+                  Expanded(
+                    child: GridView.count(
+                      crossAxisCount: 3,
+                      shrinkWrap: true,
+                      children: [
+                        Text('Manual'),
+                        Text('Babelio'),
+                        Text('GoogleBooks'),
+                        TextFormField(
+                          initialValue: manual.title,
+                          onChanged: (newText) => setState(() => manual.title = newText),
+                          decoration: const InputDecoration(
+                            icon: Icon(Icons.title),
+                            labelText: 'Book title',
+                          ),
+                          style: const TextStyle(fontSize: 30),
+                        ),
+                        ...metadata[isbn]!.mdFromProviders.entries.map((e) =>
+                            FutureBuilder(future: e.value, builder: (context, snapMD) => Text(snapMD.data!.title))),
+                        TextFormField(
+                          initialValue: manual.blurb,
+                          onChanged: (newText) => setState(() => manual.blurb = newText),
+                          decoration: const InputDecoration(
+                            icon: Icon(Icons.person),
+                            labelText: 'Book blurb',
+                          ),
+                          style: const TextStyle(fontSize: 30),
+                        ),
+                        ...metadata[isbn]!.mdFromProviders.entries.map((e) => FutureBuilder(
+                            future: e.value, builder: (context, snapMD) => Text(snapMD.data!.blurb ?? 'None')))
+                      ],
                     ),
-                    TextFormField(
-                      initialValue: manual.blurb,
-                      onChanged: (newText) => setState(() => manual.blurb = newText),
-                      decoration: const InputDecoration(
-                        icon: Icon(Icons.person),
-                        labelText: 'Book blurb',
-                      ),
-                      style: const TextStyle(fontSize: 30),
-                    ),
-                  ],
-                ),
-              ),
-              ...metadata[isbn]!.mdFromProviders.entries.map((entry) => Text(entry.key.name)
-                  /*FutureBuilder(
-          future: metadata[isbn],
-          builder: (context, snap) {
-          if (snap.connectionState != ConnectionState.done) {
-          return const CircularProgressIndicator();
-          }
-          final book = snap.data!;
-
-          return Column(children: [
-
-          ]),
-          })*/
                   ),
-
-              // ...isbns[imgPath]?.map((isbn) => Text(isbn)).toList() ?? [Text('no ISBN')],
-            ],
-          );
-        }).toList(),
+                ],
+              ),
+            );
+          }).toList(),
+        ),
       ),
     );
   }
