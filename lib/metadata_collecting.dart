@@ -14,7 +14,7 @@ class MetadataCollectingWidget extends StatefulWidget {
 
 class Metadatas {
   final Map<ProviderEnum, Future<BookMetaData>> mdFromProviders;
-  final BookMetaData manual; // = BookMetaData(title: '', authors: [], keywords: []);
+  final BookMetaData manual;
   Metadatas({required this.mdFromProviders, required this.manual});
 }
 
@@ -45,10 +45,11 @@ class _MetadataCollectingWidgetState extends State<MetadataCollectingWidget> {
               margin: EdgeInsets.all(10),
               child: Row(
                 children: [
-                  Text('ISBN: $isbn'),
+                  SelectableText('ISBN: $isbn'),
                   Expanded(
                     child: GridView.count(
                       crossAxisCount: 3,
+                      physics: const NeverScrollableScrollPhysics(),
                       shrinkWrap: true,
                       children: [
                         Text('Manual'),
@@ -63,8 +64,8 @@ class _MetadataCollectingWidgetState extends State<MetadataCollectingWidget> {
                           ),
                           style: const TextStyle(fontSize: 30),
                         ),
-                        ...metadata[isbn]!.mdFromProviders.entries.map((e) =>
-                            FutureBuilder(future: e.value, builder: (context, snapMD) => Text(snapMD.data!.title))),
+                        ...metadata[isbn]!.mdFromProviders.entries.map((e) => FutureBuilder(
+                            future: e.value, builder: (context, snapMD) => SelectableText(snapMD.data!.title))),
                         TextFormField(
                           initialValue: manual.blurb,
                           onChanged: (newText) => setState(() => manual.blurb = newText),
@@ -75,7 +76,12 @@ class _MetadataCollectingWidgetState extends State<MetadataCollectingWidget> {
                           style: const TextStyle(fontSize: 30),
                         ),
                         ...metadata[isbn]!.mdFromProviders.entries.map((e) => FutureBuilder(
-                            future: e.value, builder: (context, snapMD) => Text(snapMD.data!.blurb ?? 'None')))
+                            future: e.value,
+                            builder: (context, snapMD) {
+                              final blurb = snapMD.data!.blurb;
+                              if (blurb == null) return Text('None', style: TextStyle(fontStyle: FontStyle.italic));
+                              return SelectableText(blurb);
+                            }))
                       ],
                     ),
                   ),
