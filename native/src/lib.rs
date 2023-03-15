@@ -1,11 +1,11 @@
 mod api;
-mod bridge_generated;
 mod babelio;
+mod bridge_generated;
 mod cached_client;
 mod common;
+mod config;
 mod google_books;
 mod image_tools;
-mod publisher;
 mod jwt_decoder;
 mod leboncoin;
-mod config;
+mod publisher;

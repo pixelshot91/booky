@@ -20,22 +20,26 @@ use std::sync::Arc;
 // Section: imports
 
 use crate::common::Ad;
+use crate::common::Author;
+use crate::common::BookMetaData;
 
 // Section: wire functions
 
-fn wire_get_metadata_from_images_impl(
+fn wire_get_metadata_from_provider_impl(
     port_: MessagePort,
-    imgs_path: impl Wire2Api<Vec<String>> + UnwindSafe,
+    provider: impl Wire2Api<ProviderEnum> + UnwindSafe,
+    isbn: impl Wire2Api<String> + UnwindSafe,
 ) {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap(
         WrapInfo {
-            debug_name: "get_metadata_from_images",
+            debug_name: "get_metadata_from_provider",
             port: Some(port_),
             mode: FfiCallMode::Normal,
         },
         move || {
-            let api_imgs_path = imgs_path.wire2api();
-            move |task_callback| Ok(get_metadata_from_images(api_imgs_path))
+            let api_provider = provider.wire2api();
+            let api_isbn = isbn.wire2api();
+            move |task_callback| Ok(get_metadata_from_provider(api_provider, api_isbn))
         },
     )
 }
@@ -80,6 +84,15 @@ impl Wire2Api<i32> for i32 {
         self
     }
 }
+impl Wire2Api<ProviderEnum> for i32 {
+    fn wire2api(self) -> ProviderEnum {
+        match self {
+            0 => ProviderEnum::Babelio,
+            1 => ProviderEnum::GoogleBooks,
+            _ => unreachable!("Invalid variant for ProviderEnum: {}", self),
+        }
+    }
+}
 impl Wire2Api<u8> for u8 {
     fn wire2api(self) -> u8 {
         self
@@ -88,18 +101,25 @@ impl Wire2Api<u8> for u8 {
 
 // Section: impl IntoDart
 
-impl support::IntoDart for Ad {
+impl support::IntoDart for Author {
+    fn into_dart(self) -> support::DartAbi {
+        vec![self.first_name.into_dart(), self.last_name.into_dart()].into_dart()
+    }
+}
+impl support::IntoDartExceptPrimitive for Author {}
+
+impl support::IntoDart for BookMetaData {
     fn into_dart(self) -> support::DartAbi {
         vec![
             self.title.into_dart(),
-            self.description.into_dart(),
-            self.price_cent.into_dart(),
-            self.imgs_path.into_dart(),
+            self.authors.into_dart(),
+            self.blurb.into_dart(),
+            self.keywords.into_dart(),
         ]
         .into_dart()
     }
 }
-impl support::IntoDartExceptPrimitive for Ad {}
+impl support::IntoDartExceptPrimitive for BookMetaData {}
 
 // Section: executor
 

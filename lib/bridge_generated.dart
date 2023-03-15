@@ -24,23 +24,24 @@ class NativeImpl implements Native {
   factory NativeImpl.wasm(FutureOr<WasmModule> module) =>
       NativeImpl(module as ExternalLibrary);
   NativeImpl.raw(this._platform);
-  Future<Ad> getMetadataFromImages(
-      {required List<String> imgsPath, dynamic hint}) {
-    var arg0 = _platform.api2wire_StringList(imgsPath);
+  Future<BookMetaData?> getMetadataFromProvider(
+      {required ProviderEnum provider, required String isbn, dynamic hint}) {
+    var arg0 = api2wire_provider_enum(provider);
+    var arg1 = _platform.api2wire_String(isbn);
     return _platform.executeNormal(FlutterRustBridgeTask(
       callFfi: (port_) =>
-          _platform.inner.wire_get_metadata_from_images(port_, arg0),
-      parseSuccessData: _wire2api_ad,
-      constMeta: kGetMetadataFromImagesConstMeta,
-      argValues: [imgsPath],
+          _platform.inner.wire_get_metadata_from_provider(port_, arg0, arg1),
+      parseSuccessData: _wire2api_opt_box_autoadd_book_meta_data,
+      constMeta: kGetMetadataFromProviderConstMeta,
+      argValues: [provider, isbn],
       hint: hint,
     ));
   }
 
-  FlutterRustBridgeTaskConstMeta get kGetMetadataFromImagesConstMeta =>
+  FlutterRustBridgeTaskConstMeta get kGetMetadataFromProviderConstMeta =>
       const FlutterRustBridgeTaskConstMeta(
-        debugName: "get_metadata_from_images",
-        argNames: ["imgsPath"],
+        debugName: "get_metadata_from_provider",
+        argNames: ["provider", "isbn"],
       );
 
   Future<void> publishAd({required Ad ad, dynamic hint}) {
@@ -73,20 +74,42 @@ class NativeImpl implements Native {
     return (raw as List<dynamic>).cast<String>();
   }
 
-  Ad _wire2api_ad(dynamic raw) {
+  Author _wire2api_author(dynamic raw) {
     final arr = raw as List<dynamic>;
-    if (arr.length != 4)
-      throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
-    return Ad(
-      title: _wire2api_String(arr[0]),
-      description: _wire2api_String(arr[1]),
-      priceCent: _wire2api_i32(arr[2]),
-      imgsPath: _wire2api_StringList(arr[3]),
+    if (arr.length != 2)
+      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    return Author(
+      firstName: _wire2api_String(arr[0]),
+      lastName: _wire2api_String(arr[1]),
     );
   }
 
-  int _wire2api_i32(dynamic raw) {
-    return raw as int;
+  BookMetaData _wire2api_book_meta_data(dynamic raw) {
+    final arr = raw as List<dynamic>;
+    if (arr.length != 4)
+      throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
+    return BookMetaData(
+      title: _wire2api_String(arr[0]),
+      authors: _wire2api_list_author(arr[1]),
+      blurb: _wire2api_opt_String(arr[2]),
+      keywords: _wire2api_StringList(arr[3]),
+    );
+  }
+
+  BookMetaData _wire2api_box_autoadd_book_meta_data(dynamic raw) {
+    return _wire2api_book_meta_data(raw);
+  }
+
+  List<Author> _wire2api_list_author(dynamic raw) {
+    return (raw as List<dynamic>).map(_wire2api_author).toList();
+  }
+
+  String? _wire2api_opt_String(dynamic raw) {
+    return raw == null ? null : _wire2api_String(raw);
+  }
+
+  BookMetaData? _wire2api_opt_box_autoadd_book_meta_data(dynamic raw) {
+    return raw == null ? null : _wire2api_box_autoadd_book_meta_data(raw);
   }
 
   int _wire2api_u8(dynamic raw) {
@@ -107,6 +130,11 @@ class NativeImpl implements Native {
 @protected
 int api2wire_i32(int raw) {
   return raw;
+}
+
+@protected
+int api2wire_provider_enum(ProviderEnum raw) {
+  return api2wire_i32(raw.index);
 }
 
 @protected
@@ -260,22 +288,26 @@ class NativeWire implements FlutterRustBridgeWireBase {
   late final _init_frb_dart_api_dl = _init_frb_dart_api_dlPtr
       .asFunction<int Function(ffi.Pointer<ffi.Void>)>();
 
-  void wire_get_metadata_from_images(
+  void wire_get_metadata_from_provider(
     int port_,
-    ffi.Pointer<wire_StringList> imgs_path,
+    int provider,
+    ffi.Pointer<wire_uint_8_list> isbn,
   ) {
-    return _wire_get_metadata_from_images(
+    return _wire_get_metadata_from_provider(
       port_,
-      imgs_path,
+      provider,
+      isbn,
     );
   }
 
-  late final _wire_get_metadata_from_imagesPtr = _lookup<
-      ffi.NativeFunction<
-          ffi.Void Function(ffi.Int64,
-              ffi.Pointer<wire_StringList>)>>('wire_get_metadata_from_images');
-  late final _wire_get_metadata_from_images = _wire_get_metadata_from_imagesPtr
-      .asFunction<void Function(int, ffi.Pointer<wire_StringList>)>();
+  late final _wire_get_metadata_from_providerPtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Void Function(
+                  ffi.Int64, ffi.Int32, ffi.Pointer<wire_uint_8_list>)>>(
+      'wire_get_metadata_from_provider');
+  late final _wire_get_metadata_from_provider =
+      _wire_get_metadata_from_providerPtr
+          .asFunction<void Function(int, int, ffi.Pointer<wire_uint_8_list>)>();
 
   void wire_publish_ad(
     int port_,

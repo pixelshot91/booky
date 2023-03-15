@@ -2,8 +2,11 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 
+import 'ad_editing.dart';
 import 'drag_and_drop.dart' as drag_and_drop;
 import 'ffi.dart' if (dart.library.html) 'ffi_web.dart';
+import 'isbn_decoding.dart';
+import 'metadata_collecting.dart';
 
 void main() {
   runApp(const MyApp());
@@ -16,22 +19,57 @@ class MyApp extends StatefulWidget {
   State<MyApp> createState() => _MyAppState();
 }
 
-class _MyAppState extends State<MyApp> {
-  List<String> imgsPaths = [];
+sealed class BookyStep {}
 
+class ImageSelectionStep implements BookyStep {}
+
+class ISBNDecodingStep implements BookyStep {
+  List<String> imgsPaths = [];
+  ISBNDecodingStep({required this.imgsPaths});
+}
+
+class MetadataCollectingStep implements BookyStep {
+  List<String> imgsPaths = [];
+  Set<String> isbns = {};
+}
+
+class AdEditingStep implements BookyStep {
+  List<String> imgsPaths = [];
+  Set<String> isbns = {};
+  Map<String, BookMetaData> metadata = {};
+}
+
+class _MyAppState extends State<MyApp> {
+  BookyStep step = ImageSelectionStep();
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'BookAdPublisher',
-      theme: ThemeData(primarySwatch: Colors.blue),
-      home: imgsPaths.isEmpty
+        title: 'BookAdPublisher',
+        theme: ThemeData(primarySwatch: Colors.blue),
+        home: switch (step) {
+          ImageSelectionStep() => drag_and_drop.SelectImages(onSelect: (List<String> paths) {
+            setState(() {
+              step = ISBNDecodingStep(imgsPaths: paths);
+            });
+          }),
+          ISBNDecodingStep() => ISBNDecodingWidget(
+              step: step as ISBNDecodingStep,
+              onSubmit: (MetadataCollectingStep newStep) => setState(() => step = newStep)),
+          MetadataCollectingStep() => MetadataCollectingWidget(
+              step: step as MetadataCollectingStep,
+              onSubmit: (AdEditingStep newStep) => setState(() => step = newStep)),
+          AdEditingStep() => AdEditingWidget(
+              step: step as AdEditingStep, onSubmit: (bool publishSuccess) => setState(() => step = newStep)),
+          BookyStep() => throw UnimplementedError('Not possible')
+        }
+        /* imgsPaths.isEmpty
           ? drag_and_drop.SelectImages(onSelect: (List<String> paths) {
               setState(() {
                 imgsPaths = paths;
               });
             })
-          : MyHomePage(imgsPaths),
-    );
+          : MyHomePage(imgsPaths),*/
+        );
   }
 }
 
@@ -48,7 +86,7 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void initState() {
     super.initState();
-    ad = api.getMetadataFromImages(imgsPath: widget.imgsPaths);
+    // ad = api.getMetadataFromImages(imgsPath: widget.imgsPaths);
   }
 
   @override
@@ -103,86 +141,17 @@ extension DoubleExt on double {
   double multiply(double other) => this * other;
 }
 
-class AdPage extends StatefulWidget {
-  const AdPage({required Ad ad}) : initialAd = ad;
-
-  final Ad initialAd;
-
-  @override
-  State<AdPage> createState() => _AdPageState();
-}
-
-class _AdPageState extends State<AdPage> {
-  late Ad ad;
-
-  @override
-  void initState() {
-    super.initState();
-    ad = widget.initialAd;
-  }
+class ImageWidget extends StatelessWidget {
+  const ImageWidget(this.imgPath);
+  final String imgPath;
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: Column(
-        children: [
-          TextFormField(
-            initialValue: ad.title,
-            onChanged: (newText) => setState(() => ad.title = newText),
-            decoration: const InputDecoration(
-              icon: Icon(Icons.title),
-              labelText: 'Ad title',
-            ),
-            style: const TextStyle(fontSize: 30),
-          ),
-          TextFormField(
-            initialValue: ad.description,
-            maxLines: 20,
-            onChanged: (newText) => setState(() => ad.description = newText),
-            decoration: const InputDecoration(
-              icon: Icon(Icons.text_snippet),
-              labelText: 'Ad description',
-            ),
-          ),
-          TextFormField(
-            initialValue: ad.priceCent /*?*/ .divide(100).toString(),
-            onChanged: (newText) =>
-                setState(() => ad.priceCent = double.tryParse(newText)! /*?*/ .multiply(100).round()),
-            decoration: const InputDecoration(
-              icon: Icon(Icons.euro),
-              labelText: 'Price',
-            ),
-            style: const TextStyle(fontSize: 20),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8.0),
-            child: Row(children: [
-              const Icon(
-                Icons.image,
-                color: Colors.grey,
-              ),
-              const SizedBox(width: 16),
-              ...ad.imgsPath
-                  .map((imgPath) => Image.file(
-                        File(imgPath),
-                        height: 200,
-                        isAntiAlias: true,
-                        filterQuality: FilterQuality.medium,
-                      ))
-                  .toList(),
-            ]),
-          ),
-          ElevatedButton(
-              onPressed: ad.priceCent == null
-                  ? null
-                  : () {
-                      print('Try to publish...');
-                      api.publishAd(ad: ad);
-                    },
-              child: const Text("Publish"))
-        ],
-      ),
+    return Image.file(
+      File(imgPath),
+      height: 200,
+      isAntiAlias: true,
+      filterQuality: FilterQuality.medium,
     );
   }
 }
