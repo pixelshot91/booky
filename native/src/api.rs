@@ -7,7 +7,7 @@ use crate::{babelio, common, google_books, leboncoin};
 use itertools::Itertools;
 use std::process::Command;
 
-enum ProviderEnum {
+pub enum ProviderEnum {
     Babelio,
     GoogleBooks,
 }
@@ -15,7 +15,9 @@ enum ProviderEnum {
 pub fn get_metadata_from_provider(provider: ProviderEnum, isbn: String) -> Option<BookMetaData> {
     match provider {
         ProviderEnum::Babelio => babelio::Babelio {}.get_book_metadata_from_isbn(&isbn),
-        ProviderEnum::GoogleBooks => google_books::GoogleBooks {}.get_book_metadata_from_isbn(&isbn),
+        ProviderEnum::GoogleBooks => {
+            google_books::GoogleBooks {}.get_book_metadata_from_isbn(&isbn)
+        }
     }
 }
 
