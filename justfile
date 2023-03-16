@@ -1,16 +1,15 @@
-default: gen lint
+default: gen fmt
 
 gen:
     flutter pub get
     flutter_rust_bridge_codegen \
         --rust-input native/src/api.rs \
         --dart-output lib/bridge_generated.dart \
-        --c-output ios/Runner/bridge_generated.h \
         --dart-decl-output lib/bridge_definitions.dart \
-        --wasm
-    cp ios/Runner/bridge_generated.h macos/Runner/bridge_generated.h
+    #    --wasm
+    # cp ios/Runner/bridge_generated.h macos/Runner/bridge_generated.h
 
-lint:
+fmt:
     cd native && cargo fmt
     dart format .
 
