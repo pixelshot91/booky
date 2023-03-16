@@ -39,7 +39,16 @@ class AdEditingStep implements BookyStep {
 }
 
 class _MyAppState extends State<MyApp> {
-  BookyStep step = ImageSelectionStep();
+  BookyStep step = //ImageSelectionStep();
+      MetadataCollectingStep(imgsPaths: [
+    '/home/julien/Perso/LeBonCoin/chain_automatisation/test_images/20230204_194742.jpg',
+    '/home/julien/Perso/LeBonCoin/chain_automatisation/test_images/20230204_194746.jpg',
+    '/home/julien/Perso/LeBonCoin/chain_automatisation/test_images/20230204_194753.jpg',
+    '/home/julien/Perso/LeBonCoin/chain_automatisation/test_images/20230204_194758.jpg'
+  ], isbns: {
+    '9782253029854',
+    '9782277223634',
+  });
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
