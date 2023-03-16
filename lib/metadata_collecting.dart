@@ -32,9 +32,9 @@ class _MetadataCollectingWidgetState extends State<MetadataCollectingWidget> {
               manual: BookMetaData(title: '', authors: [], keywords: []),
               mdFromProviders: Map.fromEntries(ProviderEnum.values.map((provider) {
                 final md = api.getMetadataFromProvider(provider: provider, isbn: isbn).then((value) => value!);
-                /*if (provider == ProviderEnum.Babelio) {
+                if (provider == ProviderEnum.Babelio) {
                   md.then((value) => metadata[isbn]!.manual = value);
-                }*/
+                }
                 return MapEntry(provider, md);
               }))));
     });
@@ -43,6 +43,9 @@ class _MetadataCollectingWidgetState extends State<MetadataCollectingWidget> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: const Text('Metadata Collecting'),
+      ),
       body: SingleChildScrollView(
         child: Column(
           children: [
