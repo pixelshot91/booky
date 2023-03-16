@@ -42,46 +42,49 @@ class _MetadataCollectingWidgetState extends State<MetadataCollectingWidget> {
           children: widget.step.isbns.map((isbn) {
             final manual = metadata[isbn]!.manual;
             return Card(
-              margin: EdgeInsets.all(10),
+              margin: const EdgeInsets.all(10),
               child: Row(
                 children: [
                   SelectableText('ISBN: $isbn'),
                   Expanded(
-                    child: GridView.count(
-                      crossAxisCount: 3,
-                      physics: const NeverScrollableScrollPhysics(),
-                      shrinkWrap: true,
+                    child: Table(
                       children: [
-                        Text('Manual'),
-                        Text('Babelio'),
-                        Text('GoogleBooks'),
-                        TextFormField(
-                          initialValue: manual.title,
-                          onChanged: (newText) => setState(() => manual.title = newText),
-                          decoration: const InputDecoration(
-                            icon: Icon(Icons.title),
-                            labelText: 'Book title',
+                        const TableRow(children: [
+                          Text('Manual'),
+                          Text('Babelio'),
+                          Text('GoogleBooks'),
+                        ]),
+                        TableRow(children: [
+                          TextFormField(
+                            initialValue: manual.title,
+                            onChanged: (newText) => setState(() => manual.title = newText),
+                            decoration: const InputDecoration(
+                              icon: Icon(Icons.title),
+                              labelText: 'Book title',
+                            ),
                           ),
-                          style: const TextStyle(fontSize: 30),
-                        ),
-                        ...metadata[isbn]!.mdFromProviders.entries.map((e) => FutureBuilder(
-                            future: e.value, builder: (context, snapMD) => SelectableText(snapMD.data!.title))),
-                        TextFormField(
-                          initialValue: manual.blurb,
-                          onChanged: (newText) => setState(() => manual.blurb = newText),
-                          decoration: const InputDecoration(
-                            icon: Icon(Icons.person),
-                            labelText: 'Book blurb',
+                          ...metadata[isbn]!.mdFromProviders.entries.map((e) => FutureBuilder(
+                              future: e.value, builder: (context, snapMD) => SelectableText(snapMD.data!.title))),
+                        ]),
+                        TableRow(children: [
+                          TextFormField(
+                            initialValue: manual.blurb,
+                            onChanged: (newText) => setState(() => manual.blurb = newText),
+                            decoration: const InputDecoration(
+                              icon: Icon(Icons.person),
+                              labelText: 'Book blurb',
+                            ),
                           ),
-                          style: const TextStyle(fontSize: 30),
-                        ),
-                        ...metadata[isbn]!.mdFromProviders.entries.map((e) => FutureBuilder(
-                            future: e.value,
-                            builder: (context, snapMD) {
-                              final blurb = snapMD.data!.blurb;
-                              if (blurb == null) return Text('None', style: TextStyle(fontStyle: FontStyle.italic));
-                              return SelectableText(blurb);
-                            }))
+                          ...metadata[isbn]!.mdFromProviders.entries.map((e) => FutureBuilder(
+                              future: e.value,
+                              builder: (context, snapMD) {
+                                final blurb = snapMD.data!.blurb;
+                                if (blurb == null) {
+                                  return const Text('None', style: TextStyle(fontStyle: FontStyle.italic));
+                                }
+                                return SelectableText(blurb);
+                              })),
+                        ]),
                       ],
                     ),
                   ),
