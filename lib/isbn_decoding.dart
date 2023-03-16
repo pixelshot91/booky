@@ -58,7 +58,7 @@ class _ISBNDecodingWidgetState extends State<ISBNDecodingWidget> {
                     ],
                   ))
               .toList(),
-          Spacer(),
+          const Spacer(),
           FutureBuilder(
               future: Future.wait(isbns.values),
               builder: (context, snap) {
