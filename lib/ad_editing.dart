@@ -50,56 +50,59 @@ class _AdEditingWidgetState extends State<AdEditingWidget> {
       appBar: AppBar(title: const Text('Ad editing')),
       body: Padding(
         padding: const EdgeInsets.all(8.0),
-        child: Column(
-          children: [
-            TextFormField(
-              initialValue: ad.title,
-              onChanged: (newText) => setState(() => ad.title = newText),
-              decoration: const InputDecoration(
-                icon: Icon(Icons.title),
-                labelText: 'Ad title',
-              ),
-              style: const TextStyle(fontSize: 30),
-            ),
-            TextFormField(
-              initialValue: ad.description,
-              maxLines: 20,
-              onChanged: (newText) => setState(() => ad.description = newText),
-              decoration: const InputDecoration(
-                icon: Icon(Icons.text_snippet),
-                labelText: 'Ad description',
-              ),
-            ),
-            TextFormField(
-              initialValue: ad.priceCent /*?*/ .divide(100).toString(),
-              onChanged: (newText) =>
-                  setState(() => ad.priceCent = double.tryParse(newText)! /*?*/ .multiply(100).round()),
-              decoration: const InputDecoration(
-                icon: Icon(Icons.euro),
-                labelText: 'Price',
-              ),
-              style: const TextStyle(fontSize: 20),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8.0),
-              child: Row(children: [
-                const Icon(
-                  Icons.image,
-                  color: Colors.grey,
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              TextFormField(
+                initialValue: ad.title,
+                onChanged: (newText) => setState(() => ad.title = newText),
+                decoration: const InputDecoration(
+                  icon: Icon(Icons.title),
+                  labelText: 'Ad title',
                 ),
-                const SizedBox(width: 16),
-                ...ad.imgsPath.map((imgPath) => ImageWidget(imgPath)).toList(),
-              ]),
-            ),
-            ElevatedButton(
-                onPressed: ad.priceCent == null
-                    ? null
-                    : () {
-                        print('Try to publish...');
-                        api.publishAd(ad: ad);
-                      },
-                child: const Text('Publish'))
-          ],
+                style: const TextStyle(fontSize: 30),
+              ),
+              TextFormField(
+                initialValue: ad.description,
+                maxLines: null,
+                scrollPhysics: const NeverScrollableScrollPhysics(),
+                onChanged: (newText) => setState(() => ad.description = newText),
+                decoration: const InputDecoration(
+                  icon: Icon(Icons.text_snippet),
+                  labelText: 'Ad description',
+                ),
+              ),
+              TextFormField(
+                initialValue: ad.priceCent /*?*/ .divide(100).toString(),
+                onChanged: (newText) =>
+                    setState(() => ad.priceCent = double.tryParse(newText)! /*?*/ .multiply(100).round()),
+                decoration: const InputDecoration(
+                  icon: Icon(Icons.euro),
+                  labelText: 'Price',
+                ),
+                style: const TextStyle(fontSize: 20),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8.0),
+                child: Row(children: [
+                  const Icon(
+                    Icons.image,
+                    color: Colors.grey,
+                  ),
+                  const SizedBox(width: 16),
+                  ...ad.imgsPath.map((imgPath) => ImageWidget(imgPath)).toList(),
+                ]),
+              ),
+              ElevatedButton(
+                  onPressed: (ad.title.length < 2 || ad.description.length < 15 || ad.priceCent == null)
+                      ? null
+                      : () {
+                          print('Try to publish...');
+                          api.publishAd(ad: ad);
+                        },
+                  child: const Text('Publish'))
+            ],
+          ),
         ),
       ),
     );
