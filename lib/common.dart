@@ -2,6 +2,8 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 
+import 'bridge_definitions.dart';
+
 class ImageWidget extends StatelessWidget {
   const ImageWidget(this.imgPath);
   final String imgPath;
@@ -15,4 +17,37 @@ class ImageWidget extends StatelessWidget {
       filterQuality: FilterQuality.medium,
     );
   }
+}
+
+class FutureWidget<T> extends StatelessWidget {
+  const FutureWidget({required this.future, required this.builder});
+  final Future<T> future;
+  final Widget Function(T) builder;
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder(future: future, builder: (context, snap) => AsyncSnapshotWidget(snap: snap, builder: builder));
+  }
+}
+
+class AsyncSnapshotWidget<T> extends StatelessWidget {
+  const AsyncSnapshotWidget({required this.snap, required this.builder});
+  final AsyncSnapshot<T> snap;
+  final Widget Function(T data) builder;
+
+  @override
+  Widget build(BuildContext context) {
+    switch (snap.connectionState) {
+      case ConnectionState.waiting:
+        return const CircularProgressIndicator();
+      case ConnectionState.done:
+        return builder(snap.data!);
+      default:
+        return const Text('???');
+    }
+  }
+}
+
+extension AuthorsExt on List<Author> {
+  String toText() => map((a) => '${a.firstName} ${a.lastName}').join('\n');
 }

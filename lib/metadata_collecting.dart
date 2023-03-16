@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_rust_bridge_template/common.dart';
 
 import 'ffi.dart' if (dart.library.html) 'ffi_web.dart';
 import 'main.dart';
@@ -14,7 +15,7 @@ class MetadataCollectingWidget extends StatefulWidget {
 
 class Metadatas {
   final Map<ProviderEnum, Future<BookMetaData>> mdFromProviders;
-  final BookMetaData manual;
+  BookMetaData manual;
   Metadatas({required this.mdFromProviders, required this.manual});
 }
 
@@ -29,8 +30,13 @@ class _MetadataCollectingWidgetState extends State<MetadataCollectingWidget> {
           isbn,
           () => Metadatas(
               manual: BookMetaData(title: '', authors: [], keywords: []),
-              mdFromProviders: Map.fromEntries(ProviderEnum.values.map((provider) => MapEntry(
-                  provider, api.getMetadataFromProvider(provider: provider, isbn: isbn).then((value) => value!))))));
+              mdFromProviders: Map.fromEntries(ProviderEnum.values.map((provider) {
+                final md = api.getMetadataFromProvider(provider: provider, isbn: isbn).then((value) => value!);
+                /*if (provider == ProviderEnum.Babelio) {
+                  md.then((value) => metadata[isbn]!.manual = value);
+                }*/
+                return MapEntry(provider, md);
+              }))));
     });
   }
 
@@ -39,59 +45,103 @@ class _MetadataCollectingWidgetState extends State<MetadataCollectingWidget> {
     return Scaffold(
       body: SingleChildScrollView(
         child: Column(
-          children: widget.step.isbns.map((isbn) {
-            final manual = metadata[isbn]!.manual;
-            return Card(
-              margin: const EdgeInsets.all(10),
-              child: Row(
-                children: [
-                  SelectableText('ISBN: $isbn'),
-                  Expanded(
-                    child: Table(
-                      children: [
-                        const TableRow(children: [
-                          Text('Manual'),
-                          Text('Babelio'),
-                          Text('GoogleBooks'),
-                        ]),
-                        TableRow(children: [
-                          TextFormField(
-                            initialValue: manual.title,
-                            onChanged: (newText) => setState(() => manual.title = newText),
-                            decoration: const InputDecoration(
-                              icon: Icon(Icons.title),
-                              labelText: 'Book title',
-                            ),
-                          ),
-                          ...metadata[isbn]!.mdFromProviders.entries.map((e) => FutureBuilder(
-                              future: e.value, builder: (context, snapMD) => SelectableText(snapMD.data!.title))),
-                        ]),
-                        TableRow(children: [
-                          TextFormField(
-                            initialValue: manual.blurb,
-                            onChanged: (newText) => setState(() => manual.blurb = newText),
-                            decoration: const InputDecoration(
-                              icon: Icon(Icons.person),
-                              labelText: 'Book blurb',
-                            ),
-                          ),
-                          ...metadata[isbn]!.mdFromProviders.entries.map((e) => FutureBuilder(
-                              future: e.value,
-                              builder: (context, snapMD) {
-                                final blurb = snapMD.data!.blurb;
-                                if (blurb == null) {
-                                  return const Text('None', style: TextStyle(fontStyle: FontStyle.italic));
-                                }
-                                return SelectableText(blurb);
-                              })),
-                        ]),
-                      ],
-                    ),
+          children: [
+            ...widget.step.isbns.map((isbn) {
+              final manual = metadata[isbn]!.manual;
+              return Card(
+                margin: const EdgeInsets.all(10),
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Row(
+                    children: [
+                      SelectableText('ISBN: $isbn'),
+                      Expanded(
+                        child: Table(
+                          children: [
+                            const TableRow(children: [
+                              Text('Manual'),
+                              Text('Babelio'),
+                              Text('GoogleBooks'),
+                            ]),
+                            TableRow(children: [
+                              FutureWidget(
+                                  future: metadata[isbn]!.mdFromProviders.entries.first.value,
+                                  builder: (data) => TextFormField(
+                                        initialValue: data.title,
+                                        onChanged: (newText) => setState(() => manual.title = newText),
+                                        decoration: const InputDecoration(
+                                          icon: Icon(Icons.title),
+                                          labelText: 'Book title',
+                                        ),
+                                      )),
+                              ...metadata[isbn]!.mdFromProviders.entries.map(
+                                  (e) => FutureWidget(future: e.value, builder: (data) => SelectableText(data.title))),
+                            ]),
+                            TableRow(children: [
+                              FutureWidget(
+                                future: metadata[isbn]!.mdFromProviders.entries.first.value,
+                                builder: (data) => TextFormField(
+                                  initialValue: data.authors.toText(),
+                                  onChanged: (newText) => setState(() => manual.authors = newText
+                                      .split('\n')
+                                      .map((line) => Author(firstName: '', lastName: line))
+                                      .toList()),
+                                  decoration: const InputDecoration(
+                                    icon: Icon(Icons.person),
+                                    labelText: 'Authors',
+                                  ),
+                                ),
+                              ),
+                              ...metadata[isbn]!.mdFromProviders.entries.map((e) => FutureWidget(
+                                  future: e.value,
+                                  builder: (data) {
+                                    final authors = data.authors;
+                                    if (authors.isEmpty) {
+                                      return const Text('None', style: TextStyle(fontStyle: FontStyle.italic));
+                                    }
+                                    return SelectableText(authors.toText());
+                                  })),
+                            ]),
+                            TableRow(children: [
+                              FutureWidget(
+                                  future: metadata[isbn]!.mdFromProviders.entries.first.value,
+                                  builder: (data) => TextFormField(
+                                        initialValue: data.blurb,
+                                        onChanged: (newText) => setState(() => manual.blurb = newText),
+                                        decoration: const InputDecoration(
+                                          icon: Icon(Icons.description),
+                                          labelText: 'Book blurb',
+                                        ),
+                                      )),
+                              ...metadata[isbn]!.mdFromProviders.entries.map((e) => FutureWidget(
+                                  future: e.value,
+                                  builder: (data) {
+                                    final blurb = data.blurb;
+                                    if (blurb == null) {
+                                      return const Text('None', style: TextStyle(fontStyle: FontStyle.italic));
+                                    }
+                                    return SelectableText(blurb);
+                                  })),
+                            ]),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-            );
-          }).toList(),
+                ),
+              );
+            }).toList(),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: ElevatedButton(
+                  onPressed: () {
+                    widget.onSubmit(AdEditingStep(
+                        imgsPaths: widget.step.imgsPaths,
+                        metadata: metadata.map((key, value) => MapEntry(key, value.manual))));
+                  },
+                  child: const Text('Validate Metadatas')),
+            )
+          ],
         ),
       ),
     );

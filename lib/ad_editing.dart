@@ -32,16 +32,16 @@ class _AdEditingWidgetState extends State<AdEditingWidget> {
   @override
   void initState() {
     super.initState();
-    ad.imgsPath = widget.step.imgsPaths;
     final bookTitles = widget.step.metadata.entries.map((entry) => _bookFormatTitleAndAuthor(entry.value)).join('\n');
     final blurbs = widget.step.metadata.entries
         .map((entry) => _bookFormatTitleAndAuthor(entry.value) + ':\n' + entry.value.blurb!)
         .join('\n');
-    ad.description = bookTitles + '\n\nRésumé:\n' + blurbs + '\n\n' + personal_info.customMessage;
+    var description = bookTitles + '\n\nRésumé:\n' + blurbs + '\n\n' + personal_info.customMessage;
     final keywords = widget.step.metadata.entries.map((entry) => entry.value.keywords).join(', ');
     if (keywords.isNotEmpty) {
-      ad.description += '\n\nMots-clés:\n' + keywords;
+      description += '\n\nMots-clés:\n' + keywords;
     }
+    ad = Ad(title: '', description: description, priceCent: 1000, imgsPath: widget.step.imgsPaths);
   }
 
   @override

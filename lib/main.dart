@@ -34,8 +34,9 @@ class MetadataCollectingStep implements BookyStep {
 
 class AdEditingStep implements BookyStep {
   List<String> imgsPaths = [];
-  Set<String> isbns = {};
   Map<String, BookMetaData> metadata = {};
+
+  AdEditingStep({required this.imgsPaths, required this.metadata});
 }
 
 class _MyAppState extends State<MyApp> {
