@@ -33,17 +33,28 @@ class _AdEditingWidgetState extends State<AdEditingWidget> {
   void initState() {
     super.initState();
     final metadataFromIsbn = widget.step.metadata.entries;
-    final bookTitles = metadataFromIsbn.map((entry) => _bookFormatTitleAndAuthor(entry.value)).join('\n');
-    final blurbs =
-        metadataFromIsbn.map((entry) => _bookFormatTitleAndAuthor(entry.value) + ':\n' + entry.value.blurb!).join('\n');
-    var description = bookTitles + '\n\nRésumé:\n' + blurbs + '\n\n' + personal_info.customMessage;
-    final keywords = metadataFromIsbn.map((entry) => entry.value.keywords).join(', ');
+
+    final title = metadataFromIsbn.length == 1 ? metadataFromIsbn.first.value.title : '';
+    var description = _getDescription(metadataFromIsbn);
+
+    final keywords = metadataFromIsbn.map((entry) => entry.value.keywords).expand((kw) => kw).toSet().join(', ');
     if (keywords.isNotEmpty) {
       description += '\n\nMots-clés:\n' + keywords;
     }
 
-    final title = metadataFromIsbn.length == 1 ? metadataFromIsbn.first.value.title : '';
     ad = Ad(title: title, description: description, priceCent: 1000, imgsPath: widget.step.imgsPaths);
+  }
+
+  String _getDescription(Iterable<MapEntry<String, BookMetaData>> metadataFromIsbn) {
+    final blurbs =
+        metadataFromIsbn.map((entry) => _bookFormatTitleAndAuthor(entry.value) + ':\n' + entry.value.blurb!).join('\n');
+    if (metadataFromIsbn.length == 1) {
+      return 'Résumé:\n' + metadataFromIsbn.single.value.blurb!;
+    } else {
+      final bookTitles = metadataFromIsbn.map((entry) => _bookFormatTitleAndAuthor(entry.value)).join('\n');
+      final description = bookTitles + '\n\nRésumés:\n' + blurbs + '\n\n' + personal_info.customMessage;
+      return description;
+    }
   }
 
   @override
