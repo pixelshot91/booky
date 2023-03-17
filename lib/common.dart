@@ -41,7 +41,7 @@ class AsyncSnapshotWidget<T> extends StatelessWidget {
       case ConnectionState.waiting:
         return const CircularProgressIndicator();
       case ConnectionState.done:
-        return builder(snap.data!);
+        return builder(snap.data as T);
       default:
         return const Text('???');
     }

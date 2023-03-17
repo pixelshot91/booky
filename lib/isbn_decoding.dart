@@ -24,15 +24,15 @@ class _ISBNDecodingWidgetState extends State<ISBNDecodingWidget> {
     print('initState');
     widget.step.imgsPaths.forEach((imgPath) {
       isbns[imgPath] = Future(() async {
-        final decoder_process = await Process.run(
+        final decoderProcess = await Process.run(
             '/home/julien/Perso/LeBonCoin/chain_automatisation/book_metadata_finder/detect_barcode',
             ['-in=' + imgPath]);
-        if (decoder_process.exitCode != 0) {
-          print('stdout is ${decoder_process.stdout}');
-          print('stderr is ${decoder_process.stderr}');
-          throw Exception('decoder status is ${decoder_process.exitCode}');
+        if (decoderProcess.exitCode != 0) {
+          print('stdout is ${decoderProcess.stdout}');
+          print('stderr is ${decoderProcess.stderr}');
+          throw Exception('decoder status is ${decoderProcess.exitCode}');
         }
-        final s = decoder_process.stdout as String;
+        final s = decoderProcess.stdout as String;
         return s.split(' ').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
       });
     });
