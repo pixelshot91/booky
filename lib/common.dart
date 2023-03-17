@@ -51,3 +51,11 @@ class AsyncSnapshotWidget<T> extends StatelessWidget {
 extension AuthorsExt on List<Author> {
   String toText() => map((a) => '${a.firstName} ${a.lastName}').join('\n');
 }
+
+extension IntExt on int {
+  int divide(int other) => this ~/ other;
+}
+
+extension DoubleExt on double {
+  double multiply(double other) => this * other;
+}
