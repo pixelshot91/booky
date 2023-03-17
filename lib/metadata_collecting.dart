@@ -4,6 +4,8 @@ import 'package:flutter_rust_bridge_template/common.dart';
 import 'ffi.dart' if (dart.library.html) 'ffi_web.dart';
 import 'main.dart';
 
+const noneText = Text('None', style: TextStyle(fontStyle: FontStyle.italic));
+
 class MetadataCollectingWidget extends StatefulWidget {
   const MetadataCollectingWidget({required this.step, required this.onSubmit});
   final MetadataCollectingStep step;
@@ -14,7 +16,7 @@ class MetadataCollectingWidget extends StatefulWidget {
 }
 
 class Metadatas {
-  final Map<ProviderEnum, Future<BookMetaData>> mdFromProviders;
+  final Map<ProviderEnum, Future<BookMetaData?>> mdFromProviders;
   BookMetaData manual;
   Metadatas({required this.mdFromProviders, required this.manual});
 }
@@ -31,9 +33,13 @@ class _MetadataCollectingWidgetState extends State<MetadataCollectingWidget> {
           () => Metadatas(
               manual: BookMetaData(title: '', authors: [], keywords: []),
               mdFromProviders: Map.fromEntries(ProviderEnum.values.map((provider) {
-                final md = api.getMetadataFromProvider(provider: provider, isbn: isbn).then((value) => value!);
+                final md = api.getMetadataFromProvider(provider: provider, isbn: isbn); //.then((value) => value!);
                 if (provider == ProviderEnum.Babelio) {
-                  md.then((value) => metadata[isbn]!.manual = value);
+                  md.then((value) {
+                    if (value != null) {
+                      metadata[isbn]!.manual = value;
+                    }
+                  });
                 }
                 return MapEntry(provider, md);
               }))));
@@ -70,21 +76,22 @@ class _MetadataCollectingWidgetState extends State<MetadataCollectingWidget> {
                               FutureWidget(
                                   future: metadata[isbn]!.mdFromProviders.entries.first.value,
                                   builder: (data) => TextFormField(
-                                        initialValue: data.title,
+                                        initialValue: data?.title,
                                         onChanged: (newText) => setState(() => manual.title = newText),
                                         decoration: const InputDecoration(
                                           icon: Icon(Icons.title),
                                           labelText: 'Book title',
                                         ),
                                       )),
-                              ...metadata[isbn]!.mdFromProviders.entries.map(
-                                  (e) => FutureWidget(future: e.value, builder: (data) => SelectableText(data.title))),
+                              ...metadata[isbn]!.mdFromProviders.entries.map((e) => FutureWidget(
+                                  future: e.value,
+                                  builder: (data) => data == null ? noneText : SelectableText(data.title))),
                             ]),
                             TableRow(children: [
                               FutureWidget(
                                 future: metadata[isbn]!.mdFromProviders.entries.first.value,
                                 builder: (data) => TextFormField(
-                                  initialValue: data.authors.toText(),
+                                  initialValue: data?.authors.toText(),
                                   onChanged: (newText) => setState(() => manual.authors = newText
                                       .split('\n')
                                       .map((line) => Author(firstName: '', lastName: line))
@@ -98,9 +105,9 @@ class _MetadataCollectingWidgetState extends State<MetadataCollectingWidget> {
                               ...metadata[isbn]!.mdFromProviders.entries.map((e) => FutureWidget(
                                   future: e.value,
                                   builder: (data) {
-                                    final authors = data.authors;
-                                    if (authors.isEmpty) {
-                                      return const Text('None', style: TextStyle(fontStyle: FontStyle.italic));
+                                    final authors = data?.authors;
+                                    if (authors == null || authors.isEmpty) {
+                                      return noneText;
                                     }
                                     return SelectableText(authors.toText());
                                   })),
@@ -109,7 +116,7 @@ class _MetadataCollectingWidgetState extends State<MetadataCollectingWidget> {
                               FutureWidget(
                                   future: metadata[isbn]!.mdFromProviders.entries.first.value,
                                   builder: (data) => TextFormField(
-                                        initialValue: data.blurb,
+                                        initialValue: data?.blurb,
                                         onChanged: (newText) => setState(() => manual.blurb = newText),
                                         decoration: const InputDecoration(
                                           icon: Icon(Icons.description),
@@ -119,9 +126,9 @@ class _MetadataCollectingWidgetState extends State<MetadataCollectingWidget> {
                               ...metadata[isbn]!.mdFromProviders.entries.map((e) => FutureWidget(
                                   future: e.value,
                                   builder: (data) {
-                                    final blurb = data.blurb;
+                                    final blurb = data?.blurb;
                                     if (blurb == null) {
-                                      return const Text('None', style: TextStyle(fontStyle: FontStyle.italic));
+                                      return noneText;
                                     }
                                     return SelectableText(blurb);
                                   })),

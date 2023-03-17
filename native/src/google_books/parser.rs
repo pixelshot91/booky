@@ -34,7 +34,9 @@ mod tests {
 
     #[test]
     fn extract_self_link_from_file() {
-        let html = std::fs::read_to_string("src/google_books/test/isbn_response.html").unwrap();
+        let html =
+            std::fs::read_to_string("src/google_books/test/9782744170812/isbn_response.html")
+                .unwrap();
         let self_link = extract_self_link_from_isbn_response(&html);
         assert_eq!(
             self_link,
@@ -45,12 +47,41 @@ mod tests {
     #[test]
     fn extract_metadata_from_file() {
         let html =
-            std::fs::read_to_string("src/google_books/test/self_link_response.html").unwrap();
+            std::fs::read_to_string("src/google_books/test/9782744170812/self_link_response.html")
+                .unwrap();
         let metadata = extract_metadata_from_self_link_response(&html);
         assert_eq!(metadata, BookMetaData{
           title: "La cité de Dieu".to_string(),
           authors:vec![common::Author{first_name: "".to_string(), last_name: "Paulo Lins".to_string()}],
           blurb: Some("Au Brésil, l'évolution d'un bidonville entre les années 1960 et 1980, à travers l'histoire de deux garçons qui suivent des voies différentes : l'un fait des études et s'efforce de devenir photographe, l'autre crée son premier gang et devient, quelques années plus tard, le maître de la cité.".to_string()),
+          ..Default::default()
+    });
+    }
+
+    #[test]
+    fn extract_self_link_from_file_2() {
+        let html =
+            std::fs::read_to_string("src/google_books/test/9782266162777/isbn_response.html")
+                .unwrap();
+        let self_link = extract_self_link_from_isbn_response(&html);
+        assert_eq!(
+            self_link,
+            Some("https://www.googleapis.com/books/v1/volumes/HY_FNwAACAAJ".to_string())
+        )
+    }
+
+    #[test]
+    fn extract_metadata_from_file_2() {
+        let html =
+            std::fs::read_to_string("src/google_books/test/9782266162777/self_link_response.html")
+                .unwrap();
+        let metadata = extract_metadata_from_self_link_response(&html);
+        assert_eq!(metadata, BookMetaData{
+          title: "L'essence du Tao".to_string(),
+          authors:vec![common::Author{first_name: "".to_string(), last_name: "Pamela J. Ball".to_string()}],
+          blurb: None,
+          // Le Tao est moins une religion qu'un principe de vie universel, une recherche de la sagesse. C'est la \" Voie\" telle que les grands philosophes chinois, Lao Tse, Chuang Tse surtout, l'ont définie il y a plus de deux mille ans : une façon d'être; un ensemble de clés pour une existence harmonieuse et paisible. Pamela Bali nous aide à trouver le chemin qui est le nôtre par le biais de pratiques et de préceptes simples propres au Tao. Après en avoir brossé un bref historique, l'auteur développe les pratiques du Tao, son principe libérateur, évoquant aussi bien la méditation que le Li Chi, le Chi Cung, le Feng Shui ou art du placement, et l'interprétation du I Ching ou Livre des mutations. Un ouvrage clair, accessible et lumineux.
+          //Some("Au Brésil, l'évolution d'un bidonville entre les années 1960 et 1980, à travers l'histoire de deux garçons qui suivent des voies différentes : l'un fait des études et s'efforce de devenir photographe, l'autre crée son premier gang et devient, quelques années plus tard, le maître de la cité.".to_string()),
           ..Default::default()
     });
     }
