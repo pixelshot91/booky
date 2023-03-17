@@ -13,7 +13,7 @@ abstract class Native {
 
   FlutterRustBridgeTaskConstMeta get kGetMetadataFromProviderConstMeta;
 
-  Future<void> publishAd({required Ad ad, dynamic hint});
+  Future<bool> publishAd({required Ad ad, dynamic hint});
 
   FlutterRustBridgeTaskConstMeta get kPublishAdConstMeta;
 }
