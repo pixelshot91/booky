@@ -17,7 +17,7 @@ pub fn get_metadata_from_provider(provider: ProviderEnum, isbn: String) -> Optio
     }
 }
 
-pub fn publish_ad(ad: Ad) -> () {
+pub fn publish_ad(ad: Ad) -> bool {
     let lbc_publisher = leboncoin::Leboncoin {};
-    Publisher::publish(&lbc_publisher, ad);
+    Publisher::publish(&lbc_publisher, ad)
 }

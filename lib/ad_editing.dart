@@ -109,9 +109,13 @@ class _AdEditingWidgetState extends State<AdEditingWidget> {
               ElevatedButton(
                   onPressed: (ad.title.length < 2 || ad.description.length < 15 || ad.priceCent == null)
                       ? null
-                      : () {
+                      : () async {
                           print('Try to publish...');
-                          api.publishAd(ad: ad);
+                          final res = await api.publishAd(ad: ad);
+
+                          if (!context.mounted) return;
+                          ScaffoldMessenger.of(context)
+                              .showSnackBar(SnackBar(content: Text(res ? 'Success' : 'Failure')));
                         },
                   child: const Text('Publish'))
             ],

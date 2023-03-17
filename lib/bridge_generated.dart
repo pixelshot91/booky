@@ -44,11 +44,11 @@ class NativeImpl implements Native {
         argNames: ["provider", "isbn"],
       );
 
-  Future<void> publishAd({required Ad ad, dynamic hint}) {
+  Future<bool> publishAd({required Ad ad, dynamic hint}) {
     var arg0 = _platform.api2wire_box_autoadd_ad(ad);
     return _platform.executeNormal(FlutterRustBridgeTask(
       callFfi: (port_) => _platform.inner.wire_publish_ad(port_, arg0),
-      parseSuccessData: _wire2api_unit,
+      parseSuccessData: _wire2api_bool,
       constMeta: kPublishAdConstMeta,
       argValues: [ad],
       hint: hint,
@@ -96,6 +96,10 @@ class NativeImpl implements Native {
     );
   }
 
+  bool _wire2api_bool(dynamic raw) {
+    return raw as bool;
+  }
+
   BookMetaData _wire2api_box_autoadd_book_meta_data(dynamic raw) {
     return _wire2api_book_meta_data(raw);
   }
@@ -118,10 +122,6 @@ class NativeImpl implements Native {
 
   Uint8List _wire2api_uint_8_list(dynamic raw) {
     return raw as Uint8List;
-  }
-
-  void _wire2api_unit(dynamic raw) {
-    return;
   }
 }
 
