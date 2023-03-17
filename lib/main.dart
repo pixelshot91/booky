@@ -40,8 +40,8 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  BookyStep step = //ImageSelectionStep();
-      MetadataCollectingStep(imgsPaths: [
+  BookyStep step = ImageSelectionStep();
+  /*  MetadataCollectingStep(imgsPaths: [
     '/home/julien/Perso/LeBonCoin/chain_automatisation/test_images/20230204_194742.jpg',
     '/home/julien/Perso/LeBonCoin/chain_automatisation/test_images/20230204_194746.jpg',
     '/home/julien/Perso/LeBonCoin/chain_automatisation/test_images/20230204_194753.jpg',
@@ -49,7 +49,7 @@ class _MyAppState extends State<MyApp> {
   ], isbns: {
     '9782253029854',
     '9782277223634',
-  });
+  });*/
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
