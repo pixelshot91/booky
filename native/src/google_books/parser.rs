@@ -132,14 +132,14 @@ mod structs {
     #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub struct Item<'a> {
-        pub kind: &'a str,
+        // pub kind: &'a str,
         pub id: &'a str,
-        pub etag: &'a str,
+        // pub etag: &'a str,
         pub self_link: &'a str,
         pub volume_info: VolumeInfo<'a>,
-        pub sale_info: SaleInfo<'a>,
-        pub access_info: AccessInfo<'a>,
-        pub search_info: Option<SearchInfo<'a>>,
+        // pub sale_info: SaleInfo<'a>,
+        // pub access_info: AccessInfo<'a>,
+        // pub search_info: Option<SearchInfo<'a>>,
     }
 
     #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -148,27 +148,27 @@ mod structs {
         pub title: &'a str,
         pub subtitle: Option<&'a str>,
         pub authors: Vec<&'a str>,
-        pub publisher: Option<&'a str>,
-        pub published_date: &'a str,
+        // pub publisher: Option<&'a str>,
+        // pub published_date: &'a str,
         // Should be an owned String in case the description contain escape characters like (\")
         // TODO: change all &str to String
         pub description: Option<String>,
-        pub industry_identifiers: Vec<IndustryIdentifier<'a>>,
-        pub reading_modes: ReadingModes,
-        pub page_count: i64,
-        pub print_type: &'a str,
-        pub categories: Option<Vec<&'a str>>,
-        pub maturity_rating: &'a str,
-        pub image_links: Option<ImageLinks<'a>>,
-        pub language: &'a str,
-        pub preview_link: &'a str,
-        pub info_link: &'a str,
-        pub canonical_volume_link: &'a str,
+        // pub industry_identifiers: Vec<IndustryIdentifier<'a>>,
+        // pub reading_modes: ReadingModes,
+        // pub page_count: i64,
+        // pub print_type: &'a str,
+        // pub categories: Option<Vec<&'a str>>,
+        // pub maturity_rating: &'a str,
+        // pub image_links: Option<ImageLinks<'a>>,
+        // pub language: &'a str,
+        // pub preview_link: &'a str,
+        // pub info_link: &'a str,
+        // pub canonical_volume_link: &'a str,
     }
 
-    #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+    /* #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
-    pub struct IndustryIdentifier<'a> {
+    struct IndustryIdentifier<'a> {
         #[serde(rename = "type")]
         pub type_field: &'a str,
         pub identifier: &'a str,
@@ -234,5 +234,5 @@ mod structs {
     #[serde(rename_all = "camelCase")]
     pub struct SearchInfo<'a> {
         pub text_snippet: &'a str,
-    }
+    }*/
 }
