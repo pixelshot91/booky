@@ -33,7 +33,7 @@ class _MetadataCollectingWidgetState extends State<MetadataCollectingWidget> {
           () => Metadatas(
               manual: BookMetaData(title: '', authors: [], keywords: []),
               mdFromProviders: Map.fromEntries(ProviderEnum.values.map((provider) {
-                final md = api.getMetadataFromProvider(provider: provider, isbn: isbn); //.then((value) => value!);
+                final md = api.getMetadataFromProvider(provider: provider, isbn: isbn);
                 if (provider == ProviderEnum.Babelio) {
                   md.then((value) {
                     if (value != null) {

@@ -1,6 +1,6 @@
 #[derive(Default, Debug, PartialEq)]
 pub struct BookMetaData {
-    pub title: String,
+    pub title: Option<String>,
     pub authors: Vec<Author>,
     // A book blurb is a short promotional description.
     // A synopsis summarizes the twists, turns, and conclusion of the story.
@@ -8,7 +8,7 @@ pub struct BookMetaData {
     pub keywords: Vec<String>,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]
 pub struct Author {
     pub first_name: String,
     pub last_name: String,
