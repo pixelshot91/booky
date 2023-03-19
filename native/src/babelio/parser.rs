@@ -142,7 +142,7 @@ pub fn extract_title_author_keywords(html: &str) -> Option<BookMetaData> {
         })
         .collect();
     Some(BookMetaData {
-        title,
+        title: Some(title),
         authors,
         keywords,
         ..Default::default()
@@ -170,7 +170,7 @@ mod tests {
         assert_eq!(
             title_author_keywords,
             Some(BookMetaData {
-                title: "Le nom de la bête".to_string(),
+                title: Some("Le nom de la bête".to_string()),
                 authors: vec![crate::common::Author {
                     first_name: "Daniel".to_string(),
                     last_name: "Easterman".to_string()

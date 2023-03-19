@@ -1,17 +1,45 @@
 use itertools::Itertools;
 
-use crate::common;
+use crate::common::{self, BookMetaData};
 
 pub fn extract_self_link_from_isbn_response(html: &str) -> Option<String> {
     let s: structs::Root = serde_json::from_str(html).unwrap();
     s.items.map(|items| items[0].self_link.to_string())
+}
+pub fn extract_metadata_from_isbn_response(html: &str) -> common::BookMetaData {
+    let s: structs::Root = serde_json::from_str(html).unwrap();
+    let a = s.items.map(|items| {
+        let first_book = &items[0].volume_info;
+
+        let authors = first_book
+            .authors
+            .iter()
+            .map(|s| common::Author {
+                first_name: "".to_string(),
+                last_name: s.to_string(),
+            })
+            .collect_vec();
+        let blurb = items[0]
+            .volume_info
+            .description
+            .clone()
+            .map(|d| d.to_string());
+        BookMetaData {
+            authors,
+            blurb,
+            ..Default::default()
+        }
+    });
+    a.unwrap_or(BookMetaData {
+        ..Default::default()
+    })
 }
 
 pub fn extract_metadata_from_self_link_response(html: &str) -> common::BookMetaData {
     let s: structs::Item = serde_json::from_str(html).unwrap();
     let first_book = &s.volume_info;
     common::BookMetaData {
-        title: first_book.title.to_string(),
+        title: Some(first_book.title.to_string()),
         authors: first_book
             .authors
             .iter()
@@ -51,7 +79,7 @@ mod tests {
                 .unwrap();
         let metadata = extract_metadata_from_self_link_response(&html);
         assert_eq!(metadata, BookMetaData{
-          title: "La cité de Dieu".to_string(),
+          title: Some("La cité de Dieu".to_string()),
           authors:vec![common::Author{first_name: "".to_string(), last_name: "Paulo Lins".to_string()}],
           blurb: Some("Au Brésil, l'évolution d'un bidonville entre les années 1960 et 1980, à travers l'histoire de deux garçons qui suivent des voies différentes : l'un fait des études et s'efforce de devenir photographe, l'autre crée son premier gang et devient, quelques années plus tard, le maître de la cité.".to_string()),
           ..Default::default()
@@ -76,14 +104,17 @@ mod tests {
             std::fs::read_to_string("src/google_books/test/9782266162777/self_link_response.html")
                 .unwrap();
         let metadata = extract_metadata_from_self_link_response(&html);
-        assert_eq!(metadata, BookMetaData{
-          title: "L'essence du Tao".to_string(),
-          authors:vec![common::Author{first_name: "".to_string(), last_name: "Pamela J. Ball".to_string()}],
-          blurb: None,
-          // Le Tao est moins une religion qu'un principe de vie universel, une recherche de la sagesse. C'est la \" Voie\" telle que les grands philosophes chinois, Lao Tse, Chuang Tse surtout, l'ont définie il y a plus de deux mille ans : une façon d'être; un ensemble de clés pour une existence harmonieuse et paisible. Pamela Bali nous aide à trouver le chemin qui est le nôtre par le biais de pratiques et de préceptes simples propres au Tao. Après en avoir brossé un bref historique, l'auteur développe les pratiques du Tao, son principe libérateur, évoquant aussi bien la méditation que le Li Chi, le Chi Cung, le Feng Shui ou art du placement, et l'interprétation du I Ching ou Livre des mutations. Un ouvrage clair, accessible et lumineux.
-          //Some("Au Brésil, l'évolution d'un bidonville entre les années 1960 et 1980, à travers l'histoire de deux garçons qui suivent des voies différentes : l'un fait des études et s'efforce de devenir photographe, l'autre crée son premier gang et devient, quelques années plus tard, le maître de la cité.".to_string()),
-          ..Default::default()
-    });
+        assert_eq!(
+            metadata,
+            BookMetaData {
+                title: Some("L'essence du Tao".to_string()),
+                authors: vec![common::Author {
+                    first_name: "".to_string(),
+                    last_name: "Pamela J. Ball".to_string()
+                }],
+                ..Default::default()
+            }
+        );
     }
 }
 
