@@ -1,0 +1,64 @@
+{
+  "kind": "books#volume",
+  "id": "HY_FNwAACAAJ",
+  "etag": "4DT81Rt3Ygg",
+  "selfLink": "https://www.googleapis.com/books/v1/volumes/HY_FNwAACAAJ",
+  "volumeInfo": {
+    "title": "L'essence du Tao",
+    "authors": [
+      "Pamela J. Ball"
+    ],
+    "publisher": "Pocket",
+    "publishedDate": "2007",
+    "industryIdentifiers": [
+      {
+        "type": "ISBN_10",
+        "identifier": "2266162772"
+      },
+      {
+        "type": "ISBN_13",
+        "identifier": "9782266162777"
+      }
+    ],
+    "readingModes": {
+      "text": false,
+      "image": false
+    },
+    "pageCount": 283,
+    "printedPageCount": 283,
+    "dimensions": {
+      "height": "18.00 cm",
+      "width": "11.00 cm",
+      "thickness": "1.00 cm"
+    },
+    "printType": "BOOK",
+    "maturityRating": "NOT_MATURE",
+    "allowAnonLogging": false,
+    "contentVersion": "preview-1.0.0",
+    "language": "fr",
+    "previewLink": "http://books.google.fr/books?id=HY_FNwAACAAJ&hl=&source=gbs_api",
+    "infoLink": "https://play.google.com/store/books/details?id=HY_FNwAACAAJ&source=gbs_api",
+    "canonicalVolumeLink": "https://play.google.com/store/books/details?id=HY_FNwAACAAJ"
+  },
+  "saleInfo": {
+    "country": "FR",
+    "saleability": "NOT_FOR_SALE",
+    "isEbook": false
+  },
+  "accessInfo": {
+    "country": "FR",
+    "viewability": "NO_PAGES",
+    "embeddable": false,
+    "publicDomain": false,
+    "textToSpeechPermission": "ALLOWED",
+    "epub": {
+      "isAvailable": false
+    },
+    "pdf": {
+      "isAvailable": false
+    },
+    "webReaderLink": "http://play.google.com/books/reader?id=HY_FNwAACAAJ&hl=&source=gbs_api",
+    "accessViewStatus": "NONE",
+    "quoteSharingAllowed": false
+  }
+}
