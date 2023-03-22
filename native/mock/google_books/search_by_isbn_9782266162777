@@ -1,0 +1,64 @@
+{
+  "kind": "books#volumes",
+  "totalItems": 1,
+  "items": [
+    {
+      "kind": "books#volume",
+      "id": "HY_FNwAACAAJ",
+      "etag": "PrJ4VYAFw40",
+      "selfLink": "https://www.googleapis.com/books/v1/volumes/HY_FNwAACAAJ",
+      "volumeInfo": {
+        "title": "L'essence du Tao",
+        "authors": [
+          "Pamela Ball"
+        ],
+        "publishedDate": "2007-11-02",
+        "description": "Le Tao est moins une religion qu'un principe de vie universel, une recherche de la sagesse. C'est la \" Voie\" telle que les grands philosophes chinois, Lao Tse, Chuang Tse surtout, l'ont définie il y a plus de deux mille ans : une façon d'être; un ensemble de clés pour une existence harmonieuse et paisible. Pamela Bali nous aide à trouver le chemin qui est le nôtre par le biais de pratiques et de préceptes simples propres au Tao. Après en avoir brossé un bref historique, l'auteur développe les pratiques du Tao, son principe libérateur, évoquant aussi bien la méditation que le Li Chi, le Chi Cung, le Feng Shui ou art du placement, et l'interprétation du I Ching ou Livre des mutations. Un ouvrage clair, accessible et lumineux.",
+        "industryIdentifiers": [
+          {
+            "type": "ISBN_10",
+            "identifier": "2266162772"
+          },
+          {
+            "type": "ISBN_13",
+            "identifier": "9782266162777"
+          }
+        ],
+        "readingModes": {
+          "text": false,
+          "image": false
+        },
+        "pageCount": 283,
+        "printType": "BOOK",
+        "maturityRating": "NOT_MATURE",
+        "allowAnonLogging": false,
+        "contentVersion": "preview-1.0.0",
+        "language": "fr",
+        "previewLink": "http://books.google.fr/books?id=HY_FNwAACAAJ&dq=isbn:9782266162777&hl=&cd=1&source=gbs_api",
+        "infoLink": "http://books.google.fr/books?id=HY_FNwAACAAJ&dq=isbn:9782266162777&hl=&source=gbs_api",
+        "canonicalVolumeLink": "https://books.google.com/books/about/L_essence_du_Tao.html?hl=&id=HY_FNwAACAAJ"
+      },
+      "saleInfo": {
+        "country": "FR",
+        "saleability": "NOT_FOR_SALE",
+        "isEbook": false
+      },
+      "accessInfo": {
+        "country": "FR",
+        "viewability": "NO_PAGES",
+        "embeddable": false,
+        "publicDomain": false,
+        "textToSpeechPermission": "ALLOWED",
+        "epub": {
+          "isAvailable": false
+        },
+        "pdf": {
+          "isAvailable": false
+        },
+        "webReaderLink": "http://play.google.com/books/reader?id=HY_FNwAACAAJ&hl=&source=gbs_api",
+        "accessViewStatus": "NONE",
+        "quoteSharingAllowed": false
+      }
+    }
+  ]
+}

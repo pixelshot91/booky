@@ -1,4 +1,4 @@
-use crate::cached_client::CachedClient;
+use crate::cached_client::{CachedClient, Client};
 use itertools::Itertools;
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
@@ -17,10 +17,10 @@ struct BabelioISBNResponse {
     url: String,
 }
 
-pub fn get_book_url(client: &CachedClient, isbn: &str) -> Option<String> {
-    let raw_search_results = client.get_from_cache(
+pub fn get_book_url(client: &dyn Client, isbn: &str) -> Option<String> {
+    let raw_search_results = client.make_request(
         format!("babelio/get_book_url_{}.html", isbn).as_str(),
-        |http_client| {
+        &|http_client| {
             http_client
                 .post("https://www.babelio.com/aj_recherche.php")
                 .body(format!("{{\"isMobile\":false,\"term\":\"{}\"}}", isbn))
@@ -36,13 +36,9 @@ pub fn get_book_url(client: &CachedClient, isbn: &str) -> Option<String> {
 }
 
 pub fn get_book_page(client: &CachedClient, url: String) -> String {
-    client.get_from_cache(
-        format!(
-            "babelio/get_book_page_{}.html",
-            url.replace("/", "_slash_")
-        )
-        .as_str(),
-        |http_client| {
+    client.make_request(
+        format!("babelio/get_book_page_{}.html", url.replace("/", "_slash_")).as_str(),
+        &|http_client| {
             let resp = http_client
                 .get(format!("https://www.babelio.com{url}"))
                 .send()
@@ -53,9 +49,9 @@ pub fn get_book_page(client: &CachedClient, url: String) -> String {
 }
 
 pub fn get_book_blurb_see_more(client: &CachedClient, id_obj: &str) -> String {
-    client.get_from_cache(
+    client.make_request(
         format!("babelio/get_book_blurb_see_more_{}.html", id_obj).as_str(),
-        |http_client| {
+        &|http_client| {
             let params = std::collections::HashMap::from([("type", "1"), ("id_obj", id_obj)]);
 
             let voir_plus_resp = http_client

@@ -1,9 +1,12 @@
 use crate::common;
 mod parser;
 mod request;
+use crate::cached_client::Client;
 use itertools::Itertools;
 
-pub struct GoogleBooks;
+pub struct GoogleBooks {
+    pub client: Box<dyn Client>,
+}
 
 fn merge<T, F>(first: Option<T>, other: Option<T>, resolver: F) -> Option<T>
 where
@@ -53,14 +56,13 @@ impl common::Provider for GoogleBooks {
     fn get_book_metadata_from_isbn(&self, isbn: &str) -> Option<common::BookMetaData> {
         // TODO: For some books (eg 9782703305033), the description is better on the first page than in the second
         // The number of authors can be different too !
-        let client = reqwest::blocking::Client::builder().build().unwrap();
-        let isbn_search_response = request::search_by_isbn(&client, isbn);
+        let isbn_search_response = request::search_by_isbn(&self.client, isbn);
 
         let metadata_from_isbn_search =
             parser::extract_metadata_from_isbn_response(&isbn_search_response);
 
         let self_link = parser::extract_self_link_from_isbn_response(&isbn_search_response)?;
-        let book_page = request::get_volume(&client, &self_link);
+        let book_page = request::get_volume(&self.client, &self_link);
 
         let metadata_from_self_link_response =
             parser::extract_metadata_from_self_link_response(&book_page);
@@ -74,6 +76,7 @@ impl common::Provider for GoogleBooks {
 
 #[cfg(test)]
 mod tests {
+    use crate::cached_client::MockClient;
     use crate::common::BookMetaData;
     use crate::common::Provider;
 
@@ -81,7 +84,11 @@ mod tests {
 
     #[test]
     fn get_book_metadata_from_isbn_9782266162777() {
-        let g = GoogleBooks{};
+        let g = GoogleBooks {
+            client: Box::new(MockClient {
+                dir: "mock/google_books",
+            }),
+        };
         let md = g.get_book_metadata_from_isbn("9782266162777");
         assert_eq!(md, Some(BookMetaData { title: Some("L'essence du Tao".to_owned()), authors: vec![common::Author{first_name: "".to_owned(), last_name: "Pamela Ball".to_owned()}], blurb: Some("Le Tao est moins une religion qu'un principe de vie universel, une recherche de la sagesse. C'est la \" Voie\" telle que les grands philosophes chinois, Lao Tse, Chuang Tse surtout, l'ont définie il y a plus de deux mille ans : une façon d'être; un ensemble de clés pour une existence harmonieuse et paisible. Pamela Bali nous aide à trouver le chemin qui est le nôtre par le biais de pratiques et de préceptes simples propres au Tao. Après en avoir brossé un bref historique, l'auteur développe les pratiques du Tao, son principe libérateur, évoquant aussi bien la méditation que le Li Chi, le Chi Cung, le Feng Shui ou art du placement, et l'interprétation du I Ching ou Livre des mutations. Un ouvrage clair, accessible et lumineux.".to_string()), keywords: vec![] }))
     }
