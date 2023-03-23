@@ -1,5 +1,5 @@
-use crate::common::Ad;
+use crate::common::{Ad, LbcCredential};
 
 pub trait Publisher {
-    fn publish(&self, ad: Ad) -> bool;
+    fn publish(&self, ad: Ad, credential: LbcCredential) -> bool;
 }

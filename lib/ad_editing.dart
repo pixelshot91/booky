@@ -28,14 +28,17 @@ String _bookFormatTitleAndAuthor(BookMetaData book) {
 
 class _AdEditingWidgetState extends State<AdEditingWidget> {
   late Ad ad;
+  var credential = LbcCredential(lbcToken: '', datadomeCookie: '');
 
   @override
   void initState() {
     super.initState();
     final metadataFromIsbn = widget.step.metadata.entries;
 
-    final title = metadataFromIsbn.length == 1 ? metadataFromIsbn.first.value.title : '';
+    final title = metadataFromIsbn.length == 1 ? (metadataFromIsbn.first.value.title ?? '') : '';
     var description = _getDescription(metadataFromIsbn);
+
+    description += '\n\n' + personal_info.customMessage;
 
     final keywords = metadataFromIsbn.map((entry) => entry.value.keywords).expand((kw) => kw).toSet().join(', ');
     if (keywords.isNotEmpty) {
@@ -46,13 +49,14 @@ class _AdEditingWidgetState extends State<AdEditingWidget> {
   }
 
   String _getDescription(Iterable<MapEntry<String, BookMetaData>> metadataFromIsbn) {
-    final blurbs =
-        metadataFromIsbn.map((entry) => _bookFormatTitleAndAuthor(entry.value) + ':\n' + entry.value.blurb!).join('\n');
     if (metadataFromIsbn.length == 1) {
       return 'Résumé:\n' + metadataFromIsbn.single.value.blurb!;
     } else {
       final bookTitles = metadataFromIsbn.map((entry) => _bookFormatTitleAndAuthor(entry.value)).join('\n');
-      final description = bookTitles + '\n\nRésumés:\n' + blurbs + '\n\n' + personal_info.customMessage;
+      final blurbs = metadataFromIsbn
+          .map((entry) => _bookFormatTitleAndAuthor(entry.value) + ':\n' + entry.value.blurb!)
+          .join('\n');
+      final description = bookTitles + '\n\nRésumés:\n' + blurbs;
       return description;
     }
   }
@@ -106,12 +110,30 @@ class _AdEditingWidgetState extends State<AdEditingWidget> {
                   ...ad.imgsPath.map((imgPath) => ImageWidget(imgPath)).toList(),
                 ]),
               ),
+              TextFormField(
+                initialValue: '',
+                onChanged: (newText) => setState(() => credential.lbcToken = newText),
+                decoration: const InputDecoration(
+                  icon: Icon(Icons.key),
+                  labelText: 'LBC Bearer token',
+                ),
+                style: const TextStyle(fontSize: 20),
+              ),
+              TextFormField(
+                initialValue: '',
+                onChanged: (newText) => setState(() => credential.datadomeCookie = newText),
+                decoration: const InputDecoration(
+                  icon: Icon(Icons.cookie),
+                  labelText: 'datadome cookie',
+                ),
+                style: const TextStyle(fontSize: 20),
+              ),
               ElevatedButton(
                   onPressed: (ad.title.length < 2 || ad.description.length < 15 || ad.priceCent == null)
                       ? null
                       : () async {
                           print('Try to publish...');
-                          final res = await api.publishAd(ad: ad);
+                          final res = await api.publishAd(ad: ad, credential: credential);
 
                           if (!context.mounted) return;
                           ScaffoldMessenger.of(context)

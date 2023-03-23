@@ -11,8 +11,12 @@ pub extern "C" fn wire_get_metadata_from_provider(
 }
 
 #[no_mangle]
-pub extern "C" fn wire_publish_ad(port_: i64, ad: *mut wire_Ad) {
-    wire_publish_ad_impl(port_, ad)
+pub extern "C" fn wire_publish_ad(
+    port_: i64,
+    ad: *mut wire_Ad,
+    credential: *mut wire_LbcCredential,
+) {
+    wire_publish_ad_impl(port_, ad, credential)
 }
 
 // Section: allocate functions
@@ -29,6 +33,11 @@ pub extern "C" fn new_StringList_0(len: i32) -> *mut wire_StringList {
 #[no_mangle]
 pub extern "C" fn new_box_autoadd_ad_0() -> *mut wire_Ad {
     support::new_leak_box_ptr(wire_Ad::new_with_null_ptr())
+}
+
+#[no_mangle]
+pub extern "C" fn new_box_autoadd_lbc_credential_0() -> *mut wire_LbcCredential {
+    support::new_leak_box_ptr(wire_LbcCredential::new_with_null_ptr())
 }
 
 #[no_mangle]
@@ -75,6 +84,21 @@ impl Wire2Api<Ad> for *mut wire_Ad {
         Wire2Api::<Ad>::wire2api(*wrap).into()
     }
 }
+impl Wire2Api<LbcCredential> for *mut wire_LbcCredential {
+    fn wire2api(self) -> LbcCredential {
+        let wrap = unsafe { support::box_from_leak_ptr(self) };
+        Wire2Api::<LbcCredential>::wire2api(*wrap).into()
+    }
+}
+
+impl Wire2Api<LbcCredential> for wire_LbcCredential {
+    fn wire2api(self) -> LbcCredential {
+        LbcCredential {
+            lbc_token: self.lbc_token.wire2api(),
+            datadome_cookie: self.datadome_cookie.wire2api(),
+        }
+    }
+}
 
 impl Wire2Api<Vec<u8>> for *mut wire_uint_8_list {
     fn wire2api(self) -> Vec<u8> {
@@ -100,6 +124,13 @@ pub struct wire_Ad {
     description: *mut wire_uint_8_list,
     price_cent: i32,
     imgs_path: *mut wire_StringList,
+}
+
+#[repr(C)]
+#[derive(Clone)]
+pub struct wire_LbcCredential {
+    lbc_token: *mut wire_uint_8_list,
+    datadome_cookie: *mut wire_uint_8_list,
 }
 
 #[repr(C)]
@@ -133,6 +164,21 @@ impl NewWithNullPtr for wire_Ad {
 }
 
 impl Default for wire_Ad {
+    fn default() -> Self {
+        Self::new_with_null_ptr()
+    }
+}
+
+impl NewWithNullPtr for wire_LbcCredential {
+    fn new_with_null_ptr() -> Self {
+        Self {
+            lbc_token: core::ptr::null_mut(),
+            datadome_cookie: core::ptr::null_mut(),
+        }
+    }
+}
+
+impl Default for wire_LbcCredential {
     fn default() -> Self {
         Self::new_with_null_ptr()
     }

@@ -1,5 +1,5 @@
 use crate::cached_client::CachedClient;
-use crate::common::Provider;
+use crate::common::{Provider, LbcCredential};
 use crate::common::{Ad, BookMetaData};
 use crate::publisher::Publisher;
 use crate::{babelio, google_books, leboncoin};
@@ -21,7 +21,7 @@ pub fn get_metadata_from_provider(provider: ProviderEnum, isbn: String) -> Optio
     }
 }
 
-pub fn publish_ad(ad: Ad) -> bool {
+pub fn publish_ad(ad: Ad, credential: LbcCredential) -> bool {
     let lbc_publisher = leboncoin::Leboncoin {};
-    Publisher::publish(&lbc_publisher, ad)
+    Publisher::publish(&lbc_publisher, ad, credential)
 }
