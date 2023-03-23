@@ -59,3 +59,8 @@ extension IntExt on int {
 extension DoubleExt on double {
   double multiply(double other) => this * other;
 }
+
+extension BookMetadataExt on BookMetaData {
+  BookMetaData deepCopy() =>
+      BookMetaData(title: '$title', authors: List.from(authors), blurb: '$blurb', keywords: List.from(keywords));
+}

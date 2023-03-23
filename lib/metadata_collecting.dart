@@ -37,7 +37,7 @@ class _MetadataCollectingWidgetState extends State<MetadataCollectingWidget> {
                 if (provider == ProviderEnum.Babelio) {
                   md.then((value) {
                     if (value != null) {
-                      metadata[isbn]!.manual = value;
+                      metadata[isbn]!.manual = value.deepCopy();
                     }
                   });
                 }
@@ -117,7 +117,7 @@ class _MetadataCollectingWidgetState extends State<MetadataCollectingWidget> {
                                   future: metadata[isbn]!.mdFromProviders.entries.first.value,
                                   builder: (data) => TextFormField(
                                         initialValue: data?.blurb,
-                                        onChanged: (newText) => setState(() => manual.blurb = newText),
+                                        onChanged: (newText) => setState(() => metadata[isbn]!.manual.blurb = newText),
                                         maxLines: null,
                                         decoration: const InputDecoration(
                                           icon: Icon(Icons.description),
