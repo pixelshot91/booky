@@ -6,10 +6,28 @@ import 'main.dart';
 
 const noneText = Text('None', style: TextStyle(fontStyle: FontStyle.italic));
 
+class SelectableTextAndUse extends StatelessWidget {
+  const SelectableTextAndUse(this.s, {required this.onUse});
+  final String s;
+  final void Function(String) onUse;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        TextButton(onPressed: () => onUse(s), child: const Text('Use')),
+        SelectableText(s),
+      ],
+    );
+  }
+}
+
 class MetadataCollectingWidget extends StatefulWidget {
-  const MetadataCollectingWidget({required this.step, required this.onSubmit});
+  MetadataCollectingWidget({required this.step, required this.onSubmit});
   final MetadataCollectingStep step;
   final void Function(AdEditingStep newStep) onSubmit;
+
+  final blurbTextFieldController = TextEditingController();
 
   @override
   State<MetadataCollectingWidget> createState() => _MetadataCollectingWidgetState();
@@ -38,6 +56,7 @@ class _MetadataCollectingWidgetState extends State<MetadataCollectingWidget> {
                   md.then((value) {
                     if (value != null) {
                       metadata[isbn]!.manual = value.deepCopy();
+                      widget.blurbTextFieldController.text = metadata[isbn]!.manual.blurb ?? '';
                     }
                   });
                 }
@@ -116,7 +135,7 @@ class _MetadataCollectingWidgetState extends State<MetadataCollectingWidget> {
                               FutureWidget(
                                   future: metadata[isbn]!.mdFromProviders.entries.first.value,
                                   builder: (data) => TextFormField(
-                                        initialValue: data?.blurb,
+                                        controller: widget.blurbTextFieldController,
                                         onChanged: (newText) => setState(() => metadata[isbn]!.manual.blurb = newText),
                                         maxLines: null,
                                         decoration: const InputDecoration(
@@ -131,7 +150,13 @@ class _MetadataCollectingWidgetState extends State<MetadataCollectingWidget> {
                                     if (blurb == null) {
                                       return noneText;
                                     }
-                                    return SelectableText(blurb);
+                                    return SelectableTextAndUse(
+                                      blurb,
+                                      onUse: (b) => setState(() {
+                                        widget.blurbTextFieldController.text = b;
+                                        metadata[isbn]!.manual.blurb = b;
+                                      }),
+                                    );
                                   })),
                             ]),
                           ],
