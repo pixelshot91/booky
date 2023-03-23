@@ -129,7 +129,10 @@ class _AdEditingWidgetState extends State<AdEditingWidget> {
                 style: const TextStyle(fontSize: 20),
               ),
               ElevatedButton(
-                  onPressed: (ad.title.length < 2 || ad.description.length < 15 || ad.priceCent == null)
+                  onPressed: (ad.title.length < 2 ||
+                          ad.description.length < 15 ||
+                          ad.description.length > 4000 ||
+                          ad.priceCent == null)
                       ? null
                       : () async {
                           print('Try to publish...');
