@@ -85,7 +85,7 @@ class _MetadataCollectingWidgetState extends State<MetadataCollectingWidget> {
                                       )),
                               ...metadata[isbn]!.mdFromProviders.entries.map((e) => FutureWidget(
                                   future: e.value,
-                                  builder: (data) => data == null ? noneText : SelectableText(data.title))),
+                                  builder: (data) => data == null ? noneText : SelectableText(data.title ?? ''))),
                             ]),
                             TableRow(children: [
                               FutureWidget(
@@ -118,6 +118,7 @@ class _MetadataCollectingWidgetState extends State<MetadataCollectingWidget> {
                                   builder: (data) => TextFormField(
                                         initialValue: data?.blurb,
                                         onChanged: (newText) => setState(() => manual.blurb = newText),
+                                        maxLines: null,
                                         decoration: const InputDecoration(
                                           icon: Icon(Icons.description),
                                           labelText: 'Book blurb',

@@ -13,7 +13,7 @@ abstract class Native {
 
   FlutterRustBridgeTaskConstMeta get kGetMetadataFromProviderConstMeta;
 
-  Future<bool> publishAd({required Ad ad, dynamic hint});
+  Future<bool> publishAd({required Ad ad, required LbcCredential credential, dynamic hint});
 
   FlutterRustBridgeTaskConstMeta get kPublishAdConstMeta;
 }
@@ -43,16 +43,26 @@ class Author {
 }
 
 class BookMetaData {
-  String title;
+  String? title;
   List<Author> authors;
   String? blurb;
   List<String> keywords;
 
   BookMetaData({
-    required this.title,
+    this.title,
     required this.authors,
     this.blurb,
     required this.keywords,
+  });
+}
+
+class LbcCredential {
+  String lbcToken;
+  String datadomeCookie;
+
+  LbcCredential({
+    required this.lbcToken,
+    required this.datadomeCookie,
   });
 }
 
