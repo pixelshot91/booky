@@ -55,6 +55,13 @@ class _MetadataCollectingWidgetState extends State<MetadataCollectingWidget> {
     });
   }
 
+  void _updateManualBlurb(String isbn, String newBlurb) {
+    setState(() {
+      metadata[isbn]!.manual.blurb = newBlurb;
+      widget.blurbTextFieldController.text = newBlurb;
+    });
+  }
+
   @override
   void initState() {
     super.initState();
@@ -62,13 +69,16 @@ class _MetadataCollectingWidgetState extends State<MetadataCollectingWidget> {
       metadata.putIfAbsent(
           isbn,
           () => Metadatas(
-              manual: BookMetaData(title: '', authors: [], keywords: []),
+              manual: BookMetaData(title: '', authors: [], blurb: '', keywords: []),
               mdFromProviders: Map.fromEntries(ProviderEnum.values.map((provider) {
                 final md = api.getMetadataFromProvider(provider: provider, isbn: isbn);
                 md.then((value) {
                   if (value != null) {
                     replaceIfBetterString(value.title, metadata[isbn]!.manual.title!, () {
                       _updateManualTitle(isbn, value.title!);
+                    });
+                    replaceIfBetterString(value.blurb, metadata[isbn]!.manual.blurb!, () {
+                      _updateManualBlurb(isbn, value.blurb!);
                     });
                   }
                 });
@@ -164,10 +174,7 @@ class _MetadataCollectingWidgetState extends State<MetadataCollectingWidget> {
                                     }
                                     return SelectableTextAndUse(
                                       blurb,
-                                      onUse: (b) => setState(() {
-                                        widget.blurbTextFieldController.text = b;
-                                        metadata[isbn]!.manual.blurb = b;
-                                      }),
+                                      onUse: (b) => _updateManualBlurb(isbn, b),
                                     );
                                   })),
                             ]),
