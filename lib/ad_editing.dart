@@ -3,6 +3,7 @@ import 'package:flutter_rust_bridge_template/main.dart';
 import 'package:flutter_rust_bridge_template/personal_info.dart' as personal_info;
 
 import 'common.dart';
+import 'credential.dart';
 import 'ffi.dart' if (dart.library.html) 'ffi_web.dart';
 
 class AdEditingWidget extends StatefulWidget {
@@ -28,7 +29,7 @@ String _bookFormatTitleAndAuthor(BookMetaData book) {
 
 class _AdEditingWidgetState extends State<AdEditingWidget> {
   late Ad ad;
-  var credential = LbcCredential(lbcToken: '', datadomeCookie: '');
+  late Credential credential;
 
   @override
   void initState() {
@@ -46,6 +47,9 @@ class _AdEditingWidgetState extends State<AdEditingWidget> {
     }
 
     ad = Ad(title: title, description: description, priceCent: 1000, imgsPath: widget.step.imgsPaths);
+
+    credential = Credential.loadFromFile();
+    print('credential ${credential.lbcToken} ${credential.dataDomeCookie}');
   }
 
   String _getDescription(Iterable<MapEntry<String, BookMetaData>> metadataFromIsbn) {
@@ -111,7 +115,7 @@ class _AdEditingWidgetState extends State<AdEditingWidget> {
                 ]),
               ),
               TextFormField(
-                initialValue: '',
+                initialValue: credential.lbcToken,
                 onChanged: (newText) => setState(() => credential.lbcToken = newText),
                 decoration: const InputDecoration(
                   icon: Icon(Icons.key),
@@ -120,8 +124,8 @@ class _AdEditingWidgetState extends State<AdEditingWidget> {
                 style: const TextStyle(fontSize: 20),
               ),
               TextFormField(
-                initialValue: '',
-                onChanged: (newText) => setState(() => credential.datadomeCookie = newText),
+                initialValue: credential.dataDomeCookie,
+                onChanged: (newText) => setState(() => credential.dataDomeCookie = newText),
                 decoration: const InputDecoration(
                   icon: Icon(Icons.cookie),
                   labelText: 'datadome cookie',
@@ -136,11 +140,19 @@ class _AdEditingWidgetState extends State<AdEditingWidget> {
                       ? null
                       : () async {
                           print('Try to publish...');
-                          final res = await api.publishAd(ad: ad, credential: credential);
+
+                          final res = await api.publishAd(
+                              ad: ad,
+                              credential: LbcCredential(
+                                  lbcToken: credential.lbcToken, datadomeCookie: credential.dataDomeCookie));
 
                           if (!context.mounted) return;
-                          ScaffoldMessenger.of(context)
-                              .showSnackBar(SnackBar(content: Text(res ? 'Success' : 'Failure')));
+                          if (res) {
+                            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Success')));
+                            credential.saveToFile();
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Failure')));
+                          }
                         },
                   child: const Text('Publish'))
             ],

@@ -32,6 +32,7 @@
 /build/
 
 personal_info.*
+credential.json
 
 # Web related
 
