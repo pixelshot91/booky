@@ -28,6 +28,7 @@ class MetadataCollectingWidget extends StatefulWidget {
   final void Function(AdEditingStep newStep) onSubmit;
 
   final blurbTextFieldController = TextEditingController();
+  final titleTextFieldController = TextEditingController();
 
   @override
   State<MetadataCollectingWidget> createState() => _MetadataCollectingWidgetState();
@@ -42,6 +43,18 @@ class Metadatas {
 class _MetadataCollectingWidgetState extends State<MetadataCollectingWidget> {
   Map<String, Metadatas> metadata = {};
 
+  void replaceIfBetterString(String? providerStr, String manualStr, void Function() onReplace) {
+    if (providerStr == null || manualStr.length > providerStr.length) return;
+    onReplace();
+  }
+
+  void _updateManualTitle(String isbn, String newTitle) {
+    setState(() {
+      metadata[isbn]!.manual.title = newTitle;
+      widget.titleTextFieldController.text = newTitle;
+    });
+  }
+
   @override
   void initState() {
     super.initState();
@@ -52,14 +65,13 @@ class _MetadataCollectingWidgetState extends State<MetadataCollectingWidget> {
               manual: BookMetaData(title: '', authors: [], keywords: []),
               mdFromProviders: Map.fromEntries(ProviderEnum.values.map((provider) {
                 final md = api.getMetadataFromProvider(provider: provider, isbn: isbn);
-                if (provider == ProviderEnum.Babelio) {
-                  md.then((value) {
-                    if (value != null) {
-                      metadata[isbn]!.manual = value.deepCopy();
-                      widget.blurbTextFieldController.text = metadata[isbn]!.manual.blurb ?? '';
-                    }
-                  });
-                }
+                md.then((value) {
+                  if (value != null) {
+                    replaceIfBetterString(value.title, metadata[isbn]!.manual.title!, () {
+                      _updateManualTitle(isbn, value.title!);
+                    });
+                  }
+                });
                 return MapEntry(provider, md);
               }))));
     });
@@ -95,7 +107,7 @@ class _MetadataCollectingWidgetState extends State<MetadataCollectingWidget> {
                               FutureWidget(
                                   future: metadata[isbn]!.mdFromProviders.entries.first.value,
                                   builder: (data) => TextFormField(
-                                        initialValue: data?.title,
+                                        controller: widget.titleTextFieldController,
                                         onChanged: (newText) => setState(() => manual.title = newText),
                                         decoration: const InputDecoration(
                                           icon: Icon(Icons.title),
