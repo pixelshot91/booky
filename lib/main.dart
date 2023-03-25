@@ -41,6 +41,14 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   BookyStep step = ImageSelectionStep();
+     /* AdEditingStep(imgsPaths: [
+    '/home/julien/Perso/LeBonCoin/chain_automatisation/test_images/20230204_194742.jpg'
+  ], metadata: {
+    'myisbn': BookMetaData(
+        title: 'Mock title',
+        authors: [Author(firstName: 'Mock firstname', lastName: 'mock lastname')],
+        keywords: ['mock kw'])
+  });*/
   /*  MetadataCollectingStep(imgsPaths: [
     '/home/julien/Perso/LeBonCoin/chain_automatisation/test_images/20230204_194742.jpg',
     '/home/julien/Perso/LeBonCoin/chain_automatisation/test_images/20230204_194746.jpg',

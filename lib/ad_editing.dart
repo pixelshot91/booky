@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_rust_bridge_template/main.dart';
 import 'package:flutter_rust_bridge_template/personal_info.dart' as personal_info;
+import 'package:jwt_decoder/jwt_decoder.dart';
 
 import 'common.dart';
 import 'credential.dart';
@@ -54,7 +55,9 @@ class _AdEditingWidgetState extends State<AdEditingWidget> {
 
   String _getDescription(Iterable<MapEntry<String, BookMetaData>> metadataFromIsbn) {
     if (metadataFromIsbn.length == 1) {
-      return 'Résumé:\n' + metadataFromIsbn.single.value.blurb!;
+      final blurb = metadataFromIsbn.single.value.blurb;
+      if (blurb == null) return '';
+      return 'Résumé:\n' + blurb;
     } else {
       final bookTitles = metadataFromIsbn.map((entry) => _bookFormatTitleAndAuthor(entry.value)).join('\n');
       final blurbs = metadataFromIsbn
@@ -122,6 +125,14 @@ class _AdEditingWidgetState extends State<AdEditingWidget> {
                   labelText: 'LBC Bearer token',
                 ),
                 style: const TextStyle(fontSize: 20),
+                autovalidateMode: AutovalidateMode.always,
+                validator: (token) {
+                  final remainingDuration = JwtDecoder.getRemainingTime(token!);
+                  if (remainingDuration.isNegative) {
+                    return 'Token expired';
+                  }
+                  return null;
+                },
               ),
               TextFormField(
                 initialValue: credential.dataDomeCookie,
