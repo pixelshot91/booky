@@ -9,3 +9,4 @@ mod image_tools;
 mod jwt_decoder;
 mod leboncoin;
 mod publisher;
+mod booksprice;
