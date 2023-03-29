@@ -70,7 +70,7 @@ macro_rules! tester {
 #[macro_export]
 macro_rules! tester_inner {
     ($f:ident, $connector:expr) => {{
-        use std::sync::{Arc, Mutex};
+        // use std::sync::{Arc, Mutex};
         use std::thread;
 
         let c = $connector;
@@ -196,14 +196,6 @@ fn file_not_found() -> Response<Body> {
         .unwrap()
 }
 
-pub fn sample_page_url(port: u16) -> String {
-    format!("http://localhost:{}/sample_page.html", port)
-}
-
-pub fn other_page_url(port: u16) -> String {
-    format!("http://localhost:{}/other_page.html", port)
-}
-
-pub fn drag_to_url(port: u16) -> String {
-    format!("http://localhost:{}/drag_to.html", port)
+pub fn url_from_path(port: u16, path: &str) -> String {
+    format!("http://localhost:{}/{}", port, path)
 }
