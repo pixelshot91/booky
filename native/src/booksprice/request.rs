@@ -8,7 +8,6 @@ use tokio;
 // mod selenium_common;
 
 // use crate::common;
-use crate::booksprice::selenium_common::sample_page_url;
 
 #[tokio::main]
 async fn selenium_fn() -> color_eyre::Result<()> {
@@ -44,33 +43,30 @@ async fn selenium_fn() -> color_eyre::Result<()> {
     Ok(())
 }
 
-async fn parse_booksprices(c: WebDriver, port: u16) -> Result<(), WebDriverError> {
-    let url = sample_page_url(port);
-
-    c.goto(&url).await?;
-    println!("{:#?}", c.source().await);
-    c.find(By::Css("#select1")).await?.click().await?;
-
-    let active = c.active_element().await?;
-    assert_eq!(active.attr("id").await?, Some(String::from("select1")));
-
-    c.close_window().await
-}
-
 #[cfg(test)]
 mod tests {
+    use crate::booksprice::selenium_common;
     use crate::booksprice::selenium_common::handle_test_error;
     use crate::booksprice::selenium_common::make_capabilities;
     use crate::booksprice::selenium_common::make_url;
     use crate::booksprice::selenium_common::setup_server;
+
     use crate::{local_tester, tester_inner};
 
     use super::*;
 
-    // #[test]
-    /* fn test_selenium() {
-        selenium_fn();
-    } */
+    async fn parse_booksprices(c: WebDriver, port: u16) -> Result<(), WebDriverError> {
+        let url = selenium_common::url_from_path(port, "output_bookprice.html");
+
+        c.goto(&url).await?;
+        println!("{:#?}", c.source().await);
+        c.find(By::Css("#select1")).await?.click().await?;
+
+        let active = c.active_element().await?;
+        assert_eq!(active.attr("id").await?, Some(String::from("select1")));
+
+        c.close_window().await
+    }
 
     #[test]
     fn test_selenium() {
