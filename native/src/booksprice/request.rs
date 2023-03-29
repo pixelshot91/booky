@@ -1,13 +1,14 @@
 //! Requires chromedriver running on port 9515:
 //!
 //!     chromedriver --port=9515
-//!
-//! Run as follows:
-//!
-//!     cargo run --example tokio_async
 
 use thirtyfour::prelude::*;
 use tokio;
+
+// mod selenium_common;
+
+// use crate::common;
+use crate::booksprice::selenium_common::sample_page_url;
 
 #[tokio::main]
 async fn selenium_fn() -> color_eyre::Result<()> {
@@ -15,10 +16,12 @@ async fn selenium_fn() -> color_eyre::Result<()> {
     // it much easier to locate where the error occurred.
     color_eyre::install()?;
 
+    // thirtyfour::resolve!();
+    // crate::local_tester!();
+
     let caps = DesiredCapabilities::chrome();
     let driver = WebDriver::new("http://localhost:9515", caps).await?;
-    // Navigate to https://wikipedia.org.
-    driver.goto("https://wikipedia.org").await?;
+    driver.goto("https://www.booksprice.com/comparePrice.do?l=y&searchType=compare&inputData=9782266071529").await?;
     let elem_form = driver.find(By::Id("search-form")).await?;
 
     // Find element from element.
@@ -41,12 +44,36 @@ async fn selenium_fn() -> color_eyre::Result<()> {
     Ok(())
 }
 
+async fn parse_booksprices(c: WebDriver, port: u16) -> Result<(), WebDriverError> {
+    let url = sample_page_url(port);
+
+    c.goto(&url).await?;
+    println!("{:#?}", c.source().await);
+    c.find(By::Css("#select1")).await?.click().await?;
+
+    let active = c.active_element().await?;
+    assert_eq!(active.attr("id").await?, Some(String::from("select1")));
+
+    c.close_window().await
+}
+
 #[cfg(test)]
 mod tests {
+    use crate::booksprice::selenium_common::handle_test_error;
+    use crate::booksprice::selenium_common::make_capabilities;
+    use crate::booksprice::selenium_common::make_url;
+    use crate::booksprice::selenium_common::setup_server;
+    use crate::{local_tester, tester_inner};
+
     use super::*;
+
+    // #[test]
+    /* fn test_selenium() {
+        selenium_fn();
+    } */
 
     #[test]
     fn test_selenium() {
-        selenium_fn();
+        local_tester!(parse_booksprices, "chrome");
     }
 }
