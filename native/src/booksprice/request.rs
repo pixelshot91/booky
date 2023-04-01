@@ -45,9 +45,6 @@ async fn selenium_fn() -> color_eyre::Result<()> {
 
 #[cfg(test)]
 mod tests {
-    use itertools::Itertools;
-    use tokio::try_join;
-
     use crate::booksprice::selenium_common;
     use crate::booksprice::selenium_common::handle_test_error;
     use crate::booksprice::selenium_common::make_capabilities;
@@ -62,14 +59,12 @@ mod tests {
         let url = selenium_common::url_from_path(port, "9782884747974.html");
 
         c.goto(&url).await?;
-        // println!("{:#?}", c.source().await);
         let entries = c
             .find_all(By::XPath("//*[@id='chart']/tbody/tr[position()>1]"))
             .await?;
         assert_eq!(entries.len(), 6);
-        use futures::future::{self, try_join_all};
 
-        let prices = try_join_all(entries.iter().map(|e| async {
+        let prices = futures::future::try_join_all(entries.iter().map(|e| async {
             let price_text = e
                 .find(By::XPath("td[@title='Total']/a/em"))
                 .await
