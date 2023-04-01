@@ -45,6 +45,9 @@ async fn selenium_fn() -> color_eyre::Result<()> {
 
 #[cfg(test)]
 mod tests {
+    use itertools::Itertools;
+    use tokio::try_join;
+
     use crate::booksprice::selenium_common;
     use crate::booksprice::selenium_common::handle_test_error;
     use crate::booksprice::selenium_common::make_capabilities;
@@ -56,14 +59,35 @@ mod tests {
     use super::*;
 
     async fn parse_booksprices(c: WebDriver, port: u16) -> Result<(), WebDriverError> {
-        let url = selenium_common::url_from_path(port, "output_bookprice.html");
+        let url = selenium_common::url_from_path(port, "9782884747974.html");
 
         c.goto(&url).await?;
-        println!("{:#?}", c.source().await);
-        c.find(By::Css("#select1")).await?.click().await?;
+        // println!("{:#?}", c.source().await);
+        let entries = c
+            .find_all(By::XPath("//*[@id='chart']/tbody/tr[position()>1]"))
+            .await?;
+        assert_eq!(entries.len(), 6);
+        use futures::future::{self, try_join_all};
 
-        let active = c.active_element().await?;
-        assert_eq!(active.attr("id").await?, Some(String::from("select1")));
+        let prices = try_join_all(entries.iter().map(|e| async {
+            let price_text = e
+                .find(By::XPath("td[@title='Total']/a/em"))
+                .await
+                .unwrap()
+                .text()
+                .await;
+
+            price_text.map(|price_text| {
+                use regex::Regex;
+                let re = Regex::new(r"\$ (\d+\.?\d+)").unwrap();
+                let r = re.captures(&price_text).unwrap();
+                r.get(1).unwrap().as_str().parse::<f64>().unwrap()
+            })
+        }))
+        .await
+        .unwrap();
+
+        assert_eq!(prices, vec![16.55, 21.85, 23.75, 27.17, 28.15, 43.20]);
 
         c.close_window().await
     }
