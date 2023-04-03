@@ -88,13 +88,14 @@ class NativeImpl implements Native {
 
   BookMetaData _wire2api_book_meta_data(dynamic raw) {
     final arr = raw as List<dynamic>;
-    if (arr.length != 4)
-      throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
+    if (arr.length != 5)
+      throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
     return BookMetaData(
       title: _wire2api_opt_String(arr[0]),
       authors: _wire2api_list_author(arr[1]),
       blurb: _wire2api_opt_String(arr[2]),
       keywords: _wire2api_StringList(arr[3]),
+      marketPrice: _wire2api_float_32_list(arr[4]),
     );
   }
 
@@ -104,6 +105,14 @@ class NativeImpl implements Native {
 
   BookMetaData _wire2api_box_autoadd_book_meta_data(dynamic raw) {
     return _wire2api_book_meta_data(raw);
+  }
+
+  double _wire2api_f32(dynamic raw) {
+    return raw as double;
+  }
+
+  Float32List _wire2api_float_32_list(dynamic raw) {
+    return raw as Float32List;
   }
 
   List<Author> _wire2api_list_author(dynamic raw) {

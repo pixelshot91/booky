@@ -96,6 +96,7 @@ impl Wire2Api<ProviderEnum> for i32 {
         match self {
             0 => ProviderEnum::Babelio,
             1 => ProviderEnum::GoogleBooks,
+            2 => ProviderEnum::BooksPrice,
             _ => unreachable!("Invalid variant for ProviderEnum: {}", self),
         }
     }
@@ -122,6 +123,7 @@ impl support::IntoDart for BookMetaData {
             self.authors.into_dart(),
             self.blurb.into_dart(),
             self.keywords.into_dart(),
+            self.market_price.into_dart(),
         ]
         .into_dart()
     }
