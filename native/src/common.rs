@@ -6,6 +6,8 @@ pub struct BookMetaData {
     // A synopsis summarizes the twists, turns, and conclusion of the story.
     pub blurb: Option<String>,
     pub keywords: Vec<String>,
+
+    pub market_price: Vec<f32>,
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone)]

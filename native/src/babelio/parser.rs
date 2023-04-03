@@ -205,6 +205,7 @@ mod tests {
                 ]
                 .map(|s| s.to_string())
                 .to_vec(),
+                market_price: vec![],
             })
         );
     }
@@ -249,6 +250,7 @@ mod tests {
                 ]
                 .map(|s| s.to_string())
                 .to_vec(),
+                market_price: vec![],
             })
         );
     }
