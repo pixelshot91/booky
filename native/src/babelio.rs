@@ -67,6 +67,7 @@ mod tests {
                 ]
                 .map(|s| s.to_string())
                 .to_vec(),
+                market_price: vec![],
         }));
     }
 
@@ -87,6 +88,7 @@ Ensemble, les deux enfants devront lutter contre les forces obscures du mal et, 
                 ]
                 .map(|s| s.to_string())
                 .to_vec(),
+                market_price: vec![],
         }));
     }
 }

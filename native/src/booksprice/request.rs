@@ -6,9 +6,9 @@ use thirtyfour::prelude::*;
 use tokio;
 
 #[tokio::main]
-async fn extract_price_from_isbn(
+pub async fn extract_price_from_isbn(
     isbn: &str,
-) -> Result<Vec<f64>, thirtyfour::prelude::WebDriverError> {
+) -> Result<Vec<f32>, thirtyfour::prelude::WebDriverError> {
     let caps = DesiredCapabilities::chrome();
     let driver = WebDriver::new("http://localhost:9515", caps).await?;
 
@@ -22,7 +22,7 @@ async fn extract_price_from_isbn(
     .await
 }
 
-async fn extract_price_from_url(c: WebDriver, url: &str) -> Result<Vec<f64>, WebDriverError> {
+async fn extract_price_from_url(c: WebDriver, url: &str) -> Result<Vec<f32>, WebDriverError> {
     c.goto(&url).await?;
     let entries = c
         .find_all(By::XPath("//*[@id='chart']/tbody/tr[position()>1]"))
@@ -41,7 +41,7 @@ async fn extract_price_from_url(c: WebDriver, url: &str) -> Result<Vec<f64>, Web
             use regex::Regex;
             let re = Regex::new(r"\$ (\d+\.?\d+)").unwrap();
             let r = re.captures(&price_text).unwrap();
-            r.get(1).unwrap().as_str().parse::<f64>().unwrap()
+            r.get(1).unwrap().as_str().parse::<f32>().unwrap()
         })
     }))
     .await
@@ -72,9 +72,11 @@ mod tests {
         let prices = extract_price_from_url(
             c,
             &selenium_common::url_from_path(port, "9782884747974.html"),
-        ).await.unwrap();
+        )
+        .await
+        .unwrap();
 
-        assert_eq!(prices, vec![16.55,21.85,23.75,27.17,28.15,43.20]);
+        assert_eq!(prices, vec![16.55, 21.85, 23.75, 27.17, 28.15, 43.20]);
         Ok(())
     }
 

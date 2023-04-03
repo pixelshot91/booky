@@ -1,12 +1,13 @@
 use crate::cached_client::CachedClient;
-use crate::common::{Provider, LbcCredential};
 use crate::common::{Ad, BookMetaData};
+use crate::common::{LbcCredential, Provider};
 use crate::publisher::Publisher;
-use crate::{babelio, google_books, leboncoin};
+use crate::{babelio, booksprice, google_books, leboncoin};
 
 pub enum ProviderEnum {
     Babelio,
     GoogleBooks,
+    BooksPrice,
 }
 
 pub fn get_metadata_from_provider(provider: ProviderEnum, isbn: String) -> Option<BookMetaData> {
@@ -18,6 +19,7 @@ pub fn get_metadata_from_provider(provider: ProviderEnum, isbn: String) -> Optio
             }),
         }
         .get_book_metadata_from_isbn(&isbn),
+        ProviderEnum::BooksPrice => booksprice::BooksPrice {}.get_book_metadata_from_isbn(&isbn),
     }
 }
 

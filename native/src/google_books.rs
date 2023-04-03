@@ -49,6 +49,7 @@ fn merge_bmd(bmd1: common::BookMetaData, bmd2: common::BookMetaData) -> common::
         authors: bmd1.authors,
         blurb: longest_string_merger(bmd1.blurb, bmd2.blurb),
         keywords: merge_vec(bmd1.keywords, bmd2.keywords),
+        market_price: vec![],
     }
 }
 
@@ -90,6 +91,12 @@ mod tests {
             }),
         };
         let md = g.get_book_metadata_from_isbn("9782266162777");
-        assert_eq!(md, Some(BookMetaData { title: Some("L'essence du Tao".to_owned()), authors: vec![common::Author{first_name: "".to_owned(), last_name: "Pamela Ball".to_owned()}], blurb: Some("Le Tao est moins une religion qu'un principe de vie universel, une recherche de la sagesse. C'est la \" Voie\" telle que les grands philosophes chinois, Lao Tse, Chuang Tse surtout, l'ont définie il y a plus de deux mille ans : une façon d'être; un ensemble de clés pour une existence harmonieuse et paisible. Pamela Bali nous aide à trouver le chemin qui est le nôtre par le biais de pratiques et de préceptes simples propres au Tao. Après en avoir brossé un bref historique, l'auteur développe les pratiques du Tao, son principe libérateur, évoquant aussi bien la méditation que le Li Chi, le Chi Cung, le Feng Shui ou art du placement, et l'interprétation du I Ching ou Livre des mutations. Un ouvrage clair, accessible et lumineux.".to_string()), keywords: vec![] }))
+        assert_eq!(md, Some(BookMetaData {
+            title: Some("L'essence du Tao".to_owned()),
+            authors: vec![common::Author{first_name: "".to_owned(), last_name: "Pamela Ball".to_owned()}],
+            blurb: Some("Le Tao est moins une religion qu'un principe de vie universel, une recherche de la sagesse. C'est la \" Voie\" telle que les grands philosophes chinois, Lao Tse, Chuang Tse surtout, l'ont définie il y a plus de deux mille ans : une façon d'être; un ensemble de clés pour une existence harmonieuse et paisible. Pamela Bali nous aide à trouver le chemin qui est le nôtre par le biais de pratiques et de préceptes simples propres au Tao. Après en avoir brossé un bref historique, l'auteur développe les pratiques du Tao, son principe libérateur, évoquant aussi bien la méditation que le Li Chi, le Chi Cung, le Feng Shui ou art du placement, et l'interprétation du I Ching ou Livre des mutations. Un ouvrage clair, accessible et lumineux.".to_string()),
+            keywords: vec![],
+            market_price: vec![],
+        }))
     }
 }
