@@ -112,6 +112,7 @@ class _MetadataCollectingWidgetState extends State<MetadataCollectingWidget> {
                               Text('Manual'),
                               Text('Babelio'),
                               Text('GoogleBooks'),
+                              Text('BooksPrice'),
                             ]),
                             TableRow(children: [
                               FutureWidget(

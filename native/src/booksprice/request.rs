@@ -2,6 +2,8 @@
 //!
 //!     chromedriver --port=9515
 
+use std::time::Duration;
+
 use thirtyfour::prelude::*;
 use tokio;
 
@@ -24,10 +26,13 @@ pub async fn extract_price_from_isbn(
 
 async fn extract_price_from_url(c: WebDriver, url: &str) -> Result<Vec<f32>, WebDriverError> {
     c.goto(&url).await?;
+
+    c.query(By::XPath("//*[@id='chart']"))
+        .wait(Duration::from_secs(10), Duration::from_secs(1));
+
     let entries = c
         .find_all(By::XPath("//*[@id='chart']/tbody/tr[position()>1]"))
         .await?;
-    assert_eq!(entries.len(), 6);
 
     let prices = futures::future::try_join_all(entries.iter().map(|e| async {
         let price_text = e
