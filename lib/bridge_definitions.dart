@@ -8,7 +8,7 @@ import 'package:meta/meta.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge.dart';
 
 abstract class Native {
-  Future<BookMetaData?> getMetadataFromProvider(
+  Future<BookMetaDataFromProvider?> getMetadataFromProvider(
       {required ProviderEnum provider, required String isbn, dynamic hint});
 
   FlutterRustBridgeTaskConstMeta get kGetMetadataFromProviderConstMeta;
@@ -43,14 +43,14 @@ class Author {
   });
 }
 
-class BookMetaData {
+class BookMetaDataFromProvider {
   String? title;
   List<Author> authors;
   String? blurb;
   List<String> keywords;
   Float32List marketPrice;
 
-  BookMetaData({
+  const BookMetaDataFromProvider({
     this.title,
     required this.authors,
     this.blurb,

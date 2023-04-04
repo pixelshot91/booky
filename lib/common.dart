@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 
@@ -61,6 +62,10 @@ extension DoubleExt on double {
 }
 
 extension BookMetadataExt on BookMetaData {
-  BookMetaData deepCopy() =>
-      BookMetaData(title: '$title', authors: List.from(authors), blurb: '$blurb', keywords: List.from(keywords));
+  BookMetaData deepCopy() => BookMetaData(
+      title: '$title',
+      authors: List.from(authors),
+      blurb: '$blurb',
+      keywords: List.from(keywords),
+      marketPrice: Float32List.fromList(marketPrice));
 }

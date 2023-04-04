@@ -1,5 +1,5 @@
 #[derive(Default, Debug, PartialEq)]
-pub struct BookMetaData {
+pub struct BookMetaDataFromProvider {
     pub title: Option<String>,
     pub authors: Vec<Author>,
     // A book blurb is a short promotional description.
@@ -21,7 +21,7 @@ pub fn html_select(sel: &str) -> scraper::Selector {
 }
 
 pub trait Provider {
-    fn get_book_metadata_from_isbn(&self, isbn: &str) -> Option<BookMetaData>;
+    fn get_book_metadata_from_isbn(&self, isbn: &str) -> Option<BookMetaDataFromProvider>;
 }
 
 pub struct LbcCredential {

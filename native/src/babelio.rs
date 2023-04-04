@@ -5,7 +5,7 @@ mod request;
 pub struct Babelio;
 
 impl common::Provider for Babelio {
-    fn get_book_metadata_from_isbn(&self, isbn: &str) -> Option<common::BookMetaData> {
+    fn get_book_metadata_from_isbn(&self, isbn: &str) -> Option<common::BookMetaDataFromProvider> {
         let client = reqwest::blocking::Client::builder().build().unwrap();
         let cached_client = CachedClient {
             http_client: client,
@@ -30,7 +30,7 @@ impl common::Provider for Babelio {
 
 #[cfg(test)]
 mod tests {
-    use crate::common::{Author, BookMetaData, Provider};
+    use crate::common::{Author, BookMetaDataFromProvider, Provider};
 
     use super::*;
 
@@ -38,7 +38,7 @@ mod tests {
     fn get_metadata_from_normal_book() {
         let isbn = "9782266071529";
         let md = Babelio {}.get_book_metadata_from_isbn(isbn);
-        assert_eq!(md, Some(BookMetaData {
+        assert_eq!(md, Some(BookMetaDataFromProvider {
             title: Some("Le nom de la bête".to_string()),
             authors: vec![Author{first_name:"Daniel".to_string(), last_name: "Easterman".to_string()}],
             blurb: Some("Janvier 1999. Peu à peu, les pays arabes ont sombré dans l'intégrisme. Les attentats terroristes se multiplient en Europe attisant la haine et le racisme. Au Caire, un coup d'état fomenté par les fondamentalistes permet à leur chef Al-Kourtoubi de s'installer au pouvoir et d'instaurer la terreur. Le réseau des agents secrets britanniques en Égypte ayant été anéanti, Michael Hunt est obligé de reprendre du service pour enquêter sur place. Aidé par son frère Paul, prêtre catholique et agent du Vatican, il apprend que le Pape doit se rendre à Jérusalem pour participer à une conférence œcuménique. Au courant de ce projet, le chef des fondamentalistes a prévu d'enlever le saint père.Dans ce récit efficace et à l'action soutenue, le héros lutte presque seul contre des groupes fanatiques puissants et sans grand espoir de réussir. Comme dans tous ses autres livres, Daniel Easterman, spécialiste de l'islam, part du constat que le Mal est puissant et il dénonce l'intolérance et les nationalismes qui engendrent violence et chaos.--Claude Mesplède\n".to_string()),
@@ -75,7 +75,7 @@ mod tests {
     fn get_metadata_from_book_with_see_more_bug() {
         let isbn = "9782070541898";
         let md = Babelio {}.get_book_metadata_from_isbn(isbn);
-        assert_eq!(md, Some(BookMetaData {
+        assert_eq!(md, Some(BookMetaDataFromProvider {
             title: Some("À la croisée des mondes, tome 2 : La tour des anges".to_string()),
             authors: vec![Author{first_name:"Philip".to_string(), last_name: "Pullman".to_string()}],
             blurb: Some(r#"Le jeune Will, à la recherche de son père disparu depuis de longues années, est persuadé d’avoir tué un homme. Dans sa fuite, il franchit une brèche presque invisible qui lui permet de passer dans un monde parallèle. 
