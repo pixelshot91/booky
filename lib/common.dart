@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 
@@ -61,6 +60,23 @@ extension DoubleExt on double {
   double multiply(double other) => this * other;
 }
 
+class BookMetaDataManual {
+  String? title;
+  List<Author> authors;
+  String? blurb;
+  List<String> keywords;
+  int? priceCent;
+
+  BookMetaDataManual({
+    this.title,
+    required this.authors,
+    this.blurb,
+    required this.keywords,
+    required this.priceCent,
+  });
+}
+
+/*
 extension BookMetadataExt on BookMetaData {
   BookMetaData deepCopy() => BookMetaData(
       title: '$title',
@@ -68,4 +84,4 @@ extension BookMetadataExt on BookMetaData {
       blurb: '$blurb',
       keywords: List.from(keywords),
       marketPrice: Float32List.fromList(marketPrice));
-}
+}*/

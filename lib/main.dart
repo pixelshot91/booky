@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_rust_bridge_template/common.dart';
 
 import 'ad_editing.dart';
 import 'drag_and_drop.dart' as drag_and_drop;
-import 'ffi.dart' if (dart.library.html) 'ffi_web.dart';
 import 'isbn_decoding.dart';
 import 'metadata_collecting.dart';
 
@@ -27,7 +27,7 @@ class MetadataCollectingStep implements BookyStep {
 
 class AdEditingStep implements BookyStep {
   List<String> imgsPaths = [];
-  Map<String, BookMetaData> metadata = {};
+  Map<String, BookMetaDataManual> metadata = {};
 
   AdEditingStep({required this.imgsPaths, required this.metadata});
 }
@@ -40,8 +40,8 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  BookyStep step = ImageSelectionStep();
-     /* AdEditingStep(imgsPaths: [
+  BookyStep step = //ImageSelectionStep();
+      /* AdEditingStep(imgsPaths: [
     '/home/julien/Perso/LeBonCoin/chain_automatisation/test_images/20230204_194742.jpg'
   ], metadata: {
     'myisbn': BookMetaData(
@@ -49,7 +49,7 @@ class _MyAppState extends State<MyApp> {
         authors: [Author(firstName: 'Mock firstname', lastName: 'mock lastname')],
         keywords: ['mock kw'])
   });*/
-  /*  MetadataCollectingStep(imgsPaths: [
+      MetadataCollectingStep(imgsPaths: [
     '/home/julien/Perso/LeBonCoin/chain_automatisation/test_images/20230204_194742.jpg',
     '/home/julien/Perso/LeBonCoin/chain_automatisation/test_images/20230204_194746.jpg',
     '/home/julien/Perso/LeBonCoin/chain_automatisation/test_images/20230204_194753.jpg',
@@ -57,7 +57,7 @@ class _MyAppState extends State<MyApp> {
   ], isbns: {
     '9782253029854',
     '9782277223634',
-  });*/
+  });
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
