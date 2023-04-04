@@ -16,16 +16,16 @@ class AdEditingWidget extends StatefulWidget {
   State<AdEditingWidget> createState() => _AdEditingWidgetState();
 }
 
-String vecFmt(List<String> vec) {
+String vecFmt(Iterable<String> it) {
+  final vec = it.toList();
   if (vec.length == 0) return '';
   if (vec.length == 1) return 'de ${vec[0]}';
   if (vec.length == 2) return 'de ${vec[0]} et ${vec[1]}';
   throw UnimplementedError('More than 2 authors');
 }
 
-String _bookFormatTitleAndAuthor(BookMetaData book) {
-  final authors = book.authors.map((a) => '${a.firstName} ${a.lastName}').toList();
-  return '"${book.title}" ${vecFmt(authors)}';
+String _bookFormatTitleAndAuthor(String title, Iterable<Author> authors) {
+  return '"$title" ${vecFmt(authors.map((a) => '${a.firstName} ${a.lastName}'))}';
 }
 
 class _AdEditingWidgetState extends State<AdEditingWidget> {
@@ -53,15 +53,18 @@ class _AdEditingWidgetState extends State<AdEditingWidget> {
     print('credential ${credential.lbcToken} ${credential.dataDomeCookie}');
   }
 
-  String _getDescription(Iterable<MapEntry<String, BookMetaData>> metadataFromIsbn) {
+  String _getDescription(Iterable<MapEntry<String, BookMetaDataManual>> metadataFromIsbn) {
     if (metadataFromIsbn.length == 1) {
       final blurb = metadataFromIsbn.single.value.blurb;
       if (blurb == null) return '';
       return 'Résumé:\n' + blurb;
     } else {
-      final bookTitles = metadataFromIsbn.map((entry) => _bookFormatTitleAndAuthor(entry.value)).join('\n');
+      final bookTitles = metadataFromIsbn
+          .map((entry) => _bookFormatTitleAndAuthor(entry.value.title!, entry.value.authors))
+          .join('\n');
       final blurbs = metadataFromIsbn
-          .map((entry) => _bookFormatTitleAndAuthor(entry.value) + ':\n' + entry.value.blurb!)
+          .map((entry) =>
+              _bookFormatTitleAndAuthor(entry.value.title!, entry.value.authors) + ':\n' + entry.value.blurb!)
           .join('\n');
       final description = bookTitles + '\n\nRésumés:\n' + blurbs;
       return description;

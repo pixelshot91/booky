@@ -35,8 +35,8 @@ class MetadataCollectingWidget extends StatefulWidget {
 }
 
 class Metadatas {
-  final Map<ProviderEnum, Future<BookMetaData?>> mdFromProviders;
-  BookMetaData manual;
+  final Map<ProviderEnum, Future<BookMetaDataFromProvider?>> mdFromProviders;
+  BookMetaDataManual manual;
   Metadatas({required this.mdFromProviders, required this.manual});
 }
 
@@ -69,7 +69,7 @@ class _MetadataCollectingWidgetState extends State<MetadataCollectingWidget> {
       metadata.putIfAbsent(
           isbn,
           () => Metadatas(
-              manual: BookMetaData(title: '', authors: [], blurb: '', keywords: [], price),
+              manual: BookMetaDataManual(title: '', authors: [], blurb: '', keywords: [], priceCent: null),
               mdFromProviders: Map.fromEntries(ProviderEnum.values.map((provider) {
                 final md = api.getMetadataFromProvider(provider: provider, isbn: isbn);
                 md.then((value) {
