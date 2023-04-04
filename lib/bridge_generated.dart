@@ -24,14 +24,14 @@ class NativeImpl implements Native {
   factory NativeImpl.wasm(FutureOr<WasmModule> module) =>
       NativeImpl(module as ExternalLibrary);
   NativeImpl.raw(this._platform);
-  Future<BookMetaData?> getMetadataFromProvider(
+  Future<BookMetaDataFromProvider?> getMetadataFromProvider(
       {required ProviderEnum provider, required String isbn, dynamic hint}) {
     var arg0 = api2wire_provider_enum(provider);
     var arg1 = _platform.api2wire_String(isbn);
     return _platform.executeNormal(FlutterRustBridgeTask(
       callFfi: (port_) =>
           _platform.inner.wire_get_metadata_from_provider(port_, arg0, arg1),
-      parseSuccessData: _wire2api_opt_box_autoadd_book_meta_data,
+      parseSuccessData: _wire2api_opt_box_autoadd_book_meta_data_from_provider,
       constMeta: kGetMetadataFromProviderConstMeta,
       argValues: [provider, isbn],
       hint: hint,
@@ -86,11 +86,11 @@ class NativeImpl implements Native {
     );
   }
 
-  BookMetaData _wire2api_book_meta_data(dynamic raw) {
+  BookMetaDataFromProvider _wire2api_book_meta_data_from_provider(dynamic raw) {
     final arr = raw as List<dynamic>;
     if (arr.length != 5)
       throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
-    return BookMetaData(
+    return BookMetaDataFromProvider(
       title: _wire2api_opt_String(arr[0]),
       authors: _wire2api_list_author(arr[1]),
       blurb: _wire2api_opt_String(arr[2]),
@@ -103,8 +103,9 @@ class NativeImpl implements Native {
     return raw as bool;
   }
 
-  BookMetaData _wire2api_box_autoadd_book_meta_data(dynamic raw) {
-    return _wire2api_book_meta_data(raw);
+  BookMetaDataFromProvider _wire2api_box_autoadd_book_meta_data_from_provider(
+      dynamic raw) {
+    return _wire2api_book_meta_data_from_provider(raw);
   }
 
   double _wire2api_f32(dynamic raw) {
@@ -123,8 +124,11 @@ class NativeImpl implements Native {
     return raw == null ? null : _wire2api_String(raw);
   }
 
-  BookMetaData? _wire2api_opt_box_autoadd_book_meta_data(dynamic raw) {
-    return raw == null ? null : _wire2api_box_autoadd_book_meta_data(raw);
+  BookMetaDataFromProvider?
+      _wire2api_opt_box_autoadd_book_meta_data_from_provider(dynamic raw) {
+    return raw == null
+        ? null
+        : _wire2api_box_autoadd_book_meta_data_from_provider(raw);
   }
 
   int _wire2api_u8(dynamic raw) {

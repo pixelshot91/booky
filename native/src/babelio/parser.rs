@@ -1,4 +1,4 @@
-use crate::common::{html_select, BookMetaData};
+use crate::common::{html_select, BookMetaDataFromProvider};
 use itertools::Itertools;
 
 #[derive(PartialEq, Debug)]
@@ -96,7 +96,7 @@ fn extract_author(author_scope: scraper::ElementRef) -> crate::common::Author {
     }
 }
 
-pub fn extract_title_author_keywords(html: &str) -> Option<BookMetaData> {
+pub fn extract_title_author_keywords(html: &str) -> Option<BookMetaDataFromProvider> {
     let doc = scraper::Html::parse_document(html);
 
     let book_select = html_select("div[itemscope][itemtype=\"https://schema.org/Book\"]");
@@ -146,7 +146,7 @@ pub fn extract_title_author_keywords(html: &str) -> Option<BookMetaData> {
             )
         })
         .collect();
-    Some(BookMetaData {
+    Some(BookMetaDataFromProvider {
         title: Some(title),
         authors,
         keywords,
@@ -174,7 +174,7 @@ mod tests {
         let title_author_keywords = extract_title_author_keywords(&html);
         assert_eq!(
             title_author_keywords,
-            Some(BookMetaData {
+            Some(BookMetaDataFromProvider {
                 title: Some("Le nom de la bête".to_string()),
                 authors: vec![crate::common::Author {
                     first_name: "Daniel".to_string(),
@@ -219,7 +219,7 @@ mod tests {
         let title_author_keywords = extract_title_author_keywords(&html);
         assert_eq!(
             title_author_keywords,
-            Some(BookMetaData {
+            Some(BookMetaDataFromProvider {
                 title: Some("Bardo-Thödol : Le livre tibétain des morts".to_string()),
                 authors: vec![crate::common::Author {
                     first_name: "".to_string(),

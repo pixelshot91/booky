@@ -21,7 +21,7 @@ use std::sync::Arc;
 
 use crate::common::Ad;
 use crate::common::Author;
-use crate::common::BookMetaData;
+use crate::common::BookMetaDataFromProvider;
 use crate::common::LbcCredential;
 
 // Section: wire functions
@@ -116,7 +116,7 @@ impl support::IntoDart for Author {
 }
 impl support::IntoDartExceptPrimitive for Author {}
 
-impl support::IntoDart for BookMetaData {
+impl support::IntoDart for BookMetaDataFromProvider {
     fn into_dart(self) -> support::DartAbi {
         vec![
             self.title.into_dart(),
@@ -128,7 +128,7 @@ impl support::IntoDart for BookMetaData {
         .into_dart()
     }
 }
-impl support::IntoDartExceptPrimitive for BookMetaData {}
+impl support::IntoDartExceptPrimitive for BookMetaDataFromProvider {}
 
 // Section: executor
 

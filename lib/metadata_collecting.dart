@@ -69,7 +69,7 @@ class _MetadataCollectingWidgetState extends State<MetadataCollectingWidget> {
       metadata.putIfAbsent(
           isbn,
           () => Metadatas(
-              manual: BookMetaData(title: '', authors: [], blurb: '', keywords: []),
+              manual: BookMetaData(title: '', authors: [], blurb: '', keywords: [], price),
               mdFromProviders: Map.fromEntries(ProviderEnum.values.map((provider) {
                 final md = api.getMetadataFromProvider(provider: provider, isbn: isbn);
                 md.then((value) {
