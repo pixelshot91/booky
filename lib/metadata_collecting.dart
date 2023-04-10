@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_rust_bridge_template/common.dart';
 
 import 'ffi.dart' if (dart.library.html) 'ffi_web.dart';
@@ -29,6 +30,7 @@ class MetadataCollectingWidget extends StatefulWidget {
 
   final blurbTextFieldController = TextEditingController();
   final titleTextFieldController = TextEditingController();
+  final priceTextFieldController = TextEditingController();
 
   @override
   State<MetadataCollectingWidget> createState() => _MetadataCollectingWidgetState();
@@ -98,89 +100,114 @@ class _MetadataCollectingWidgetState extends State<MetadataCollectingWidget> {
           children: [
             ...widget.step.isbns.map((isbn) {
               final manual = metadata[isbn]!.manual;
+              const columnHeaderStyle = TextStyle(fontSize: 20, fontWeight: FontWeight.bold);
               return Card(
                 margin: const EdgeInsets.all(10),
                 child: Padding(
                   padding: const EdgeInsets.all(8.0),
-                  child: Row(
+                  child: Column(
                     children: [
-                      SelectableText('ISBN: $isbn'),
-                      Expanded(
-                        child: Table(
-                          children: [
-                            const TableRow(children: [
-                              Text('Manual'),
-                              Text('Babelio'),
-                              Text('GoogleBooks'),
-                              Text('BooksPrice'),
-                            ]),
-                            TableRow(children: [
-                              FutureWidget(
-                                  future: metadata[isbn]!.mdFromProviders.entries.first.value,
-                                  builder: (data) => TextFormField(
-                                        controller: widget.titleTextFieldController,
-                                        onChanged: (newText) => setState(() => manual.title = newText),
-                                        decoration: const InputDecoration(
-                                          icon: Icon(Icons.title),
-                                          labelText: 'Book title',
-                                        ),
-                                      )),
-                              ...metadata[isbn]!.mdFromProviders.entries.map((e) => FutureWidget(
-                                  future: e.value,
-                                  builder: (data) => data == null ? noneText : SelectableText(data.title ?? ''))),
-                            ]),
-                            TableRow(children: [
-                              FutureWidget(
+                      SelectableText('ISBN: $isbn', style: const TextStyle(fontSize: 30, fontWeight: FontWeight.bold)),
+                      Table(
+                        children: [
+                          TableRow(
+                              children: [
+                            const Text('Manual', style: columnHeaderStyle),
+                            const Text('Babelio', style: columnHeaderStyle),
+                            const Text('GoogleBooks', style: columnHeaderStyle),
+                            const Text('BooksPrice', style: columnHeaderStyle),
+                          ].map((e) => Center(child: e)).toList()),
+                          TableRow(children: [
+                            FutureWidget(
                                 future: metadata[isbn]!.mdFromProviders.entries.first.value,
                                 builder: (data) => TextFormField(
-                                  initialValue: data?.authors.toText(),
-                                  onChanged: (newText) => setState(() => manual.authors = newText
-                                      .split('\n')
-                                      .map((line) => Author(firstName: '', lastName: line))
-                                      .toList()),
-                                  decoration: const InputDecoration(
-                                    icon: Icon(Icons.person),
-                                    labelText: 'Authors',
-                                  ),
+                                      controller: widget.titleTextFieldController,
+                                      onChanged: (newText) => setState(() => manual.title = newText),
+                                      decoration: const InputDecoration(
+                                        icon: Icon(Icons.title),
+                                        labelText: 'Book title',
+                                      ),
+                                    )),
+                            ...metadata[isbn]!.mdFromProviders.entries.map((e) => FutureWidget(
+                                future: e.value,
+                                builder: (data) => data == null ? noneText : SelectableText(data.title ?? ''))),
+                          ]),
+                          TableRow(children: [
+                            FutureWidget(
+                              future: metadata[isbn]!.mdFromProviders.entries.first.value,
+                              builder: (data) => TextFormField(
+                                initialValue: data?.authors.toText(),
+                                onChanged: (newText) => setState(() => manual.authors =
+                                    newText.split('\n').map((line) => Author(firstName: '', lastName: line)).toList()),
+                                decoration: const InputDecoration(
+                                  icon: Icon(Icons.person),
+                                  labelText: 'Authors',
                                 ),
                               ),
-                              ...metadata[isbn]!.mdFromProviders.entries.map((e) => FutureWidget(
-                                  future: e.value,
-                                  builder: (data) {
-                                    final authors = data?.authors;
-                                    if (authors == null || authors.isEmpty) {
-                                      return noneText;
-                                    }
-                                    return SelectableText(authors.toText());
-                                  })),
-                            ]),
-                            TableRow(children: [
-                              FutureWidget(
-                                  future: metadata[isbn]!.mdFromProviders.entries.first.value,
-                                  builder: (data) => TextFormField(
-                                        controller: widget.blurbTextFieldController,
-                                        onChanged: (newText) => setState(() => metadata[isbn]!.manual.blurb = newText),
-                                        maxLines: null,
-                                        decoration: const InputDecoration(
-                                          icon: Icon(Icons.description),
-                                          labelText: 'Book blurb',
-                                        ),
-                                      )),
-                              ...metadata[isbn]!.mdFromProviders.entries.map((e) => FutureWidget(
-                                  future: e.value,
-                                  builder: (data) {
-                                    final blurb = data?.blurb;
-                                    if (blurb == null) {
-                                      return noneText;
-                                    }
-                                    return SelectableTextAndUse(
-                                      blurb,
-                                      onUse: (b) => _updateManualBlurb(isbn, b),
-                                    );
-                                  })),
-                            ]),
-                          ],
-                        ),
+                            ),
+                            ...metadata[isbn]!.mdFromProviders.entries.map((e) => FutureWidget(
+                                future: e.value,
+                                builder: (data) {
+                                  final authors = data?.authors;
+                                  if (authors == null || authors.isEmpty) {
+                                    return noneText;
+                                  }
+                                  return SelectableText(authors.toText());
+                                })),
+                          ]),
+                          TableRow(children: [
+                            FutureWidget(
+                                future: metadata[isbn]!.mdFromProviders.entries.first.value,
+                                builder: (data) => TextFormField(
+                                      controller: widget.blurbTextFieldController,
+                                      onChanged: (newText) => setState(() => metadata[isbn]!.manual.blurb = newText),
+                                      maxLines: null,
+                                      decoration: const InputDecoration(
+                                        icon: Icon(Icons.description),
+                                        labelText: 'Book blurb',
+                                      ),
+                                    )),
+                            ...metadata[isbn]!.mdFromProviders.entries.map((e) => FutureWidget(
+                                future: e.value,
+                                builder: (data) {
+                                  final blurb = data?.blurb;
+                                  if (blurb == null) {
+                                    return noneText;
+                                  }
+                                  return SelectableTextAndUse(
+                                    blurb,
+                                    onUse: (b) => _updateManualBlurb(isbn, b),
+                                  );
+                                })),
+                          ]),
+                          TableRow(children: [
+                            FutureWidget(
+                                future: metadata[isbn]!.mdFromProviders.entries.first.value,
+                                builder: (data) => TextFormField(
+                                      controller: widget.priceTextFieldController,
+                                      onChanged: (newText) => setState(() => metadata[isbn]!.manual.priceCent =
+                                          double.parse(newText).multiply(100).round()),
+                                      inputFormatters: [
+                                        FilteringTextInputFormatter.allow(RegExp(r'[0-9]+[,.]{0,1}[0-9]*')),
+                                      ],
+                                      decoration: const InputDecoration(
+                                        icon: Icon(Icons.euro),
+                                        labelText: 'Price',
+                                      ),
+                                    )),
+                            ...metadata[isbn]!.mdFromProviders.entries.map((e) => FutureWidget(
+                                future: e.value,
+                                builder: (data) {
+                                  final marketPrices = data?.marketPrice.toList()?..sort();
+                                  if (marketPrices == null || marketPrices.isEmpty) {
+                                    return noneText;
+                                  }
+                                  return SelectableText(
+                                    '${marketPrices.first.toStringAsFixed(2)} - ${marketPrices.last.toStringAsFixed(2)}',
+                                  );
+                                })),
+                          ]),
+                        ],
                       ),
                     ],
                   ),
