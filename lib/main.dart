@@ -40,8 +40,8 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  BookyStep step = //ImageSelectionStep();
-      /* AdEditingStep(imgsPaths: [
+  BookyStep step = ImageSelectionStep();
+  /* AdEditingStep(imgsPaths: [
     '/home/julien/Perso/LeBonCoin/chain_automatisation/test_images/20230204_194742.jpg'
   ], metadata: {
     'myisbn': BookMetaData(
@@ -49,15 +49,15 @@ class _MyAppState extends State<MyApp> {
         authors: [Author(firstName: 'Mock firstname', lastName: 'mock lastname')],
         keywords: ['mock kw'])
   });*/
-      MetadataCollectingStep(imgsPaths: [
+  /*     MetadataCollectingStep(imgsPaths: [
     '/home/julien/Perso/LeBonCoin/chain_automatisation/test_images/20230204_194742.jpg',
     '/home/julien/Perso/LeBonCoin/chain_automatisation/test_images/20230204_194746.jpg',
     '/home/julien/Perso/LeBonCoin/chain_automatisation/test_images/20230204_194753.jpg',
     '/home/julien/Perso/LeBonCoin/chain_automatisation/test_images/20230204_194758.jpg'
   ], isbns: {
     '9782253029854',
-    '9782277223634',
-  });
+    // '9782277223634',
+  });*/
   @override
   Widget build(BuildContext context) {
     return MaterialApp(

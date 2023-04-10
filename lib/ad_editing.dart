@@ -1,3 +1,4 @@
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_rust_bridge_template/main.dart';
 import 'package:flutter_rust_bridge_template/personal_info.dart' as personal_info;
@@ -47,7 +48,9 @@ class _AdEditingWidgetState extends State<AdEditingWidget> {
       description += '\n\nMots-clés:\n' + keywords;
     }
 
-    ad = Ad(title: title, description: description, priceCent: 1000, imgsPath: widget.step.imgsPaths);
+    final totalPrice = metadataFromIsbn.map((e) => e.value.priceCent ?? 0).sum;
+
+    ad = Ad(title: title, description: description, priceCent: totalPrice, imgsPath: widget.step.imgsPaths);
 
     credential = Credential.loadFromFile();
     print('credential ${credential.lbcToken} ${credential.dataDomeCookie}');
@@ -130,9 +133,13 @@ class _AdEditingWidgetState extends State<AdEditingWidget> {
                 style: const TextStyle(fontSize: 20),
                 autovalidateMode: AutovalidateMode.always,
                 validator: (token) {
-                  final remainingDuration = JwtDecoder.getRemainingTime(token!);
-                  if (remainingDuration.isNegative) {
-                    return 'Token expired';
+                  try {
+                    final remainingDuration = JwtDecoder.getRemainingTime(token!);
+                    if (remainingDuration.isNegative) {
+                      return 'Token expired';
+                    }
+                  } on FormatException catch (e) {
+                    return 'Not a JWT token';
                   }
                   return null;
                 },

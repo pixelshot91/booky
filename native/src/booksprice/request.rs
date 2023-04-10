@@ -27,8 +27,11 @@ pub async fn extract_price_from_isbn(
 async fn extract_price_from_url(c: WebDriver, url: &str) -> Result<Vec<f32>, WebDriverError> {
     c.goto(&url).await?;
 
-    c.query(By::XPath("//*[@id='chart']"))
-        .wait(Duration::from_secs(10), Duration::from_secs(1));
+    let wait_res = c
+        .query(By::XPath("//*[@id='chart']"))
+        .wait(Duration::from_secs(10), Duration::from_secs(1))
+        .exists()
+        .await;
 
     let entries = c
         .find_all(By::XPath("//*[@id='chart']/tbody/tr[position()>1]"))
