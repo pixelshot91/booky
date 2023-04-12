@@ -41,35 +41,41 @@ class _ISBNDecodingWidgetState extends State<ISBNDecodingWidget> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Row(
+      body: Column(
         children: [
-          ...widget.step.imgsPaths
-              .map((imgPath) => Column(
-                    children: [
-                      ImageWidget(imgPath),
-                      FutureBuilder(
-                          future: isbns[imgPath]!,
-                          builder: (context, snap) {
-                            if (snap.hasData == false) {
-                              return const CircularProgressIndicator();
-                            }
-                            return Column(children: snap.data!.map((isbn) => Text(isbn)).toList());
-                          })
-                    ],
-                  ))
-              .toList(),
-          const Spacer(),
-          FutureBuilder(
-              future: Future.wait(isbns.values),
-              builder: (context, snap) {
-                return ElevatedButton(
-                    onPressed: () {
-                      final isbnSet = snap.data!.expand((e) => e).toSet();
-                      print('isbnSet = $isbnSet');
-                      widget.onSubmit(MetadataCollectingStep(imgsPaths: widget.step.imgsPaths, isbns: isbnSet));
-                    },
-                    child: const Text('Validate ISBNs'));
-              })
+          Wrap(
+            children: [
+              ...widget.step.imgsPaths
+                  .map((imgPath) => Column(
+                        children: [
+                          ImageWidget(imgPath),
+                          FutureBuilder(
+                              future: isbns[imgPath]!,
+                              builder: (context, snap) {
+                                if (snap.hasData == false) {
+                                  return const CircularProgressIndicator();
+                                }
+                                return Column(children: snap.data!.map((isbn) => Text(isbn)).toList());
+                              })
+                        ],
+                      ))
+                  .toList(),
+            ],
+          ),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: FutureBuilder(
+                future: Future.wait(isbns.values),
+                builder: (context, snap) {
+                  return ElevatedButton(
+                      onPressed: () {
+                        final isbnSet = snap.data!.expand((e) => e).toSet();
+                        print('isbnSet = $isbnSet');
+                        widget.onSubmit(MetadataCollectingStep(imgsPaths: widget.step.imgsPaths, isbns: isbnSet));
+                      },
+                      child: const Text('Validate ISBNs'));
+                }),
+          )
         ],
       ),
     );
