@@ -154,8 +154,9 @@ pub fn extract_title_author_keywords(html: &str) -> Option<BookMetaDataFromProvi
     })
 }
 
-pub fn parse_blurb(raw_blurb: &str) -> Option<String> {
-    Some(raw_blurb.trim().replace("<br>", "\n"))
+pub fn parse_blurb(raw_blurb: &str) -> String {
+    let text = html2text::from_read(raw_blurb.as_bytes(), usize::MAX);
+    text.trim().to_string()
 }
 
 #[cfg(test)]
@@ -168,6 +169,15 @@ mod tests {
         let id_obj = extract_blurb(&html);
         assert_eq!(id_obj, Some(BlurbRes::BigBlurb("827593".to_string())));
     }
+
+    #[test]
+    fn test_parse_blurb_with_special_charset() {
+        let html = std::fs::read_to_string("src/babelio/test/get_book_blurb_see_more_179245.html")
+            .unwrap();
+        let text = parse_blurb(&html);
+        assert_eq!(text, "La ville entière est sous le choc. Adam, un jeune autiste de neuf ans, a été retrouvé dans les bois à côté du corps sans vie d'une camarade d'école sauvagement poignardée. Quelques heures auparavant, les deux enfants avaient échappé à la vigilance des adultes pendant la récréation et s'étaient évanouis dans la nature. Tous les espoirs d'identifier le coupable reposent désormais sur le témoignage d'Adam. Mais, replié sur lui-même, il ne réagit pas et refuse de communiquer. Commence alors pour Cara, sa mère, un subtil exercice d'interprétation : saura-t-elle déchiffrer les silences de son fils et aider les enquêteurs à débusquer le meurtrier ? Thriller psychologique, Au fond des yeux raconte avec pudeur et justesse le courageux combat d'une mère contre les préjugés et l'isolement.");
+    }
+
     #[test]
     pub fn extract_title_author_keywords_from_file() {
         let html = std::fs::read_to_string("src/babelio/test/get_book_minimal.html").unwrap();
