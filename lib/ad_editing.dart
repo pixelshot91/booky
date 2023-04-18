@@ -82,6 +82,7 @@ class _AdEditingWidgetState extends State<AdEditingWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final metadata = widget.step.bundle.metadata;
     return Scaffold(
       appBar: AppBar(title: const Text('Ad editing')),
       body: Padding(
@@ -97,6 +98,14 @@ class _AdEditingWidgetState extends State<AdEditingWidget> {
                   labelText: 'Ad title',
                 ),
                 style: const TextStyle(fontSize: 30),
+              ),
+              TextFormField(
+                initialValue: metadata.itemState?.loc,
+                decoration: const InputDecoration(
+                  icon: Icon(Icons.diamond),
+                  labelText: 'State',
+                ),
+                style: const TextStyle(fontSize: 20),
               ),
               TextFormField(
                 initialValue: ad.description,
@@ -115,6 +124,14 @@ class _AdEditingWidgetState extends State<AdEditingWidget> {
                 decoration: const InputDecoration(
                   icon: Icon(Icons.euro),
                   labelText: 'Price',
+                ),
+                style: const TextStyle(fontSize: 20),
+              ),
+              TextFormField(
+                initialValue: metadata.weightGrams?.toString(),
+                decoration: const InputDecoration(
+                  icon: Icon(Icons.scale),
+                  labelText: 'Weight (grams)',
                 ),
                 style: const TextStyle(fontSize: 20),
               ),

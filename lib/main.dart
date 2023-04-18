@@ -53,7 +53,8 @@ class _MyAppState extends State<MyApp> {
       'myisbn': BookMetaDataManual(
           title: 'Mock title',
           authors: [const Author(firstName: 'Mock firstname', lastName: 'mock lastname')],
-          keywords: ['mock kw'],
+          blurb: 'This is a mock blurb',
+          keywords: ['kw1', 'kw2', 'kw3'],
           priceCent: 1234)
     },
   );
