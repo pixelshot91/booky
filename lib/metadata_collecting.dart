@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_rust_bridge_template/common.dart';
+import 'package:flutter_rust_bridge_template/helpers.dart';
 
 import 'ffi.dart' if (dart.library.html) 'ffi_web.dart';
 import 'main.dart';
@@ -219,7 +219,7 @@ class _MetadataCollectingWidgetState extends State<MetadataCollectingWidget> {
               child: ElevatedButton(
                   onPressed: () {
                     widget.onSubmit(AdEditingStep(
-                        imgsPaths: widget.step.imgsPaths,
+                        bundle: widget.step.bundle,
                         metadata: metadata.map((key, value) => MapEntry(key, value.manual))));
                   },
                   child: const Text('Validate Metadatas')),

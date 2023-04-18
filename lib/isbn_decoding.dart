@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_rust_bridge_template/main.dart';
 
-import 'common.dart';
+import 'helpers.dart';
 
 class ISBNDecodingWidget extends StatefulWidget {
   const ISBNDecodingWidget({required this.step, required this.onSubmit});
@@ -15,14 +15,14 @@ class ISBNDecodingWidget extends StatefulWidget {
 }
 
 class _ISBNDecodingWidgetState extends State<ISBNDecodingWidget> {
+  // TODO: Don't use Map because operator[] accept Object as parameter instead of o Key type
   Map<String, Future<List<String>>> isbns = {};
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
-    print('initState');
-    widget.step.imgsPaths.forEach((imgPath) {
+    widget.step.bundle.images.forEach((image) {
+      final imgPath = image.path;
       isbns[imgPath] = Future(() async {
         final decoderProcess = await Process.run(
             '/home/julien/Perso/LeBonCoin/chain_automatisation/book_metadata_finder/detect_barcode',
@@ -45,7 +45,7 @@ class _ISBNDecodingWidgetState extends State<ISBNDecodingWidget> {
         children: [
           Wrap(
             children: [
-              ...widget.step.imgsPaths
+              ...widget.step.bundle.images
                   .map((imgPath) => Column(
                         children: [
                           ImageWidget(imgPath),
@@ -71,7 +71,7 @@ class _ISBNDecodingWidgetState extends State<ISBNDecodingWidget> {
                       onPressed: () {
                         final isbnSet = snap.data!.expand((e) => e).toSet();
                         print('isbnSet = $isbnSet');
-                        widget.onSubmit(MetadataCollectingStep(imgsPaths: widget.step.imgsPaths, isbns: isbnSet));
+                        widget.onSubmit(MetadataCollectingStep(bundle: widget.step.bundle, isbns: isbnSet));
                       },
                       child: const Text('Validate ISBNs'));
                 }),
