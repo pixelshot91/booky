@@ -1,12 +1,14 @@
+import 'dart:io';
+
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_rust_bridge_template/main.dart';
 import 'package:flutter_rust_bridge_template/personal_info.dart' as personal_info;
 import 'package:jwt_decoder/jwt_decoder.dart';
 
-import 'common.dart';
 import 'credential.dart';
 import 'ffi.dart' if (dart.library.html) 'ffi_web.dart';
+import 'helpers.dart';
 
 class AdEditingWidget extends StatefulWidget {
   const AdEditingWidget({required this.step, required this.onSubmit});
@@ -50,7 +52,11 @@ class _AdEditingWidgetState extends State<AdEditingWidget> {
 
     final totalPrice = metadataFromIsbn.map((e) => e.value.priceCent ?? 0).sum;
 
-    ad = Ad(title: title, description: description, priceCent: totalPrice, imgsPath: widget.step.imgsPaths);
+    ad = Ad(
+        title: title,
+        description: description,
+        priceCent: totalPrice,
+        imgsPath: widget.step.bundle.images.map((e) => e.path).toList());
 
     credential = Credential.loadFromFile();
     print('credential ${credential.lbcToken} ${credential.dataDomeCookie}');
@@ -120,7 +126,7 @@ class _AdEditingWidgetState extends State<AdEditingWidget> {
                     color: Colors.grey,
                   ),
                   const SizedBox(width: 16),
-                  ...ad.imgsPath.map((imgPath) => ImageWidget(imgPath)).toList(),
+                  ...ad.imgsPath.map((img) => ImageWidget(File(img))).toList(),
                 ]),
               ),
               TextFormField(

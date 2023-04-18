@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_rust_bridge_template/common.dart';
+import 'package:flutter_rust_bridge_template/helpers.dart';
 
 import 'ad_editing.dart';
-import 'drag_and_drop.dart' as drag_and_drop;
+import 'bundle.dart';
+import 'bundle_selection.dart';
 import 'isbn_decoding.dart';
 import 'metadata_collecting.dart';
 
@@ -12,24 +13,25 @@ void main() {
 
 sealed class BookyStep {}
 
-class ImageSelectionStep implements BookyStep {}
+class BundleSelectionStep implements BookyStep {}
 
 class ISBNDecodingStep implements BookyStep {
-  List<String> imgsPaths = [];
-  ISBNDecodingStep({required this.imgsPaths});
+  Bundle bundle;
+  ISBNDecodingStep({required this.bundle});
 }
 
 class MetadataCollectingStep implements BookyStep {
-  List<String> imgsPaths = [];
+  Bundle bundle;
   Set<String> isbns = {};
-  MetadataCollectingStep({required this.imgsPaths, required this.isbns});
+  MetadataCollectingStep({required this.bundle, required this.isbns});
 }
 
 class AdEditingStep implements BookyStep {
-  List<String> imgsPaths = [];
+  Bundle bundle;
+
   Map<String, BookMetaDataManual> metadata = {};
 
-  AdEditingStep({required this.imgsPaths, required this.metadata});
+  AdEditingStep({required this.bundle, required this.metadata});
 }
 
 class MyApp extends StatefulWidget {
@@ -40,7 +42,7 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  BookyStep step = ImageSelectionStep();
+  BookyStep step = BundleSelectionStep();
   /* AdEditingStep(imgsPaths: [
     '/home/julien/Perso/LeBonCoin/chain_automatisation/test_images/20230204_194742.jpg'
   ], metadata: {
@@ -64,11 +66,8 @@ class _MyAppState extends State<MyApp> {
         title: 'BookAdPublisher',
         theme: ThemeData(primarySwatch: Colors.blue),
         home: switch (step) {
-          ImageSelectionStep() => drag_and_drop.SelectImages(onSelect: (List<String> paths) {
-            setState(() {
-              step = ISBNDecodingStep(imgsPaths: paths);
-            });
-          }),
+          BundleSelectionStep() =>
+            BundleSelection(onSubmit: (ISBNDecodingStep newStep) => setState(() => step = newStep)),
           ISBNDecodingStep() => ISBNDecodingWidget(
               step: step as ISBNDecodingStep,
               onSubmit: (MetadataCollectingStep newStep) => setState(() => step = newStep)),
