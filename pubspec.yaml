@@ -17,15 +17,16 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  collection: ^1.17.1
   ffi: ^2.0.1
   flutter_rust_bridge: ^1.45.0
-  meta: ^1.8.0
-  super_drag_and_drop: ^0.2.3
-  collection: ^1.17.1
-  super_clipboard: ^0.2.3+1
   json_annotation: ^4.8.0
   jwt_decoder: ^2.0.1
+  meta: ^1.8.0
   path: ^1.8.3
+  super_clipboard: ^0.3.0+2
+  super_drag_and_drop: ^0.3.0+2
+  super_native_extensions: ^0.3.0+2
 
 dev_dependencies:
   flutter_test:
