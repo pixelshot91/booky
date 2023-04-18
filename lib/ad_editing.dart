@@ -28,7 +28,7 @@ String vecFmt(Iterable<String> it) {
 }
 
 String _bookFormatTitleAndAuthor(String title, Iterable<Author> authors) {
-  return '"$title" ${vecFmt(authors.map((a) => '${a.firstName} ${a.lastName}'))}';
+  return '"$title" ${vecFmt(authors.map((a) => a.toText()))}';
 }
 
 class _AdEditingWidgetState extends State<AdEditingWidget> {
@@ -39,7 +39,11 @@ class _AdEditingWidgetState extends State<AdEditingWidget> {
     super.initState();
     final metadataFromIsbn = widget.step.metadata.entries;
 
-    final title = metadataFromIsbn.length == 1 ? (metadataFromIsbn.first.value.title ?? '') : '';
+    var title = '';
+    if (metadataFromIsbn.length == 1) {
+      final onlyMetadata = metadataFromIsbn.single.value;
+      title = _bookFormatTitleAndAuthor(onlyMetadata.title!, onlyMetadata.authors);
+    }
     var description = _getDescription(metadataFromIsbn);
 
     description += '\n\n' + personal_info.customMessage;

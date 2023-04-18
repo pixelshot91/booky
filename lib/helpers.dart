@@ -48,8 +48,12 @@ class AsyncSnapshotWidget<T> extends StatelessWidget {
   }
 }
 
+extension AuthorExt on Author {
+  String toText() => [firstName, lastName].where((s) => s.isNotEmpty).join(' ');
+}
+
 extension AuthorsExt on List<Author> {
-  String toText() => map((a) => '${a.firstName} ${a.lastName}').join('\n');
+  String toText() => map((a) => a.toText()).join('\n');
 }
 
 extension IntExt on int {
