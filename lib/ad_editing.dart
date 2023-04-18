@@ -6,7 +6,6 @@ import 'package:flutter_rust_bridge_template/main.dart';
 import 'package:flutter_rust_bridge_template/personal_info.dart' as personal_info;
 
 import 'copiable_text_field.dart';
-import 'credential.dart';
 import 'draggable_files_widget.dart';
 import 'ffi.dart' if (dart.library.html) 'ffi_web.dart';
 import 'helpers.dart';
@@ -34,7 +33,6 @@ String _bookFormatTitleAndAuthor(String title, Iterable<Author> authors) {
 
 class _AdEditingWidgetState extends State<AdEditingWidget> {
   late Ad ad;
-  late Credential credential;
 
   @override
   void initState() {
@@ -58,9 +56,6 @@ class _AdEditingWidgetState extends State<AdEditingWidget> {
         description: description,
         priceCent: totalPrice,
         imgsPath: widget.step.bundle.images.map((e) => e.path).toList());
-
-    credential = Credential.loadFromFile();
-    print('credential ${credential.lbcToken} ${credential.dataDomeCookie}');
   }
 
   String _getDescription(Iterable<MapEntry<String, BookMetaDataManual>> metadataFromIsbn) {
