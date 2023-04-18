@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_rust_bridge_template/main.dart';
 import 'package:flutter_rust_bridge_template/personal_info.dart' as personal_info;
 
+import 'copiable_text_field.dart';
 import 'credential.dart';
 import 'draggable_files_widget.dart';
 import 'ffi.dart' if (dart.library.html) 'ffi_web.dart';
@@ -90,15 +91,15 @@ class _AdEditingWidgetState extends State<AdEditingWidget> {
         child: SingleChildScrollView(
           child: Column(
             children: [
-              TextFormField(
-                initialValue: ad.title,
+              CopiableTextField(TextFormField(
+                controller: TextEditingController(text: ad.title),
                 onChanged: (newText) => setState(() => ad.title = newText),
                 decoration: const InputDecoration(
                   icon: Icon(Icons.title),
                   labelText: 'Ad title',
                 ),
                 style: const TextStyle(fontSize: 30),
-              ),
+              )),
               TextFormField(
                 initialValue: metadata.itemState?.loc,
                 decoration: const InputDecoration(
@@ -107,8 +108,8 @@ class _AdEditingWidgetState extends State<AdEditingWidget> {
                 ),
                 style: const TextStyle(fontSize: 20),
               ),
-              TextFormField(
-                initialValue: ad.description,
+              CopiableTextField(TextFormField(
+                controller: TextEditingController(text: ad.description),
                 maxLines: null,
                 scrollPhysics: const NeverScrollableScrollPhysics(),
                 onChanged: (newText) => setState(() => ad.description = newText),
@@ -116,9 +117,9 @@ class _AdEditingWidgetState extends State<AdEditingWidget> {
                   icon: Icon(Icons.text_snippet),
                   labelText: 'Ad description',
                 ),
-              ),
-              TextFormField(
-                initialValue: ad.priceCent /*?*/ .divide(100).toString(),
+              )),
+              CopiableTextField(TextFormField(
+                controller: TextEditingController(text: ad.priceCent.divide(100).toString()),
                 onChanged: (newText) =>
                     setState(() => ad.priceCent = double.tryParse(newText)! /*?*/ .multiply(100).round()),
                 decoration: const InputDecoration(
@@ -126,7 +127,7 @@ class _AdEditingWidgetState extends State<AdEditingWidget> {
                   labelText: 'Price',
                 ),
                 style: const TextStyle(fontSize: 20),
-              ),
+              )),
               TextFormField(
                 initialValue: metadata.weightGrams?.toString(),
                 decoration: const InputDecoration(
