@@ -4,7 +4,6 @@ import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_rust_bridge_template/main.dart';
 import 'package:flutter_rust_bridge_template/personal_info.dart' as personal_info;
-import 'package:jwt_decoder/jwt_decoder.dart';
 
 import 'credential.dart';
 import 'draggable_files_widget.dart';
@@ -131,59 +130,6 @@ class _AdEditingWidgetState extends State<AdEditingWidget> {
                   ...ad.imgsPath.map((img) => ImageWidget(File(img))).toList(),
                 ]),
               ),
-              TextFormField(
-                initialValue: credential.lbcToken,
-                onChanged: (newText) => setState(() => credential.lbcToken = newText),
-                decoration: const InputDecoration(
-                  icon: Icon(Icons.key),
-                  labelText: 'LBC Bearer token',
-                ),
-                style: const TextStyle(fontSize: 20),
-                autovalidateMode: AutovalidateMode.always,
-                validator: (token) {
-                  try {
-                    final remainingDuration = JwtDecoder.getRemainingTime(token!);
-                    if (remainingDuration.isNegative) {
-                      return 'Token expired';
-                    }
-                  } on FormatException catch (e) {
-                    return 'Not a JWT token';
-                  }
-                  return null;
-                },
-              ),
-              TextFormField(
-                initialValue: credential.dataDomeCookie,
-                onChanged: (newText) => setState(() => credential.dataDomeCookie = newText),
-                decoration: const InputDecoration(
-                  icon: Icon(Icons.cookie),
-                  labelText: 'datadome cookie',
-                ),
-                style: const TextStyle(fontSize: 20),
-              ),
-              ElevatedButton(
-                  onPressed: (ad.title.length < 2 ||
-                          ad.description.length < 15 ||
-                          ad.description.length > 4000 ||
-                          ad.priceCent == null)
-                      ? null
-                      : () async {
-                          print('Try to publish...');
-
-                          final res = await api.publishAd(
-                              ad: ad,
-                              credential: LbcCredential(
-                                  lbcToken: credential.lbcToken, datadomeCookie: credential.dataDomeCookie));
-
-                          if (!context.mounted) return;
-                          if (res) {
-                            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Success')));
-                            credential.saveToFile();
-                          } else {
-                            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Failure')));
-                          }
-                        },
-                  child: const Text('Publish'))
             ],
           ),
         ),
