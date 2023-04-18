@@ -7,6 +7,7 @@ import 'package:flutter_rust_bridge_template/personal_info.dart' as personal_inf
 import 'package:jwt_decoder/jwt_decoder.dart';
 
 import 'credential.dart';
+import 'draggable_files_widget.dart';
 import 'ffi.dart' if (dart.library.html) 'ffi_web.dart';
 import 'helpers.dart';
 
@@ -122,10 +123,11 @@ class _AdEditingWidgetState extends State<AdEditingWidget> {
                 padding: const EdgeInsets.symmetric(vertical: 8.0),
                 child: Row(children: [
                   const Icon(
-                    Icons.image,
+                    Icons.collections,
                     color: Colors.grey,
                   ),
                   const SizedBox(width: 16),
+                  DraggableFilesWidget(uris: ad.imgsPath.map((path) => Uri.file(path))),
                   ...ad.imgsPath.map((img) => ImageWidget(File(img))).toList(),
                 ]),
               ),
