@@ -1,10 +1,7 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_rust_bridge_template/helpers.dart';
 
 import 'ad_editing.dart';
-import 'bridge_definitions.dart';
 import 'bundle.dart';
 import 'bundle_selection.dart';
 import 'isbn_decoding.dart';
@@ -45,8 +42,8 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  BookyStep step = //BundleSelectionStep();
-      AdEditingStep(
+  BookyStep step = BundleSelectionStep();
+  /*AdEditingStep(
     bundle: Bundle(
         Directory('/home/julien/Perso/LeBonCoin/chain_automatisation/open_cv_test/test_images/booky_example/normal')),
     metadata: {
@@ -57,7 +54,7 @@ class _MyAppState extends State<MyApp> {
           keywords: ['kw1', 'kw2', 'kw3'],
           priceCent: 1234)
     },
-  );
+  );*/
   /*     MetadataCollectingStep(imgsPaths: [
     '/home/julien/Perso/LeBonCoin/chain_automatisation/test_images/20230204_194742.jpg',
     '/home/julien/Perso/LeBonCoin/chain_automatisation/test_images/20230204_194746.jpg',

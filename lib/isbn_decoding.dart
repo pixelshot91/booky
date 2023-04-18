@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_rust_bridge_template/main.dart';
+import 'package:kt_dart/collection.dart';
 
 import 'helpers.dart';
 
@@ -15,8 +16,7 @@ class ISBNDecodingWidget extends StatefulWidget {
 }
 
 class _ISBNDecodingWidgetState extends State<ISBNDecodingWidget> {
-  // TODO: Don't use Map because operator[] accept Object as parameter instead of o Key type
-  Map<String, Future<List<String>>> isbns = {};
+  KtMutableMap<String, Future<List<String>>> isbns = KtMutableMap.empty();
 
   @override
   void initState() {
@@ -50,7 +50,7 @@ class _ISBNDecodingWidgetState extends State<ISBNDecodingWidget> {
                         children: [
                           ImageWidget(imgPath),
                           FutureBuilder(
-                              future: isbns[imgPath]!,
+                              future: isbns[imgPath.path]!,
                               builder: (context, snap) {
                                 if (snap.hasData == false) {
                                   return const CircularProgressIndicator();
@@ -65,7 +65,7 @@ class _ISBNDecodingWidgetState extends State<ISBNDecodingWidget> {
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: FutureBuilder(
-                future: Future.wait(isbns.values),
+                future: Future.wait(isbns.values.iter),
                 builder: (context, snap) {
                   return ElevatedButton(
                       onPressed: () {

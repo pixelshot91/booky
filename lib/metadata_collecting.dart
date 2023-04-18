@@ -28,8 +28,9 @@ class MetadataCollectingWidget extends StatefulWidget {
   final MetadataCollectingStep step;
   final void Function(AdEditingStep newStep) onSubmit;
 
-  final blurbTextFieldController = TextEditingController();
   final titleTextFieldController = TextEditingController();
+  final authorsTextFieldController = TextEditingController();
+  final blurbTextFieldController = TextEditingController();
   final priceTextFieldController = TextEditingController();
 
   @override
@@ -57,6 +58,13 @@ class _MetadataCollectingWidgetState extends State<MetadataCollectingWidget> {
     });
   }
 
+  void _updateManualAuthors(String isbn, String newAuthor) {
+    setState(() {
+      metadata[isbn]!.manual.authors = [Author(firstName: '', lastName: newAuthor)];
+      widget.authorsTextFieldController.text = newAuthor;
+    });
+  }
+
   void _updateManualBlurb(String isbn, String newBlurb) {
     setState(() {
       metadata[isbn]!.manual.blurb = newBlurb;
@@ -78,6 +86,12 @@ class _MetadataCollectingWidgetState extends State<MetadataCollectingWidget> {
                   if (value != null) {
                     replaceIfBetterString(value.title, metadata[isbn]!.manual.title!, () {
                       _updateManualTitle(isbn, value.title!);
+                    });
+
+                    // TODO: handle list of authors
+                    final joinedAuthors = value.authors.toText();
+                    replaceIfBetterString(joinedAuthors, metadata[isbn]!.manual.authors.toText(), () {
+                      _updateManualAuthors(isbn, joinedAuthors);
                     });
                     replaceIfBetterString(value.blurb, metadata[isbn]!.manual.blurb!, () {
                       _updateManualBlurb(isbn, value.blurb!);
@@ -136,7 +150,7 @@ class _MetadataCollectingWidgetState extends State<MetadataCollectingWidget> {
                             FutureWidget(
                               future: metadata[isbn]!.mdFromProviders.entries.first.value,
                               builder: (data) => TextFormField(
-                                initialValue: data?.authors.toText(),
+                                controller: widget.authorsTextFieldController,
                                 onChanged: (newText) => setState(() => manual.authors =
                                     newText.split('\n').map((line) => Author(firstName: '', lastName: line)).toList()),
                                 decoration: const InputDecoration(
