@@ -78,9 +78,8 @@ class _MyAppState extends State<MyApp> {
           MetadataCollectingStep() => MetadataCollectingWidget(
               step: step as MetadataCollectingStep,
               onSubmit: (AdEditingStep newStep) => setState(() => step = newStep)),
-          AdEditingStep() => AdEditingWidget(
-              step: step as AdEditingStep,
-              onSubmit: (bool publishSuccess) => print('onSubmit with bool = $publishSuccess')),
+          AdEditingStep() =>
+            AdEditingWidget(step: step as AdEditingStep, onSubmit: () => setState(() => step = BundleSelectionStep())),
           BookyStep() => throw UnimplementedError('Not possible')
         });
   }

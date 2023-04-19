@@ -14,7 +14,7 @@ import 'helpers.dart';
 class AdEditingWidget extends StatefulWidget {
   const AdEditingWidget({required this.step, required this.onSubmit});
   final AdEditingStep step;
-  final void Function(bool newStep) onSubmit;
+  final void Function() onSubmit;
 
   @override
   State<AdEditingWidget> createState() => _AdEditingWidgetState();
@@ -166,6 +166,7 @@ class _AdEditingWidgetState extends State<AdEditingWidget> {
                     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                       content: Text('Moved'),
                     ));
+                    widget.onSubmit();
                   },
                   child: const Text('Mark as published'))
             ],
