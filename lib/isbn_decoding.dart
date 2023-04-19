@@ -33,7 +33,7 @@ class _ISBNDecodingWidgetState extends State<ISBNDecodingWidget> {
           throw Exception('decoder status is ${decoderProcess.exitCode}');
         }
         final s = decoderProcess.stdout as String;
-        return s.split(' ').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
+        return s.split('\n').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
       });
     });
   }
