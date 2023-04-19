@@ -5,16 +5,17 @@ import 'package:super_native_extensions/raw_drag_drop.dart' as raw;
 import 'package:super_native_extensions/widgets.dart';
 
 class DraggableFilesWidget extends StatelessWidget {
-  const DraggableFilesWidget({required this.uris});
+  const DraggableFilesWidget({required this.uris, required this.child});
 
   final Iterable<Uri> uris;
+  final Widget child;
 
   @override
   Widget build(BuildContext context) => FallbackSnapshotWidget(
         child: Builder(
             builder: (context) => BaseDraggableWidget(
                   hitTestBehavior: HitTestBehavior.deferToChild,
-                  child: const Text('Drag and drop images'),
+                  child: child,
                   dragConfiguration: (location, session) async {
                     Future<DragImage?> getSnapshot(Offset location) async {
                       final snapshotter = Snapshotter.of(context)!;
