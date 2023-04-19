@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_rust_bridge_template/main.dart';
 import 'package:path/path.dart' as path;
@@ -51,9 +52,14 @@ class BundleWidget extends StatelessWidget {
                   .listSync()
                   .whereType<File>()
                   .where((f) => path.extension(f.path) == '.jpg')
+                  .sorted((f1, f2) => f1.lastModifiedSync().compareTo(f2.lastModifiedSync()))
                   .map((f) => Padding(
                         padding: const EdgeInsets.all(8.0),
-                        child: Image.file(f, height: 150),
+                        child: Image.file(
+                          f,
+                          height: 150,
+                          filterQuality: FilterQuality.medium,
+                        ),
                       ))
                   .toList(),
             )),
