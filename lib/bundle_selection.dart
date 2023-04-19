@@ -6,6 +6,7 @@ import 'package:flutter_rust_bridge_template/main.dart';
 import 'package:path/path.dart' as path;
 
 import 'bundle.dart';
+import 'helpers.dart';
 
 class BundleSelection extends StatelessWidget {
   const BundleSelection({required this.onSubmit});
@@ -55,11 +56,7 @@ class BundleWidget extends StatelessWidget {
                   .sorted((f1, f2) => f1.lastModifiedSync().compareTo(f2.lastModifiedSync()))
                   .map((f) => Padding(
                         padding: const EdgeInsets.all(8.0),
-                        child: Image.file(
-                          f,
-                          height: 150,
-                          filterQuality: FilterQuality.medium,
-                        ),
+                        child: ImageWidget(f),
                       ))
                   .toList(),
             )),

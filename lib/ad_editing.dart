@@ -4,6 +4,7 @@ import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_rust_bridge_template/main.dart';
 import 'package:flutter_rust_bridge_template/personal_info.dart' as personal_info;
+import 'package:path/path.dart' as path;
 
 import 'copiable_text_field.dart';
 import 'draggable_files_widget.dart';
@@ -143,10 +144,30 @@ class _AdEditingWidgetState extends State<AdEditingWidget> {
                     color: Colors.grey,
                   ),
                   const SizedBox(width: 16),
-                  DraggableFilesWidget(uris: ad.imgsPath.map((path) => Uri.file(path))),
-                  ...ad.imgsPath.map((img) => ImageWidget(File(img))).toList(),
+                  DraggableFilesWidget(
+                    uris: ad.imgsPath.map((path) => Uri.file(path)),
+                    child: Column(
+                      children: [
+                        Row(
+                          children: ad.imgsPath.map((img) => ImageWidget(File(img))).toList(),
+                        ),
+                        const Text('Drag and drop images')
+                      ],
+                    ),
+                  ),
                 ]),
               ),
+              ElevatedButton(
+                  onPressed: () {
+                    final d = widget.step.bundle.directory;
+                    final segments = path.split(d.path);
+                    segments[segments.length - 2] = 'booky_done';
+                    d.renameSync(path.joinAll(segments));
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                      content: Text('Moved'),
+                    ));
+                  },
+                  child: const Text('Mark as published'))
             ],
           ),
         ),
