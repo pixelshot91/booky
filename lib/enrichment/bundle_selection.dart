@@ -2,11 +2,11 @@ import 'dart:io';
 
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_rust_bridge_template/main.dart';
 import 'package:path/path.dart' as path;
 
-import 'bundle.dart';
-import 'helpers.dart';
+import '../bundle.dart';
+import '../helpers.dart';
+import 'enrichment.dart';
 
 class BundleSelection extends StatelessWidget {
   const BundleSelection({required this.onSubmit});

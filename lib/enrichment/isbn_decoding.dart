@@ -1,10 +1,10 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_rust_bridge_template/main.dart';
 import 'package:kt_dart/collection.dart';
 
-import 'helpers.dart';
+import '../helpers.dart';
+import 'enrichment.dart';
 
 class ISBNDecodingWidget extends StatefulWidget {
   const ISBNDecodingWidget({required this.step, required this.onSubmit});
