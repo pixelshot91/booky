@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_rust_bridge_template/helpers.dart';
 
-import 'ffi.dart' if (dart.library.html) 'ffi_web.dart';
-import 'main.dart';
+import '../ffi.dart' if (dart.library.html) 'ffi_web.dart';
+import 'enrichment.dart';
 
 const noneText = Text('None', style: TextStyle(fontStyle: FontStyle.italic));
 
