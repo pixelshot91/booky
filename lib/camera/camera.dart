@@ -59,7 +59,15 @@ class _CameraExampleHomeState extends State<CameraExampleHome> with WidgetsBindi
     _generateNewFolderPath();
     WidgetsBinding.instance.addObserver(this);
 
-    _onNewCameraSelected(_cameras.first);
+    Future(() async {
+      try {
+        // WidgetsFlutterBinding.ensureInitialized();
+        _cameras = await availableCameras();
+      } on CameraException catch (e) {
+        _logError(e.code, e.description);
+      }
+      _onNewCameraSelected(_cameras.first);
+    });
   }
 
   @override
