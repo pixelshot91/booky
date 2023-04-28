@@ -12,7 +12,7 @@ class ImageWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Image.file(
       image,
-      height: 200,
+      fit: BoxFit.fitHeight,
       isAntiAlias: true,
       filterQuality: FilterQuality.medium,
     );
