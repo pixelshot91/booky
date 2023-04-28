@@ -9,11 +9,16 @@ import '../common.dart' as common;
 import '../helpers.dart';
 import 'enrichment.dart';
 
-class BundleSelection extends StatelessWidget {
+class BundleSelection extends StatefulWidget {
   const BundleSelection({required this.onSubmit});
 
   final void Function(ISBNDecodingStep newStep) onSubmit;
 
+  @override
+  State<BundleSelection> createState() => _BundleSelectionState();
+}
+
+class _BundleSelectionState extends State<BundleSelection> {
   @override
   Widget build(BuildContext context) {
     final bundleDirs = common.bookyDir.listSync().whereType<Directory>().sorted((d1, d2) => d1.path.compareTo(d2.path));
@@ -27,8 +32,10 @@ class BundleSelection extends StatelessWidget {
             .map((d) => Padding(
                   padding: const EdgeInsets.all(2.0),
                   child: GestureDetector(
-                    child: BundleWidget(d),
-                    onTap: () => onSubmit(ISBNDecodingStep(bundle: Bundle(d))),
+                    child: BundleWidget(d, onDelete: () {
+                      setState(() {});
+                    }),
+                    onTap: () => widget.onSubmit(ISBNDecodingStep(bundle: Bundle(d))),
                   ),
                 ))
             .toList(),
@@ -38,9 +45,10 @@ class BundleSelection extends StatelessWidget {
 }
 
 class BundleWidget extends StatelessWidget {
-  const BundleWidget(this.directory);
+  const BundleWidget(this.directory, {required this.onDelete});
 
   final Directory directory;
+  final void Function() onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -65,7 +73,15 @@ class BundleWidget extends StatelessWidget {
                 const Expanded(child: SizedBox.expand()),
                 IconButton(
                   icon: const Icon(Icons.delete),
-                  onPressed: () {},
+                  onPressed: () {
+                    final segments = path.split(directory.path);
+                    segments[segments.length - 2] = 'booky_deleted';
+                    directory.renameSync(path.joinAll(segments));
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                      content: Text('Deleted'),
+                    ));
+                    onDelete();
+                  },
                 ),
               ],
             ),
