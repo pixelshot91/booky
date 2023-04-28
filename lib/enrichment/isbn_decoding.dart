@@ -44,23 +44,26 @@ class _ISBNDecodingWidgetState extends State<ISBNDecodingWidget> {
       body: Column(
         children: [
           Wrap(
-            children: [
-              ...widget.step.bundle.images
-                  .map((imgPath) => Column(
-                        children: [
-                          ImageWidget(imgPath),
-                          FutureBuilder(
-                              future: isbns[imgPath.path]!,
-                              builder: (context, snap) {
-                                if (snap.hasData == false) {
-                                  return const CircularProgressIndicator();
-                                }
-                                return Column(children: snap.data!.map((isbn) => Text(isbn)).toList());
-                              })
-                        ],
-                      ))
-                  .toList(),
-            ],
+            children: widget.step.bundle.images
+                .map((imgPath) => Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Column(
+                          children: [
+                            SizedBox(height: 300, child: ImageWidget(imgPath)),
+                            FutureBuilder(
+                                future: isbns[imgPath.path]!,
+                                builder: (context, snap) {
+                                  if (snap.hasData == false) {
+                                    return const CircularProgressIndicator();
+                                  }
+                                  return Column(children: snap.data!.map((isbn) => Text(isbn)).toList());
+                                })
+                          ],
+                        ),
+                      ),
+                    ))
+                .toList(),
           ),
           Padding(
             padding: const EdgeInsets.all(8.0),
