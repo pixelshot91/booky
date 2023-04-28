@@ -21,11 +21,15 @@ class BundleSelection extends StatefulWidget {
 class _BundleSelectionState extends State<BundleSelection> {
   @override
   Widget build(BuildContext context) {
-    final bundleDirs = common.bookyDir.listSync().whereType<Directory>().sorted((d1, d2) => d1.path.compareTo(d2.path));
+    return Scaffold(appBar: AppBar(title: const Text('Bundle Section')), body: _getBody());
+  }
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Bundle Section')),
-      body: GridView.extent(
+  Widget _getBody() {
+    try {
+      final bundleDirs =
+          common.bookyDir.listSync().whereType<Directory>().sorted((d1, d2) => d1.path.compareTo(d2.path));
+
+      return GridView.extent(
         maxCrossAxisExtent: 500,
         childAspectRatio: 2,
         children: bundleDirs
@@ -39,8 +43,26 @@ class _BundleSelectionState extends State<BundleSelection> {
                   ),
                 ))
             .toList(),
-      ),
-    );
+      );
+    } on PathNotFoundException {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'Device not connected',
+              style: TextStyle(fontSize: 30),
+            ),
+            IconButton(
+              icon: const Icon(Icons.refresh),
+              onPressed: () {
+                setState(() {});
+              },
+            ),
+          ],
+        ),
+      );
+    }
   }
 }
 
