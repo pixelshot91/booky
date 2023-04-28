@@ -70,7 +70,8 @@ class _EnrichmentAppState extends State<EnrichmentApp> {
             BundleSelection(onSubmit: (ISBNDecodingStep newStep) => setState(() => step = newStep)),
           ISBNDecodingStep() => ISBNDecodingWidget(
               step: step as ISBNDecodingStep,
-              onSubmit: (MetadataCollectingStep newStep) => setState(() => step = newStep)),
+              onSubmit: (MetadataCollectingStep newStep) => setState(() => step = newStep),
+              onBack: () => setState(() => step = BundleSelectionStep())),
           MetadataCollectingStep() => MetadataCollectingWidget(
               step: step as MetadataCollectingStep,
               onSubmit: (AdEditingStep newStep) => setState(() => step = newStep)),

@@ -7,9 +7,10 @@ import '../helpers.dart';
 import 'enrichment.dart';
 
 class ISBNDecodingWidget extends StatefulWidget {
-  const ISBNDecodingWidget({required this.step, required this.onSubmit});
+  const ISBNDecodingWidget({required this.step, required this.onSubmit, required this.onBack});
   final ISBNDecodingStep step;
   final void Function(MetadataCollectingStep newStep) onSubmit;
+  final void Function() onBack;
 
   @override
   State<ISBNDecodingWidget> createState() => _ISBNDecodingWidgetState();
@@ -41,6 +42,12 @@ class _ISBNDecodingWidgetState extends State<ISBNDecodingWidget> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: widget.onBack,
+          ),
+          title: const Text('ISBN decoding')),
       body: Column(
         children: [
           Wrap(
