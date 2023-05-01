@@ -26,20 +26,23 @@ class _BundleSelectionState extends State<BundleSelection> {
 
   Widget _getBody() {
     try {
-      final bundleDirs =
-          common.bookyDir.listSync().whereType<Directory>().sorted((d1, d2) => d1.path.compareTo(d2.path));
+      final bundles = common.bookyDir
+          .listSync()
+          .whereType<Directory>()
+          .sorted((d1, d2) => d1.path.compareTo(d2.path))
+          .map((d) => Bundle(d));
 
       return GridView.extent(
         maxCrossAxisExtent: 500,
         childAspectRatio: 2,
-        children: bundleDirs
-            .map((d) => Padding(
+        children: bundles
+            .map((bundle) => Padding(
                   padding: const EdgeInsets.all(2.0),
                   child: GestureDetector(
-                    child: BundleWidget(d, onDelete: () {
+                    child: BundleWidget(bundle, onDelete: () {
                       setState(() {});
                     }),
-                    onTap: () => widget.onSubmit(ISBNDecodingStep(bundle: Bundle(d))),
+                    onTap: () => widget.onSubmit(ISBNDecodingStep(bundle: bundle)),
                   ),
                 ))
             .toList(),
@@ -70,9 +73,9 @@ class _BundleSelectionState extends State<BundleSelection> {
 }
 
 class BundleWidget extends StatelessWidget {
-  const BundleWidget(this.directory, {required this.onDelete});
+  const BundleWidget(this.bundle, {required this.onDelete});
 
-  final Directory directory;
+  final Bundle bundle;
   final void Function() onDelete;
 
   @override
@@ -81,15 +84,11 @@ class BundleWidget extends StatelessWidget {
       // decoration: const BoxDecoration(color: Colors.blue),
       child: Column(
         children: [
-          Text(path.basename(directory.path)),
+          Text(path.basename(bundle.directory.path)),
           Expanded(
             child: Row(
               children: [
-                ...directory
-                    .listSync()
-                    .whereType<File>()
-                    .where((f) => path.extension(f.path) == '.jpg')
-                    .sorted((f1, f2) => f1.lastModifiedSync().compareTo(f2.lastModifiedSync()))
+                ...bundle.images
                     .map((f) => Padding(
                           padding: const EdgeInsets.all(8.0),
                           child: ImageWidget(f),
@@ -99,9 +98,9 @@ class BundleWidget extends StatelessWidget {
                 IconButton(
                   icon: const Icon(Icons.delete),
                   onPressed: () {
-                    final segments = path.split(directory.path);
+                    final segments = path.split(bundle.directory.path);
                     segments[segments.length - 2] = 'booky_deleted';
-                    directory.renameSync(path.joinAll(segments));
+                    bundle.directory.renameSync(path.joinAll(segments));
                     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                       content: Text('Deleted'),
                     ));

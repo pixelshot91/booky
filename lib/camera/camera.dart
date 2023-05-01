@@ -7,6 +7,7 @@ import 'package:gallery_saver/gallery_saver.dart';
 import 'package:path/path.dart' as path;
 import 'package:permission_handler/permission_handler.dart';
 
+import '../bundle.dart';
 import '../common.dart' as common;
 import 'draggable_widget.dart';
 
@@ -47,7 +48,7 @@ class _CameraExampleHomeState extends State<CameraExampleHome> with WidgetsBindi
   XFile? imageFile;
   late String bundleName;
 
-  Directory get getBundleDir => Directory(path.join(common.bookyDir.path, bundleName));
+  Bundle get getBundle => Bundle(Directory(path.join(common.bookyDir.path, bundleName)));
 
   void _generateNewFolderPath() {
     bundleName = DateTime.now().toIso8601String().replaceAll(':', '_');
@@ -134,7 +135,7 @@ class _CameraExampleHomeState extends State<CameraExampleHome> with WidgetsBindi
           Padding(
             padding: const EdgeInsets.all(5.0),
             child: BottomWidget(
-                directory: getBundleDir,
+                bundle: getBundle,
                 onSubmit: () {
                   setState(() {
                     _generateNewFolderPath();
@@ -331,8 +332,8 @@ class _CameraExampleHomeState extends State<CameraExampleHome> with WidgetsBindi
 }
 
 class BottomWidget extends StatefulWidget {
-  const BottomWidget({required this.directory, required this.onSubmit});
-  final Directory directory;
+  const BottomWidget({required this.bundle, required this.onSubmit});
+  final Bundle bundle;
   final void Function() onSubmit;
 
   @override
@@ -343,11 +344,10 @@ class _BottomWidgetState extends State<BottomWidget> {
   @override
   Widget build(BuildContext context) {
     try {
-      final images = widget.directory.listSync().where((file) => path.extension(file.path) == '.jpg');
       return Row(
         children: <Widget>[
-          _thumbnailWidget(images),
-          _addMetadataButton(context: context, directory: widget.directory, onSubmit: widget.onSubmit),
+          _thumbnailWidget(widget.bundle.images),
+          _addMetadataButton(context: context, directory: widget.bundle.directory, onSubmit: widget.onSubmit),
         ],
       );
     } on PathNotFoundException {

@@ -149,7 +149,9 @@ class _AdEditingWidgetState extends State<AdEditingWidget> {
                     child: Column(
                       children: [
                         Row(
-                          children: ad.imgsPath.map((img) => ImageWidget(File(img))).toList(),
+                          children: ad.imgsPath.map((img) => SizedBox(
+                              height: 200,
+                              child: ImageWidget(File(img)))).toList(),
                         ),
                         const Text('Drag and drop images')
                       ],
