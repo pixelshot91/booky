@@ -14,17 +14,26 @@ pub async fn extract_price_from_isbn(
     let caps = DesiredCapabilities::chrome();
     let driver = WebDriver::new("http://localhost:9515", caps).await?;
 
-    extract_price_from_url(
-        driver,
-        &format!(
-            "https://www.booksprice.com/comparePrice.do?l=y&searchType=compare&inputData={}",
-            isbn
-        ),
-    )
-    .await
+    let url = format!(
+        "https://www.booksprice.com/comparePrice.do?l=y&searchType=compare&inputData={}",
+        isbn
+    );
+
+    let cache_file_path = format!("{}/booksprice/{}.html", crate::config::CACHE_PATH, isbn);
+    if std::path::Path::new(&cache_file_path).exists() {
+        println!("Using cache");
+        extract_price_from_url(driver, &format!("file://{}", cache_file_path), None).await
+    } else {
+        println!("using online selenium");
+        extract_price_from_url(driver, &url, Some(cache_file_path)).await
+    }
 }
 
-async fn extract_price_from_url(c: WebDriver, url: &str) -> Result<Vec<f32>, WebDriverError> {
+async fn extract_price_from_url(
+    c: WebDriver,
+    url: &str,
+    cache_file_path: Option<String>,
+) -> Result<Vec<f32>, WebDriverError> {
     c.goto(&url).await?;
 
     let wait_res = c
@@ -32,6 +41,12 @@ async fn extract_price_from_url(c: WebDriver, url: &str) -> Result<Vec<f32>, Web
         .wait(Duration::from_secs(10), Duration::from_secs(1))
         .exists()
         .await;
+    let source_file = c.source().await.unwrap();
+
+    if let Some(cache_file_path) = cache_file_path {
+        let write_res = std::fs::write(&cache_file_path, &source_file);
+        write_res.expect(format!("Can't write to file {}", cache_file_path).as_str());
+    }
 
     let entries = c
         .find_all(By::XPath("//*[@id='chart']/tbody/tr[position()>1]"))
@@ -80,6 +95,7 @@ mod tests {
         let prices = extract_price_from_url(
             c,
             &selenium_common::url_from_path(port, "9782884747974.html"),
+            None,
         )
         .await
         .unwrap();
@@ -92,4 +108,13 @@ mod tests {
     fn test_selenium() {
         local_tester!(parse_booksprices_from_9782884747974, "chrome");
     }
+
+    /* #[test]
+
+    fn test_selenium_real_test() -> Result<(), WebDriverError> {
+        let prices = extract_price_from_isbn("9782884747974").unwrap();
+
+        assert_eq!(prices, vec![16.55, 21.85, 23.75, 27.17, 28.15, 43.20]);
+        Ok(())
+    } */
 }
