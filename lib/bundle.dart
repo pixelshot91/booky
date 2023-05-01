@@ -18,6 +18,16 @@ class Bundle {
         .sorted((f1, f2) => f1.lastModifiedSync().compareTo(f2.lastModifiedSync()));
   }
 
+  Directory get compressedImagesDir => Directory(path.join(directory.path, 'compressed'));
+
+  Iterable<File> get compressedImages {
+    return compressedImagesDir
+        .listSync()
+        .whereType<File>()
+        .where((file) => path.extension(file.path) == '.jpg')
+        .sorted((f1, f2) => f1.lastModifiedSync().compareTo(f2.lastModifiedSync()));
+  }
+
   Metadata get metadata {
     final metadataFile = File(path.join(directory.path, 'metadata.json'));
     return Metadata.fromJson(jsonDecode(metadataFile.readAsStringSync()) as Map<String, dynamic>);
