@@ -44,24 +44,27 @@ class _BundleSelectionState extends State<BundleSelection> {
                 ))
             .toList(),
       );
-    } on PathNotFoundException {
-      return Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text(
-              'Device not connected',
-              style: TextStyle(fontSize: 30),
-            ),
-            IconButton(
-              icon: const Icon(Icons.refresh),
-              onPressed: () {
-                setState(() {});
-              },
-            ),
-          ],
-        ),
-      );
+    } catch (e) {
+      if (e is PathNotFoundException || e is FileSystemException) {
+        return Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Device not connected',
+                style: TextStyle(fontSize: 30),
+              ),
+              IconButton(
+                icon: const Icon(Icons.refresh),
+                onPressed: () {
+                  setState(() {});
+                },
+              ),
+            ],
+          ),
+        );
+      }
+      rethrow;
     }
   }
 }
