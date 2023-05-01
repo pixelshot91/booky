@@ -3,7 +3,6 @@ import 'dart:io';
 
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
-import 'package:gallery_saver/gallery_saver.dart';
 import 'package:path/path.dart' as path;
 import 'package:permission_handler/permission_handler.dart';
 
@@ -45,10 +44,10 @@ void _logError(String code, String? message) {
 
 class _CameraExampleHomeState extends State<CameraExampleHome> with WidgetsBindingObserver, TickerProviderStateMixin {
   CameraController? controller;
-  XFile? imageFile;
   late String bundleName;
 
-  Bundle get getBundle => Bundle(Directory(path.join(common.bookyDir.path, bundleName)));
+  Directory get getBundleDir => Directory(path.join(common.bookyDir.path, bundleName));
+  Bundle get getBundle => Bundle(getBundleDir);
 
   void _generateNewFolderPath() {
     bundleName = DateTime.now().toIso8601String().replaceAll(':', '_');
@@ -272,19 +271,15 @@ class _CameraExampleHomeState extends State<CameraExampleHome> with WidgetsBindi
     takePicture().then((XFile? file) async {
       if (mounted) {
         if (file != null) {
-          GallerySaver.saveImage(file.path, albumName: 'booky/$bundleName', toDcim: true).then((bool? success) {
-            if (success != true) {
-              showInSnackBar('Error when saving image');
-            } else {
-              setState(() {
-                imageFile = file;
-              });
-            }
-          });
+          await getBundleDir.create();
+          file.saveTo(_getFirstUnusedName(getBundleDir));
         }
       }
     });
   }
+
+  String _getFirstUnusedName(Directory dir) =>
+      List.generate(20, (index) => path.join(dir.path, '$index.jpg')).firstWhere((path) => !File(path).existsSync());
 
   Future<void> onCaptureOrientationLockButtonPressed() async {
     try {
