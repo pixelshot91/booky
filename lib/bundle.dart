@@ -11,11 +11,7 @@ class Bundle {
   final Directory directory;
 
   Iterable<File> get images {
-    return directory
-        .listSync()
-        .whereType<File>()
-        .where((file) => path.extension(file.path) == '.jpg')
-        .sorted((f1, f2) => f1.lastModifiedSync().compareTo(f2.lastModifiedSync()));
+    return directory.listSync().whereType<File>().where((file) => path.extension(file.path) == '.jpg');
   }
 
   Directory get compressedImagesDir => Directory(path.join(directory.path, 'compressed'));
@@ -25,7 +21,7 @@ class Bundle {
         .listSync()
         .whereType<File>()
         .where((file) => path.extension(file.path) == '.jpg')
-        .sorted((f1, f2) => f1.lastModifiedSync().compareTo(f2.lastModifiedSync()));
+        .sorted((f1, f2) => path.basename(f1.path).compareTo(path.basename(f2.path)));
   }
 
   Metadata get metadata {

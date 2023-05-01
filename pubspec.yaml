@@ -29,7 +29,6 @@ dependencies:
   super_native_extensions: ^0.3.0+2
   kt_dart: ^1.1.0
   camera: ^0.10.3+2
-  gallery_saver: ^2.3.2
   permission_handler: ^10.2.0
   flutter_image_compress: ^1.1.3
 
