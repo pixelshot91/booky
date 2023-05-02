@@ -1,6 +1,5 @@
 # TODO
 
-* [ ] Navigate between enrichment and camera
 * [ ] MetadataCollecting: Create multiple textFieldController when multiple ISBN
 * [ ] Add back the keywords
 * [ ] Price auto fill
@@ -11,3 +10,4 @@
 # DONE
 
 * [x] Compress the images to upload them quicker
+* [x] Navigate between enrichment and camera

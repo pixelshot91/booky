@@ -1,11 +1,6 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_rust_bridge_template/helpers.dart';
 
 import '../bundle.dart';
-import 'ad_editing.dart';
-import 'bundle_selection.dart';
-import 'isbn_decoding.dart';
-import 'metadata_collecting.dart';
 
 sealed class BookyStep {}
 
@@ -30,16 +25,8 @@ class AdEditingStep implements BookyStep {
   AdEditingStep({required this.bundle, required this.metadata});
 }
 
-class EnrichmentApp extends StatefulWidget {
-  const EnrichmentApp({Key? key}) : super(key: key);
-
-  @override
-  State<EnrichmentApp> createState() => _EnrichmentAppState();
-}
-
-class _EnrichmentAppState extends State<EnrichmentApp> {
-  BookyStep step = BundleSelectionStep();
-  /*AdEditingStep(
+// Example State
+/*AdEditingStep(
     bundle: Bundle(
         Directory('/home/julien/Perso/LeBonCoin/chain_automatisation/open_cv_test/test_images/booky_example/normal')),
     metadata: {
@@ -51,7 +38,7 @@ class _EnrichmentAppState extends State<EnrichmentApp> {
           priceCent: 1234)
     },
   );*/
-  /*     MetadataCollectingStep(imgsPaths: [
+/*     MetadataCollectingStep(imgsPaths: [
     '/home/julien/Perso/LeBonCoin/chain_automatisation/test_images/20230204_194742.jpg',
     '/home/julien/Perso/LeBonCoin/chain_automatisation/test_images/20230204_194746.jpg',
     '/home/julien/Perso/LeBonCoin/chain_automatisation/test_images/20230204_194753.jpg',
@@ -60,24 +47,3 @@ class _EnrichmentAppState extends State<EnrichmentApp> {
     '9782253029854',
     // '9782277223634',
   });*/
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-        title: 'BookAdPublisher',
-        theme: ThemeData(primarySwatch: Colors.blue),
-        home: switch (step) {
-          BundleSelectionStep() =>
-            BundleSelection(onSubmit: (ISBNDecodingStep newStep) => setState(() => step = newStep)),
-          ISBNDecodingStep() => ISBNDecodingWidget(
-              step: step as ISBNDecodingStep,
-              onSubmit: (MetadataCollectingStep newStep) => setState(() => step = newStep),
-              onBack: () => setState(() => step = BundleSelectionStep())),
-          MetadataCollectingStep() => MetadataCollectingWidget(
-              step: step as MetadataCollectingStep,
-              onSubmit: (AdEditingStep newStep) => setState(() => step = newStep)),
-          AdEditingStep() =>
-            AdEditingWidget(step: step as AdEditingStep, onSubmit: () => setState(() => step = BundleSelectionStep())),
-          BookyStep() => throw UnimplementedError('Not possible')
-        });
-  }
-}

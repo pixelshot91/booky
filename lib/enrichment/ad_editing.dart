@@ -9,12 +9,12 @@ import '../copiable_text_field.dart';
 import '../draggable_files_widget.dart';
 import '../ffi.dart' if (dart.library.html) 'ffi_web.dart';
 import '../helpers.dart';
+import 'bundle_selection.dart';
 import 'enrichment.dart';
 
 class AdEditingWidget extends StatefulWidget {
-  const AdEditingWidget({required this.step, required this.onSubmit});
+  const AdEditingWidget({required this.step});
   final AdEditingStep step;
-  final void Function() onSubmit;
 
   @override
   State<AdEditingWidget> createState() => _AdEditingWidgetState();
@@ -167,7 +167,7 @@ class _AdEditingWidgetState extends State<AdEditingWidget> {
                     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                       content: Text('Moved'),
                     ));
-                    widget.onSubmit();
+                    Navigator.push(context, MaterialPageRoute<void>(builder: (context) => const BundleSelection()));
                   },
                   child: const Text('Mark as published'))
             ],
