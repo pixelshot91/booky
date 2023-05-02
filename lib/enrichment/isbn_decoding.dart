@@ -1,16 +1,15 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_rust_bridge_template/enrichment/metadata_collecting.dart';
 import 'package:kt_dart/collection.dart';
 
 import '../helpers.dart';
 import 'enrichment.dart';
 
 class ISBNDecodingWidget extends StatefulWidget {
-  const ISBNDecodingWidget({required this.step, required this.onSubmit, required this.onBack});
+  const ISBNDecodingWidget({required this.step});
   final ISBNDecodingStep step;
-  final void Function(MetadataCollectingStep newStep) onSubmit;
-  final void Function() onBack;
 
   @override
   State<ISBNDecodingWidget> createState() => _ISBNDecodingWidgetState();
@@ -42,12 +41,7 @@ class _ISBNDecodingWidgetState extends State<ISBNDecodingWidget> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
-            onPressed: widget.onBack,
-          ),
-          title: const Text('ISBN decoding')),
+      appBar: AppBar(title: const Text('ISBN decoding')),
       body: Column(
         children: [
           Wrap(
@@ -81,7 +75,11 @@ class _ISBNDecodingWidgetState extends State<ISBNDecodingWidget> {
                       onPressed: () {
                         final isbnSet = snap.data!.expand((e) => e).toSet();
                         print('isbnSet = $isbnSet');
-                        widget.onSubmit(MetadataCollectingStep(bundle: widget.step.bundle, isbns: isbnSet));
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute<void>(
+                                builder: (context) => MetadataCollectingWidget(
+                                    step: MetadataCollectingStep(bundle: widget.step.bundle, isbns: isbnSet))));
                       },
                       child: const Text('Validate ISBNs'));
                 }),

@@ -3,17 +3,17 @@ import 'dart:io';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
+import 'package:flutter_rust_bridge_template/camera/camera.dart';
 import 'package:path/path.dart' as path;
 
 import '../bundle.dart';
 import '../common.dart' as common;
 import '../helpers.dart';
 import 'enrichment.dart';
+import 'isbn_decoding.dart';
 
 class BundleSelection extends StatefulWidget {
-  const BundleSelection({required this.onSubmit});
-
-  final void Function(ISBNDecodingStep newStep) onSubmit;
+  const BundleSelection();
 
   @override
   State<BundleSelection> createState() => _BundleSelectionState();
@@ -22,7 +22,13 @@ class BundleSelection extends StatefulWidget {
 class _BundleSelectionState extends State<BundleSelection> {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(appBar: AppBar(title: const Text('Bundle Section')), body: _getBody());
+    return Scaffold(
+        appBar: AppBar(title: const Text('Bundle Section')),
+        floatingActionButton: FloatingActionButton(
+            child: const Icon(Icons.camera),
+            onPressed: () =>
+                Navigator.push(context, MaterialPageRoute<void>(builder: (context) => const CameraWidget()))),
+        body: _getBody());
   }
 
   Widget _getBody() {
@@ -33,7 +39,7 @@ class _BundleSelectionState extends State<BundleSelection> {
           .sorted((d1, d2) => d1.path.compareTo(d2.path))
           .map((d) => Bundle(d));
 
-      return BundleList(bundles, onSubmit: widget.onSubmit);
+      return BundleList(bundles);
     } catch (e) {
       if (e is PathNotFoundException || e is FileSystemException) {
         return Center(
@@ -60,10 +66,8 @@ class _BundleSelectionState extends State<BundleSelection> {
 }
 
 class BundleList extends StatefulWidget {
-  const BundleList(this.bundles, {required this.onSubmit});
+  const BundleList(this.bundles);
   final Iterable<Bundle> bundles;
-
-  final void Function(ISBNDecodingStep newStep) onSubmit;
 
   @override
   State<BundleList> createState() => _BundleListState();
@@ -115,7 +119,12 @@ class _BundleListState extends State<BundleList> {
                     setState(() {});
                   }),
                   onTap: () {
-                    widget.onSubmit(ISBNDecodingStep(bundle: bundle));
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute<void>(
+                            builder: (context) => ISBNDecodingWidget(
+                                  step: ISBNDecodingStep(bundle: bundle),
+                                )));
                   },
                 ),
               ))

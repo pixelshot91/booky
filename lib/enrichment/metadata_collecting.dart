@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_rust_bridge_template/enrichment/ad_editing.dart';
 import 'package:flutter_rust_bridge_template/helpers.dart';
 
 import '../ffi.dart' if (dart.library.html) 'ffi_web.dart';
@@ -24,9 +25,8 @@ class SelectableTextAndUse extends StatelessWidget {
 }
 
 class MetadataCollectingWidget extends StatefulWidget {
-  MetadataCollectingWidget({required this.step, required this.onSubmit});
+  MetadataCollectingWidget({required this.step});
   final MetadataCollectingStep step;
-  final void Function(AdEditingStep newStep) onSubmit;
 
   final titleTextFieldController = TextEditingController();
   final authorsTextFieldController = TextEditingController();
@@ -232,9 +232,13 @@ class _MetadataCollectingWidgetState extends State<MetadataCollectingWidget> {
               padding: const EdgeInsets.all(8.0),
               child: ElevatedButton(
                   onPressed: () {
-                    widget.onSubmit(AdEditingStep(
-                        bundle: widget.step.bundle,
-                        metadata: metadata.map((key, value) => MapEntry(key, value.manual))));
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute<void>(
+                            builder: (context) => AdEditingWidget(
+                                step: AdEditingStep(
+                                    bundle: widget.step.bundle,
+                                    metadata: metadata.map((key, value) => MapEntry(key, value.manual))))));
                   },
                   child: const Text('Validate Metadatas')),
             )

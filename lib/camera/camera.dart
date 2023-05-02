@@ -11,30 +11,14 @@ import '../common.dart' as common;
 import 'draggable_widget.dart';
 
 /// Camera example home widget.
-class CameraExampleHome extends StatefulWidget {
+class CameraWidget extends StatefulWidget {
   /// Default Constructor
-  const CameraExampleHome({Key? key}) : super(key: key);
+  const CameraWidget({Key? key}) : super(key: key);
 
   @override
-  State<CameraExampleHome> createState() {
-    return _CameraExampleHomeState();
+  State<CameraWidget> createState() {
+    return _CameraWidgetState();
   }
-}
-
-/// Returns a suitable camera icon for [direction].
-IconData getCameraLensIcon(CameraLensDirection direction) {
-  switch (direction) {
-    case CameraLensDirection.back:
-      return Icons.camera_rear;
-    case CameraLensDirection.front:
-      return Icons.camera_front;
-    case CameraLensDirection.external:
-      return Icons.camera;
-  }
-  // This enum is from a different package, so a new value could be added at
-  // any time. The example should keep working if that happens.
-  // ignore: dead_code
-  return Icons.camera;
 }
 
 void _logError(String code, String? message) {
@@ -42,7 +26,7 @@ void _logError(String code, String? message) {
   print('Error: $code${message == null ? '' : '\nError Message: $message'}');
 }
 
-class _CameraExampleHomeState extends State<CameraExampleHome> with WidgetsBindingObserver, TickerProviderStateMixin {
+class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver, TickerProviderStateMixin {
   CameraController? controller;
   late String bundleName;
 
@@ -431,19 +415,6 @@ class _MetadataWidgetState extends State<MetadataWidget> {
               widget.onSubmit();
             })
       ],
-    );
-  }
-}
-
-/// CameraApp is the Main Application.
-class CameraApp extends StatelessWidget {
-  /// Default Constructor
-  const CameraApp({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return const MaterialApp(
-      home: CameraExampleHome(),
     );
   }
 }
