@@ -42,57 +42,59 @@ class _ISBNDecodingWidgetState extends State<ISBNDecodingWidget> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('ISBN decoding')),
-      body: Column(
-        children: [
-          Wrap(
-            children: widget.step.bundle.images
-                .map((imgPath) => Card(
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Column(
-                          children: [
-                            SizedBox(height: 300, child: ImageWidget(imgPath)),
-                            FutureBuilder(
-                                future: isbns[imgPath.path]!,
-                                builder: (context, snap) {
-                                  if (snap.hasData == false) {
-                                    return const CircularProgressIndicator();
-                                  }
-                                  return Column(
-                                      children: snap.data!
-                                          .map((isbn) => Text(
-                                                isbn,
-                                                style: TextStyle(
-                                                    decoration:
-                                                        isbn.startsWith('978') ? null : TextDecoration.lineThrough),
-                                              ))
-                                          .toList());
-                                })
-                          ],
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            Wrap(
+              children: widget.step.bundle.images
+                  .map((imgPath) => Card(
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Column(
+                            children: [
+                              SizedBox(height: 600, child: ImageWidget(imgPath)),
+                              FutureBuilder(
+                                  future: isbns[imgPath.path]!,
+                                  builder: (context, snap) {
+                                    if (snap.hasData == false) {
+                                      return const CircularProgressIndicator();
+                                    }
+                                    return Column(
+                                        children: snap.data!
+                                            .map((isbn) => Text(
+                                                  isbn,
+                                                  style: TextStyle(
+                                                      decoration:
+                                                          isbn.startsWith('978') ? null : TextDecoration.lineThrough),
+                                                ))
+                                            .toList());
+                                  })
+                            ],
+                          ),
                         ),
-                      ),
-                    ))
-                .toList(),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: FutureBuilder(
-                future: Future.wait(isbns.values.iter),
-                builder: (context, snap) {
-                  return ElevatedButton(
-                      onPressed: () {
-                        final isbnSet = snap.data!.expand((e) => e).where((isbn) => isbn.startsWith('978')).toSet();
-                        print('isbnSet = $isbnSet');
-                        Navigator.push(
-                            context,
-                            MaterialPageRoute<void>(
-                                builder: (context) => BooksMetadataCollectingWidget(
-                                    step: MetadataCollectingStep(bundle: widget.step.bundle, isbns: isbnSet))));
-                      },
-                      child: const Text('Validate ISBNs'));
-                }),
-          )
-        ],
+                      ))
+                  .toList(),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: FutureBuilder(
+                  future: Future.wait(isbns.values.iter),
+                  builder: (context, snap) {
+                    return ElevatedButton(
+                        onPressed: () {
+                          final isbnSet = snap.data!.expand((e) => e).where((isbn) => isbn.startsWith('978')).toSet();
+                          print('isbnSet = $isbnSet');
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute<void>(
+                                  builder: (context) => BooksMetadataCollectingWidget(
+                                      step: MetadataCollectingStep(bundle: widget.step.bundle, isbns: isbnSet))));
+                        },
+                        child: const Text('Validate ISBNs'));
+                  }),
+            )
+          ],
+        ),
       ),
     );
   }
