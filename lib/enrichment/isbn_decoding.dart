@@ -1,11 +1,11 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_rust_bridge_template/enrichment/metadata_collecting.dart';
 import 'package:kt_dart/collection.dart';
 
 import '../helpers.dart';
 import 'enrichment.dart';
+import 'metadata_collecting.dart';
 
 class ISBNDecodingWidget extends StatefulWidget {
   const ISBNDecodingWidget({required this.step});
@@ -78,7 +78,7 @@ class _ISBNDecodingWidgetState extends State<ISBNDecodingWidget> {
                         Navigator.push(
                             context,
                             MaterialPageRoute<void>(
-                                builder: (context) => MetadataCollectingWidget(
+                                builder: (context) => BooksMetadataCollectingWidget(
                                     step: MetadataCollectingStep(bundle: widget.step.bundle, isbns: isbnSet))));
                       },
                       child: const Text('Validate ISBNs'));

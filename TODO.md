@@ -1,6 +1,5 @@
 # TODO
 
-* [ ] MetadataCollecting: Create multiple textFieldController when multiple ISBN
 * [ ] Add back the keywords
 * [ ] Price auto fill
 * [ ] Launch the scrapping asynchronously to avoid waiting for the provider (notably BooksPrice)
@@ -9,5 +8,6 @@
 
 # DONE
 
-* [x] Compress the images to upload them quicker
+* [x] MetadataCollecting: Create multiple textFieldController when multiple ISBN
 * [x] Navigate between enrichment and camera
+* [x] Compress the images to upload them quicker
