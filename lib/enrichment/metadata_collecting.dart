@@ -188,6 +188,7 @@ class _BookMetadataCollectingWidgetState extends State<_BookMetadataCollectingWi
                     future: metadata.entries.first.value,
                     builder: (data) => TextFormField(
                       controller: widget.controllers.authorsTextFieldController,
+                      maxLines: null,
                       decoration: const InputDecoration(
                         icon: Icon(Icons.person),
                         labelText: 'Authors',
