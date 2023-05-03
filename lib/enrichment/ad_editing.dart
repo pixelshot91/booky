@@ -64,15 +64,21 @@ class _AdEditingWidgetState extends State<AdEditingWidget> {
   }
 
   String _getDescription(Iterable<MapEntry<String, BookMetaDataManual>> metadataFromIsbn) {
-    if (metadataFromIsbn.length == 1) {
-      final blurb = metadataFromIsbn.single.value.blurb;
-      if (blurb == null) return '';
-      return 'Résumé:\n' + blurb;
+    final booksWithBlurb = metadataFromIsbn.where((entry) => entry.value.blurb?.isNotEmpty == true);
+    if (booksWithBlurb.length == 0) {
+      return '';
+    } else if (booksWithBlurb.length == 1) {
+      final onlyBookWithBlurb = booksWithBlurb.single.value;
+      String titleAndAuthor = '';
+      // Even if only one book has a blurb, multiple book are in the same ad, so we need to specify which book this blurb is about
+      if (metadataFromIsbn.length > 1) {
+        titleAndAuthor = _bookFormatTitleAndAuthor(onlyBookWithBlurb.title!, onlyBookWithBlurb.authors) + '\n';
+      }
+      return 'Résumé:\n' + titleAndAuthor + onlyBookWithBlurb.blurb!;
     } else {
-      final bookTitles = metadataFromIsbn
-          .map((entry) => _bookFormatTitleAndAuthor(entry.value.title!, entry.value.authors))
-          .join('\n');
-      final blurbs = metadataFromIsbn
+      final bookTitles =
+          booksWithBlurb.map((entry) => _bookFormatTitleAndAuthor(entry.value.title!, entry.value.authors)).join('\n ');
+      final blurbs = booksWithBlurb
           .map((entry) =>
               _bookFormatTitleAndAuthor(entry.value.title!, entry.value.authors) + ':\n' + entry.value.blurb!)
           .join('\n');
