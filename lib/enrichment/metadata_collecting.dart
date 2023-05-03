@@ -52,12 +52,9 @@ class _BooksMetadataCollectingWidgetState extends State<BooksMetadataCollectingW
                                         key,
                                         BookMetaDataManual(
                                           title: value.titleTextFieldController.text,
-                                          authors: value.authorsTextFieldController.text
-                                              .split('\n')
-                                              .map((line) => Author(firstName: '', lastName: line))
-                                              .toList(),
+                                          authors: _stringToAuthors(value.authorsTextFieldController.text),
                                           blurb: value.blurbTextFieldController.text,
-                                          keywords: [],
+                                          keywords: _stringToKeywords(value.keywordsTextFieldController.text),
                                           priceCent:
                                               double.parse(value.priceTextFieldController.text).multiply(100).round(),
                                         )))))));
@@ -75,8 +72,15 @@ class _BookControllerSet {
   final TextEditingController titleTextFieldController = TextEditingController();
   final TextEditingController authorsTextFieldController = TextEditingController();
   final TextEditingController blurbTextFieldController = TextEditingController();
+  final TextEditingController keywordsTextFieldController = TextEditingController();
   final TextEditingController priceTextFieldController = TextEditingController();
 }
+
+String _keywordsToString(List<String> keywords) => keywords.join(', ');
+List<String> _stringToKeywords(String s) => s.split(', ').toList();
+
+String _authorsToString(List<Author> authors) => authors.map((a) => a.toText()).join('\n');
+List<Author> _stringToAuthors(String s) => s.split('\n').map((line) => Author(firstName: '', lastName: line)).toList();
 
 class _BookMetadataCollectingWidget extends StatefulWidget {
   const _BookMetadataCollectingWidget({required this.isbn, required this.controllers});
@@ -103,14 +107,17 @@ class _BookMetadataCollectingWidgetState extends State<_BookMetadataCollectingWi
             _updateManualTitle(value.title!);
           });
 
-          final joinedAuthors = value.authors.toText();
+          final joinedAuthors = _authorsToString(value.authors);
           _replaceIfBetterString(joinedAuthors, widget.controllers.authorsTextFieldController.text, () {
             _updateManualAuthors(joinedAuthors);
           });
           _replaceIfBetterString(value.blurb, widget.controllers.blurbTextFieldController.text, () {
             _updateManualBlurb(value.blurb!);
           });
-          // TODO: handle keywords
+          final joinedKeywords = _keywordsToString(value.keywords);
+          _replaceIfBetterString(joinedAuthors, widget.controllers.keywordsTextFieldController.text, () {
+            _updateManualKeywords(joinedKeywords);
+          });
         }
       });
       return MapEntry(provider, md);
@@ -132,6 +139,10 @@ class _BookMetadataCollectingWidgetState extends State<_BookMetadataCollectingWi
 
   void _updateManualBlurb(String newBlurb) {
     setState(() => widget.controllers.blurbTextFieldController.text = newBlurb);
+  }
+
+  void _updateManualKeywords(String newKeywords) {
+    setState(() => widget.controllers.keywordsTextFieldController.text = newKeywords);
   }
 
   @override
@@ -184,7 +195,7 @@ class _BookMetadataCollectingWidgetState extends State<_BookMetadataCollectingWi
                         if (authors == null || authors.isEmpty) {
                           return _noneText;
                         }
-                        return SelectableText(authors.toText());
+                        return SelectableText(_authorsToString(authors));
                       })),
                 ]),
                 TableRow(children: [
@@ -207,6 +218,30 @@ class _BookMetadataCollectingWidgetState extends State<_BookMetadataCollectingWi
                         }
                         return _SelectableTextAndUse(
                           blurb,
+                          onUse: (b) => _updateManualBlurb(b),
+                        );
+                      })),
+                ]),
+                TableRow(children: [
+                  FutureWidget(
+                      future: metadata.entries.first.value,
+                      builder: (data) => TextFormField(
+                            controller: widget.controllers.keywordsTextFieldController,
+                            maxLines: null,
+                            decoration: const InputDecoration(
+                              icon: Icon(Icons.manage_search),
+                              labelText: 'Keywords',
+                            ),
+                          )),
+                  ...metadata.entries.map((e) => FutureWidget(
+                      future: e.value,
+                      builder: (data) {
+                        final keywords = data?.keywords;
+                        if (keywords == null) {
+                          return _noneText;
+                        }
+                        return _SelectableTextAndUse(
+                          _keywordsToString(keywords),
                           onUse: (b) => _updateManualBlurb(b),
                         );
                       })),

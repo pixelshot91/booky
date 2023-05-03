@@ -52,10 +52,6 @@ extension AuthorExt on Author {
   String toText() => [firstName, lastName].where((s) => s.isNotEmpty).join(' ');
 }
 
-extension AuthorsExt on List<Author> {
-  String toText() => map((a) => a.toText()).join('\n');
-}
-
 extension IntExt on int {
   int divide(int other) => this ~/ other;
 }
