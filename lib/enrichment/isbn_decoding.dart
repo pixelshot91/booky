@@ -58,7 +58,15 @@ class _ISBNDecodingWidgetState extends State<ISBNDecodingWidget> {
                                   if (snap.hasData == false) {
                                     return const CircularProgressIndicator();
                                   }
-                                  return Column(children: snap.data!.map((isbn) => Text(isbn)).toList());
+                                  return Column(
+                                      children: snap.data!
+                                          .map((isbn) => Text(
+                                                isbn,
+                                                style: TextStyle(
+                                                    decoration:
+                                                        isbn.startsWith('978') ? null : TextDecoration.lineThrough),
+                                              ))
+                                          .toList());
                                 })
                           ],
                         ),
@@ -73,7 +81,7 @@ class _ISBNDecodingWidgetState extends State<ISBNDecodingWidget> {
                 builder: (context, snap) {
                   return ElevatedButton(
                       onPressed: () {
-                        final isbnSet = snap.data!.expand((e) => e).toSet();
+                        final isbnSet = snap.data!.expand((e) => e).where((isbn) => isbn.startsWith('978')).toSet();
                         print('isbnSet = $isbnSet');
                         Navigator.push(
                             context,
