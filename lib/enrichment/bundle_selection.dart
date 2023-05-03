@@ -141,6 +141,35 @@ class BundleWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    const maxImagesShown = 3;
+    final imagesShown = bundle.compressedImages
+        .take(maxImagesShown)
+        .mapIndexed((index, f) {
+          final thumbnail = ImageWidget(f);
+          if (index == maxImagesShown - 1) {
+            final nbImagesNotShown = bundle.compressedImages.length - maxImagesShown;
+            if (nbImagesNotShown > 0) {
+              return LayoutBuilder(
+                builder: (BuildContext context, BoxConstraints constraints) {
+                  return Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      thumbnail,
+                      Positioned.fill(child: ColoredBox(color: Colors.black.withOpacity(0.3))),
+                      Text(
+                        '+$nbImagesNotShown',
+                        style: const TextStyle(color: Colors.white, fontSize: 30),
+                      ),
+                    ],
+                  );
+                },
+              );
+            }
+          }
+          return thumbnail;
+        })
+        .map((w) => Padding(padding: const EdgeInsets.all(8.0), child: w))
+        .toList();
     return Card(
       // decoration: const BoxDecoration(color: Colors.blue),
       child: Column(
@@ -149,12 +178,7 @@ class BundleWidget extends StatelessWidget {
           Expanded(
             child: Row(
               children: [
-                ...bundle.compressedImages
-                    .map((f) => Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: ImageWidget(f),
-                        ))
-                    .toList(),
+                ...imagesShown,
                 const Expanded(child: SizedBox.expand()),
                 IconButton(
                   icon: const Icon(Icons.delete),
