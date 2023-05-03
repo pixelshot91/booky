@@ -1,3 +1,4 @@
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_rust_bridge_template/enrichment/ad_editing.dart';
@@ -118,6 +119,11 @@ class _BookMetadataCollectingWidgetState extends State<_BookMetadataCollectingWi
           _replaceIfBetterString(joinedAuthors, widget.controllers.keywordsTextFieldController.text, () {
             _updateManualKeywords(joinedKeywords);
           });
+
+          if (value.marketPrice.isNotEmpty) {
+            // TODO: If multiple provider give a marketPrice, we should update the manual price by taking into account all the marketPrice received yet, not just the most recent
+            widget.controllers.priceTextFieldController.text = value.marketPrice.average.round().toString();
+          }
         }
       });
       return MapEntry(provider, md);
