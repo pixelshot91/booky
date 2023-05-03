@@ -243,11 +243,11 @@ class _BookMetadataCollectingWidgetState extends State<_BookMetadataCollectingWi
                       future: e.value,
                       builder: (data) {
                         final keywords = data?.keywords;
-                        if (keywords == null) {
+                        if (keywords?.isEmpty ?? true) {
                           return _noneText;
                         }
                         return _SelectableTextAndUse(
-                          _keywordsToString(keywords),
+                          _keywordsToString(keywords!),
                           onUse: (b) => _updateManualBlurb(b),
                         );
                       })),
