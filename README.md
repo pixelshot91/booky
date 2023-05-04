@@ -45,6 +45,8 @@ BookMetaData {
 | [OpenLibrary](https://openlibrary.org/)               | blurb are not translated                    | Its is based on physical books, it is not really a book database                                                                                                                                                            |
 | [Chasse Aux Livre](https://www.chasse-aux-livres.fr/) | price only                                  | it is not possible to parse with Selenium                                                                                                                                                                                   |
 | [AbeBooks](https://www.abebooks.fr/)                  | Seems to have good french blurb             |                                                                                                                                                                                                                             |
+| [Fnac](https://www.fnac.com/)                         | blurb, second-hand price                    |                                                                                                                                                                                                                             |
+| [Librarie Kleber](https://www.librairie-kleber.com/)  | blurb, price                                |                                                                                                                                                                                                                             |
 
 #### GoogleBooks
 GoogleBooks has some inconsistencies:
