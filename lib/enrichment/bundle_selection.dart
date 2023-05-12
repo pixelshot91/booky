@@ -236,17 +236,26 @@ class _BundleWidgetState extends State<BundleWidget> {
                 children: [
                   ...imagesShown,
                   const Expanded(child: SizedBox.expand()),
-                  IconButton(
-                    icon: const Icon(Icons.delete),
-                    onPressed: () {
-                      final segments = path.split(widget.bundle.directory.path);
-                      segments[segments.length - 2] = 'booky_deleted';
-                      widget.bundle.directory.renameSync(path.joinAll(segments));
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                        content: Text('Deleted'),
-                      ));
-                      widget.onDelete();
-                    },
+                  Column(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      if (Platform.isLinux)
+                        IconButton(
+                            onPressed: () => Process.run('pcmanfm', [widget.bundle.directory.path]),
+                            icon: const Icon(Icons.open_in_new)),
+                      IconButton(
+                        icon: const Icon(Icons.delete),
+                        onPressed: () {
+                          final segments = path.split(widget.bundle.directory.path);
+                          segments[segments.length - 2] = 'booky_deleted';
+                          widget.bundle.directory.renameSync(path.joinAll(segments));
+                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                            content: Text('Deleted'),
+                          ));
+                          widget.onDelete();
+                        },
+                      ),
+                    ],
                   ),
                 ],
               ),
