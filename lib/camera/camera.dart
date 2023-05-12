@@ -182,28 +182,25 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
         ),
       );
     } else {
-      return Stack(
-        fit: StackFit.expand,
-        children: [
-          CameraPreview(
-            controller!,
-            child: LayoutBuilder(
-              builder: (context, boxConstraints) => GestureDetector(
-                onTapDown: (TapDownDetails details) async {
-                  _onViewFinderTap(details, boxConstraints);
-                  // The auto focus is not instantaneous. We must wait a little while before taking the picture
-                  // In release mode, if we
-                  // wait 100 ms : blurry
-                  // wait 300 ms : sharp
-                  // The optimum delay shall lie between the bounds
-                  await Future<void>.delayed(const Duration(milliseconds: 300));
-                  _onTakePictureButtonPressed();
-                },
-              ),
+      return Center(
+        child: CameraPreview(
+          controller!,
+          child: LayoutBuilder(
+            builder: (context, boxConstraints) => GestureDetector(
+              onTapDown: (TapDownDetails details) async {
+                _onViewFinderTap(details, boxConstraints);
+                // The auto focus is not instantaneous. We must wait a little while before taking the picture
+                // In release mode, if we
+                // wait 100 ms : blurry
+                // wait 300 ms : sharp
+                // The optimum delay shall lie between the bounds
+                await Future<void>.delayed(const Duration(milliseconds: 300));
+                _onTakePictureButtonPressed();
+              },
+              child: _customPaint,
             ),
           ),
-          if (_customPaint != null) IgnorePointer(child: _customPaint!),
-        ],
+        ),
       );
     }
   }
