@@ -196,7 +196,7 @@ class NativeImpl implements Native {
   }
 
   ProviderEnum _wire2api_provider_enum(dynamic raw) {
-    return ProviderEnum.values[raw];
+    return ProviderEnum.values[raw as int];
   }
 
   ProviderMetadataPair _wire2api_provider_metadata_pair(dynamic raw) {
