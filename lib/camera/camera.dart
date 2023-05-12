@@ -89,6 +89,7 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
   }
   // #enddocregion AppLifecycle
 
+  static const MIN_BARCODE_OCCURENCE = 20;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -122,17 +123,28 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
             child: Row(
               children: [
                 SizedBox(
-                  width: 200,
-                  child: Column(
-                    children: _registeredBarcodes.entries.map((entry) {
-                      final barcode = entry.key;
-                      return Text(
-                        '$barcode ${entry.value}',
-                        style: TextStyle(
-                            fontWeight: barcode.startsWith('978') ? FontWeight.bold : FontWeight.normal,
-                            color: entry.value > 20 ? Colors.black : Colors.grey.shade200),
-                      );
-                    }).toList(),
+                  width: 180,
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Column(
+                      children: _registeredBarcodes.entries
+                          .where((entry) => entry.key.startsWith('978') && entry.value > MIN_BARCODE_OCCURENCE)
+                          .map((entry) {
+                        final barcode = entry.key;
+                        return Row(
+                          children: [
+                            Expanded(child: Text(barcode, style: const TextStyle(fontWeight: FontWeight.bold))),
+                            IconButton(
+                                onPressed: () {
+                                  setState(() {
+                                    _registeredBarcodes.remove(barcode);
+                                  });
+                                },
+                                icon: const Icon(Icons.delete))
+                          ],
+                        );
+                      }).toList(),
+                    ),
                   ),
                 ),
                 Expanded(
