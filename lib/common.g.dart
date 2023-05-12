@@ -9,11 +9,13 @@ part of 'common.dart';
 Metadata _$MetadataFromJson(Map<String, dynamic> json) => Metadata(
       weightGrams: json['weightGrams'] as int?,
       itemState: $enumDecodeNullable(_$ItemStateEnumMap, json['itemState']),
-    );
+    )..isbns =
+        (json['isbns'] as List<dynamic>?)?.map((e) => e as String).toList();
 
 Map<String, dynamic> _$MetadataToJson(Metadata instance) => <String, dynamic>{
       'weightGrams': instance.weightGrams,
       'itemState': _$ItemStateEnumMap[instance.itemState],
+      'isbns': instance.isbns,
     };
 
 const _$ItemStateEnumMap = {
