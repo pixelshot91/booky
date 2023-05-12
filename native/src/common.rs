@@ -1,4 +1,6 @@
-#[derive(Default, Debug, PartialEq)]
+use serde::{Serialize, Deserialize};
+
+#[derive(Default, Debug, PartialEq, Deserialize, Serialize, Clone)]
 pub struct BookMetaDataFromProvider {
     pub title: Option<String>,
     pub authors: Vec<Author>,
@@ -10,7 +12,7 @@ pub struct BookMetaDataFromProvider {
     pub market_price: Vec<f32>,
 }
 
-#[derive(Debug, PartialEq, Eq, Hash, Clone)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize, Serialize)]
 pub struct Author {
     pub first_name: String,
     pub last_name: String,

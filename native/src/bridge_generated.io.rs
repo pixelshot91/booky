@@ -2,6 +2,20 @@ use super::*;
 // Section: wire functions
 
 #[no_mangle]
+pub extern "C" fn wire_get_metadata_from_isbns(
+    port_: i64,
+    isbns: *mut wire_StringList,
+    path: *mut wire_uint_8_list,
+) {
+    wire_get_metadata_from_isbns_impl(port_, isbns, path)
+}
+
+#[no_mangle]
+pub extern "C" fn wire_get_auto_metadata_from_bundle(port_: i64, path: *mut wire_uint_8_list) {
+    wire_get_auto_metadata_from_bundle_impl(port_, path)
+}
+
+#[no_mangle]
 pub extern "C" fn wire_get_metadata_from_provider(
     port_: i64,
     provider: i32,
