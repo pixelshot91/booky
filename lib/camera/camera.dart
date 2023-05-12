@@ -242,7 +242,9 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
     final CameraController cameraController = CameraController(
       cameraDescription,
       ResolutionPreset.max,
-      imageFormatGroup: ImageFormatGroup.jpeg,
+      // If the imageFormatGroup is specified, the stream processing does not work anymore
+      // It seems that the default format for still picture is jpeg, bu the default format for streaming is not
+      // imageFormatGroup: ImageFormatGroup.jpeg,
     );
 
     controller = cameraController;
