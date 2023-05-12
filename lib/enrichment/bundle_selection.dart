@@ -137,21 +137,18 @@ class _BundleListState extends State<BundleList> {
       maxCrossAxisExtent: 500,
       childAspectRatio: 2,
       children: widget.bundles
-          .map((bundle) => Padding(
-                padding: const EdgeInsets.all(2.0),
-                child: GestureDetector(
-                  child: BundleWidget(bundle, onDelete: () {
-                    setState(() {});
-                  }),
-                  onTap: () {
-                    Navigator.push(
-                        context,
-                        MaterialPageRoute<void>(
-                            builder: (context) => ISBNDecodingWidget(
-                                  step: ISBNDecodingStep(bundle: bundle),
-                                )));
-                  },
-                ),
+          .map((bundle) => GestureDetector(
+                child: BundleWidget(bundle, onDelete: () {
+                  setState(() {});
+                }),
+                onTap: () {
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute<void>(
+                          builder: (context) => ISBNDecodingWidget(
+                                step: ISBNDecodingStep(bundle: bundle),
+                              )));
+                },
               ))
           .toList(),
     );
@@ -208,51 +205,54 @@ class _BundleWidgetState extends State<BundleWidget> {
         .map((w) => Padding(padding: const EdgeInsets.all(8.0), child: w))
         .toList();
     return Card(
-      child: Column(
-        children: [
-          // Text(path.basename(widget.bundle.directory.path)),
-          FutureWidget(
-              future: cachedAutoMetadata,
-              builder: (autoMetadata) {
-                final firstBook = autoMetadata.firstOrNull;
-                if (firstBook == null) return const Text('No book identified');
-                final md = firstBook.metadatas.mergeAllProvider();
-                final priceRange = md.marketPrice.toList();
-                return Row(children: [
-                  // Text(firstBook.isbn),
-                  md.title.ifIs(
-                      notnull: (t) => Text(t, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                      nul: () => const Text(
-                            'No title found',
-                            style: TextStyle(fontStyle: FontStyle.italic),
-                          )),
-                  const Spacer(),
-                  priceRange.isEmpty
-                      ? const Text('?')
-                      : Text('${priceRange.first.toInt()} - ${priceRange.last.toInt()} €'),
-                ]);
-              }),
-          Expanded(
-            child: Row(
-              children: [
-                ...imagesShown,
-                const Expanded(child: SizedBox.expand()),
-                IconButton(
-                  icon: const Icon(Icons.delete),
-                  onPressed: () {
-                    final segments = path.split(widget.bundle.directory.path);
-                    segments[segments.length - 2] = 'booky_deleted';
-                    widget.bundle.directory.renameSync(path.joinAll(segments));
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                      content: Text('Deleted'),
-                    ));
-                    widget.onDelete();
-                  },
-                ),
-              ],
+      child: Padding(
+        padding: const EdgeInsets.all(4.0),
+        child: Column(
+          children: [
+            // Text(path.basename(widget.bundle.directory.path)),
+            FutureWidget(
+                future: cachedAutoMetadata,
+                builder: (autoMetadata) {
+                  final firstBook = autoMetadata.firstOrNull;
+                  if (firstBook == null) return const Text('No book identified');
+                  final md = firstBook.metadatas.mergeAllProvider();
+                  final priceRange = md.marketPrice.toList();
+                  return Row(children: [
+                    // Text(firstBook.isbn),
+                    Expanded(
+                        child: md.title.ifIs(
+                            notnull: (t) => TextWithTooltip(t),
+                            nul: () => const Text(
+                                  'No title found',
+                                  style: TextStyle(fontStyle: FontStyle.italic),
+                                ))),
+                    priceRange.isEmpty
+                        ? const Text('?')
+                        : Text('${priceRange.first.toInt()} - ${priceRange.last.toInt()} €'),
+                  ]);
+                }),
+            Expanded(
+              child: Row(
+                children: [
+                  ...imagesShown,
+                  const Expanded(child: SizedBox.expand()),
+                  IconButton(
+                    icon: const Icon(Icons.delete),
+                    onPressed: () {
+                      final segments = path.split(widget.bundle.directory.path);
+                      segments[segments.length - 2] = 'booky_deleted';
+                      widget.bundle.directory.renameSync(path.joinAll(segments));
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                        content: Text('Deleted'),
+                      ));
+                      widget.onDelete();
+                    },
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
