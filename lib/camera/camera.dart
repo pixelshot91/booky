@@ -89,7 +89,13 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
   }
   // #enddocregion AppLifecycle
 
-  static const MIN_BARCODE_OCCURENCE = 20;
+  /// The minimum number of time the barcode stream decoder must see a barcode to consider it valid.
+  /// Use the prevent false barcode decoding to show up (due to glare, poor image quality)
+  static const minBarcodeOccurrence = 20;
+
+  /// All ISBN (EAN-13) should start with 978
+  /// Use to prevent false barcode decoding
+  static const isbnPrefix = '978';
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -128,7 +134,7 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
                     padding: const EdgeInsets.all(8.0),
                     child: Column(
                       children: _registeredBarcodes.entries
-                          .where((entry) => entry.key.startsWith('978') && entry.value > MIN_BARCODE_OCCURENCE)
+                          .where((entry) => entry.key.startsWith(isbnPrefix) && entry.value >= minBarcodeOccurrence)
                           .map((entry) {
                         final barcode = entry.key;
                         return Row(
@@ -366,11 +372,24 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
 
   void _onTakePictureButtonPressed() {
     takePicture().then((XFile? file) async {
+      if (file == null) {
+        return;
+      }
       if (mounted) {
-        if (file != null) {
-          await getBundleDir.create();
-          file.saveTo(_getFirstUnusedName(getBundleDir));
-        }
+        await getBundleDir.create();
+        file.saveTo(_getFirstUnusedName(getBundleDir));
+      }
+
+      final inputImage = InputImage.fromFilePath(file.path);
+      final barcodes = await _barcodeScanner.processImage(inputImage);
+
+      final barcodesString = barcodes.map((barcode) => barcode.displayValue).whereType<String>();
+      for (final barcodeString in barcodesString) {
+        _registeredBarcodes.update(barcodeString, (oldCount) => oldCount + minBarcodeOccurrence,
+            ifAbsent: () => minBarcodeOccurrence);
+      }
+      if (mounted) {
+        setState(() {});
       }
     });
   }
