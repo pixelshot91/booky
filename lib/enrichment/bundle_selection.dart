@@ -102,17 +102,25 @@ class _BundleListState extends State<BundleList> {
   @override
   void initState() {
     super.initState();
-    for (final bundle in widget.bundles) {
-      for (final image in bundle.images) {
-        final segments = path.split(image.path);
-        segments.insert(segments.length - 1, 'compressed');
-        print('new path ${path.joinAll(segments)}');
-        final targetPath = path.joinAll(segments);
-        if (!File(targetPath).existsSync()) {
-          _testCompressAndGetFile(image, targetPath);
+    Future(() async {
+      final futures = widget.bundles.map<Future<void>>((bundle) async {
+        for (final image in bundle.images) {
+          final segments = path.split(image.path);
+          segments.insert(segments.length - 1, 'compressed');
+          print('new path ${path.joinAll(segments)}');
+          final targetPath = path.joinAll(segments);
+          if (!File(targetPath).existsSync()) {
+            await _testCompressAndGetFile(image, targetPath);
+          }
         }
+      });
+      await Future.wait(futures);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('Compression finished'),
+        ));
       }
-    }
+    });
   }
 
   Future<File?> _testCompressAndGetFile(File file, String targetPath) async {
