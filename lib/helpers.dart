@@ -19,6 +19,21 @@ class ImageWidget extends StatelessWidget {
   }
 }
 
+class TextWithTooltip extends StatelessWidget {
+  const TextWithTooltip(this.text);
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: text,
+      child: Text(text,
+          softWrap: false,
+          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, overflow: TextOverflow.fade)),
+    );
+  }
+}
+
 class FutureWidget<T> extends StatelessWidget {
   const FutureWidget({required this.future, required this.builder});
   final Future<T> future;
