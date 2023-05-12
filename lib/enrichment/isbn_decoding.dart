@@ -1,8 +1,7 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:kt_dart/collection.dart';
 
+import '../common.dart' as common;
 import '../helpers.dart';
 import 'enrichment.dart';
 import 'metadata_collecting.dart';
@@ -22,19 +21,7 @@ class _ISBNDecodingWidgetState extends State<ISBNDecodingWidget> {
   void initState() {
     super.initState();
     widget.step.bundle.images.forEach((image) {
-      final imgPath = image.path;
-      isbns[imgPath] = Future(() async {
-        final decoderProcess = await Process.run(
-            '/home/julien/Perso/LeBonCoin/chain_automatisation/book_metadata_finder/detect_barcode',
-            ['-in=' + imgPath]);
-        if (decoderProcess.exitCode != 0) {
-          print('stdout is ${decoderProcess.stdout}');
-          print('stderr is ${decoderProcess.stderr}');
-          throw Exception('decoder status is ${decoderProcess.exitCode}');
-        }
-        final s = decoderProcess.stdout as String;
-        return s.split('\n').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
-      });
+      isbns[image.path] = common.extractIsbnsFromImage(image);
     });
   }
 

@@ -8,6 +8,7 @@ import 'package:path/path.dart' as path;
 
 import '../bundle.dart';
 import '../common.dart' as common;
+import '../ffi.dart';
 import '../helpers.dart';
 import 'enrichment.dart';
 import 'isbn_decoding.dart';
@@ -23,7 +24,27 @@ class _BundleSelectionState extends State<BundleSelection> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(title: const Text('Bundle Section')),
+        appBar: AppBar(
+          title: const Text('Bundle Section'),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.cloud_download),
+              onPressed: () async {
+                _listBundles().forEach((bundle) async {
+                  final isbnsList = await Future.wait(bundle.images.map((img) => common.extractIsbnsFromImage(img)));
+                  Set<String> isbns = isbnsList.expand((i) => i).toSet();
+                  await api.getMetadataFromIsbns(
+                    isbns: isbns.toList(),
+                    path: bundle.autoMetadataFile.path,
+                  );
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Json wrote to file')));
+                  }
+                });
+              },
+            )
+          ],
+        ),
         floatingActionButton: FloatingActionButton(
             child: const Icon(Icons.camera),
             onPressed: () =>
@@ -33,11 +54,7 @@ class _BundleSelectionState extends State<BundleSelection> {
 
   Widget _getBody() {
     try {
-      final bundles = common.bookyDir
-          .listSync()
-          .whereType<Directory>()
-          .sorted((d1, d2) => d1.path.compareTo(d2.path))
-          .map((d) => Bundle(d));
+      final bundles = _listBundles();
 
       return BundleList(bundles);
     } catch (e) {
@@ -62,6 +79,14 @@ class _BundleSelectionState extends State<BundleSelection> {
       }
       rethrow;
     }
+  }
+
+  static Iterable<Bundle> _listBundles() {
+    return common.bookyDir
+        .listSync()
+        .whereType<Directory>()
+        .sorted((d1, d2) => d1.path.compareTo(d2.path))
+        .map((d) => Bundle(d));
   }
 }
 
@@ -133,21 +158,33 @@ class _BundleListState extends State<BundleList> {
   }
 }
 
-class BundleWidget extends StatelessWidget {
+class BundleWidget extends StatefulWidget {
   const BundleWidget(this.bundle, {required this.onDelete});
 
   final Bundle bundle;
   final void Function() onDelete;
 
   @override
+  State<BundleWidget> createState() => _BundleWidgetState();
+}
+
+class _BundleWidgetState extends State<BundleWidget> {
+  late Future<List<ISBNMetadataPair>> cachedAutoMetadata;
+  @override
+  void initState() {
+    super.initState();
+    cachedAutoMetadata = api.getAutoMetadataFromBundle(path: widget.bundle.autoMetadataFile.path);
+  }
+
+  @override
   Widget build(BuildContext context) {
     const maxImagesShown = 3;
-    final imagesShown = bundle.compressedImages
+    final imagesShown = widget.bundle.compressedImages
         .take(maxImagesShown)
         .mapIndexed((index, f) {
           final thumbnail = ImageWidget(f);
           if (index == maxImagesShown - 1) {
-            final nbImagesNotShown = bundle.compressedImages.length - maxImagesShown;
+            final nbImagesNotShown = widget.bundle.compressedImages.length - maxImagesShown;
             if (nbImagesNotShown > 0) {
               return LayoutBuilder(
                 builder: (BuildContext context, BoxConstraints constraints) {
@@ -171,10 +208,30 @@ class BundleWidget extends StatelessWidget {
         .map((w) => Padding(padding: const EdgeInsets.all(8.0), child: w))
         .toList();
     return Card(
-      // decoration: const BoxDecoration(color: Colors.blue),
       child: Column(
         children: [
-          Text(path.basename(bundle.directory.path)),
+          // Text(path.basename(widget.bundle.directory.path)),
+          FutureWidget(
+              future: cachedAutoMetadata,
+              builder: (autoMetadata) {
+                final firstBook = autoMetadata.firstOrNull;
+                if (firstBook == null) return const Text('No book identified');
+                final md = firstBook.metadatas.mergeAllProvider();
+                final priceRange = md.marketPrice.toList();
+                return Row(children: [
+                  // Text(firstBook.isbn),
+                  md.title.ifIs(
+                      notnull: (t) => Text(t, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                      nul: () => const Text(
+                            'No title found',
+                            style: TextStyle(fontStyle: FontStyle.italic),
+                          )),
+                  const Spacer(),
+                  priceRange.isEmpty
+                      ? const Text('?')
+                      : Text('${priceRange.first.toInt()} - ${priceRange.last.toInt()} €'),
+                ]);
+              }),
           Expanded(
             child: Row(
               children: [
@@ -183,13 +240,13 @@ class BundleWidget extends StatelessWidget {
                 IconButton(
                   icon: const Icon(Icons.delete),
                   onPressed: () {
-                    final segments = path.split(bundle.directory.path);
+                    final segments = path.split(widget.bundle.directory.path);
                     segments[segments.length - 2] = 'booky_deleted';
-                    bundle.directory.renameSync(path.joinAll(segments));
+                    widget.bundle.directory.renameSync(path.joinAll(segments));
                     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                       content: Text('Deleted'),
                     ));
-                    onDelete();
+                    widget.onDelete();
                   },
                 ),
               ],

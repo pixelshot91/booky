@@ -41,6 +41,9 @@ class AsyncSnapshotWidget<T> extends StatelessWidget {
       case ConnectionState.waiting:
         return const CircularProgressIndicator();
       case ConnectionState.done:
+        if (snap.hasError) {
+          return Text(snap.error.toString());
+        }
         return builder(snap.data as T);
       default:
         return const Text('???');
@@ -58,6 +61,17 @@ extension IntExt on int {
 
 extension DoubleExt on double {
   double multiply(double other) => this * other;
+}
+
+extension IfNullExt<T> on T? {
+  R ifIs<R>({required R Function(T) notnull, required R Function() nul}) {
+    final t = this;
+    if (t == null) {
+      return nul();
+    } else {
+      return notnull(t);
+    }
+  }
 }
 
 class BookMetaDataManual {

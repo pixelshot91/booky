@@ -26,6 +26,40 @@ use crate::common::LbcCredential;
 
 // Section: wire functions
 
+fn wire_get_metadata_from_isbns_impl(
+    port_: MessagePort,
+    isbns: impl Wire2Api<Vec<String>> + UnwindSafe,
+    path: impl Wire2Api<String> + UnwindSafe,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap(
+        WrapInfo {
+            debug_name: "get_metadata_from_isbns",
+            port: Some(port_),
+            mode: FfiCallMode::Normal,
+        },
+        move || {
+            let api_isbns = isbns.wire2api();
+            let api_path = path.wire2api();
+            move |task_callback| get_metadata_from_isbns(api_isbns, api_path)
+        },
+    )
+}
+fn wire_get_auto_metadata_from_bundle_impl(
+    port_: MessagePort,
+    path: impl Wire2Api<String> + UnwindSafe,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap(
+        WrapInfo {
+            debug_name: "get_auto_metadata_from_bundle",
+            port: Some(port_),
+            mode: FfiCallMode::Normal,
+        },
+        move || {
+            let api_path = path.wire2api();
+            move |task_callback| get_auto_metadata_from_bundle(api_path)
+        },
+    )
+}
 fn wire_get_metadata_from_provider_impl(
     port_: MessagePort,
     provider: impl Wire2Api<ProviderEnum> + UnwindSafe,
@@ -129,6 +163,30 @@ impl support::IntoDart for BookMetaDataFromProvider {
     }
 }
 impl support::IntoDartExceptPrimitive for BookMetaDataFromProvider {}
+
+impl support::IntoDart for ISBNMetadataPair {
+    fn into_dart(self) -> support::DartAbi {
+        vec![self.isbn.into_dart(), self.metadatas.into_dart()].into_dart()
+    }
+}
+impl support::IntoDartExceptPrimitive for ISBNMetadataPair {}
+
+impl support::IntoDart for ProviderEnum {
+    fn into_dart(self) -> support::DartAbi {
+        match self {
+            Self::Babelio => 0,
+            Self::GoogleBooks => 1,
+            Self::BooksPrice => 2,
+        }
+        .into_dart()
+    }
+}
+impl support::IntoDart for ProviderMetadataPair {
+    fn into_dart(self) -> support::DartAbi {
+        vec![self.provider.into_dart(), self.metadata.into_dart()].into_dart()
+    }
+}
+impl support::IntoDartExceptPrimitive for ProviderMetadataPair {}
 
 // Section: executor
 

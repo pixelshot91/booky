@@ -1,9 +1,12 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:collection/collection.dart';
 import 'package:flutter_rust_bridge_template/common.dart';
 import 'package:path/path.dart' as path;
+
+import 'bridge_definitions.dart';
 
 class Bundle {
   Bundle(this.directory);
@@ -19,6 +22,23 @@ class Bundle {
   Metadata get metadata {
     final metadataFile = File(path.join(directory.path, 'metadata.json'));
     return Metadata.fromJson(jsonDecode(metadataFile.readAsStringSync()) as Map<String, dynamic>);
+  }
+
+  File get autoMetadataFile => File(path.join(directory.path, 'automatic_metadata.json'));
+}
+
+extension ListProviderMetadataPairExt on List<ProviderMetadataPair> {
+  List<double> getPrices() =>
+      map((e) => e.metadata?.marketPrice.toList()).whereNotNull().expand((i) => i).toList()..sort();
+
+  BookMetaDataFromProvider mergeAllProvider() {
+    return BookMetaDataFromProvider(
+        title: map((e) => e.metadata?.title)
+            .whereNotNull()
+            .fold(null, (best, s) => s.length > (best?.length ?? 0) ? s : best),
+        authors: [],
+        keywords: [],
+        marketPrice: Float32List.fromList(getPrices()));
   }
 }
 
