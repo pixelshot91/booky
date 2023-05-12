@@ -48,9 +48,10 @@ enum ItemState {
 
 @JsonSerializable()
 class Metadata {
-  Metadata({this.weightGrams, this.itemState});
+  Metadata({this.weightGrams, this.itemState, this.isbns});
   int? weightGrams;
   ItemState? itemState;
+  List<String>? isbns;
 
   factory Metadata.fromJson(Map<String, dynamic> json) => _$MetadataFromJson(json);
 

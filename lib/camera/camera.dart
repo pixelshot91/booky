@@ -133,10 +133,7 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
                   child: Padding(
                     padding: const EdgeInsets.all(8.0),
                     child: Column(
-                      children: _registeredBarcodes.entries
-                          .where((entry) => entry.key.startsWith(isbnPrefix) && entry.value >= minBarcodeOccurrence)
-                          .map((entry) {
-                        final barcode = entry.key;
+                      children: _getValidRegisteredBarcodes().map((barcode) {
                         return Row(
                           children: [
                             Expanded(child: Text(barcode, style: const TextStyle(fontWeight: FontWeight.bold))),
@@ -179,6 +176,7 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
                 await controller!.stopImageStream();
                 setState(() => _customPaint = null);
               },
+              isbns: _getValidRegisteredBarcodes(),
             ),
           ),
         ],
@@ -440,18 +438,28 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
     _logError(e.code, e.description);
     showInSnackBar('Error: ${e.code}\n${e.description}');
   }
+
+  List<String> _getValidRegisteredBarcodes() {
+    return _registeredBarcodes.entries
+        .where((entry) => entry.key.startsWith(isbnPrefix) && entry.value >= minBarcodeOccurrence)
+        .map((e) => e.key)
+        .toList();
+  }
 }
 
 class BottomWidget extends StatefulWidget {
-  const BottomWidget(
-      {required this.bundle,
-      required this.onSubmit,
-      required this.onBarcodeDetectStart,
-      required this.onBarcodeDetectStop});
+  const BottomWidget({
+    required this.bundle,
+    required this.onSubmit,
+    required this.onBarcodeDetectStart,
+    required this.onBarcodeDetectStop,
+    required this.isbns,
+  });
   final Bundle bundle;
   final void Function() onSubmit;
   final void Function() onBarcodeDetectStart;
   final void Function() onBarcodeDetectStop;
+  final List<String> isbns;
 
   @override
   State<BottomWidget> createState() => _BottomWidgetState();
@@ -516,23 +524,32 @@ class _BottomWidgetState extends State<BottomWidget> {
           icon: const Icon(Icons.keyboard_arrow_right),
           onPressed: () => showDialog<void>(
               context: context,
-              builder: (BuildContext context) => MetadataWidget(directory: directory, onSubmit: onSubmit)));
+              builder: (BuildContext context) =>
+                  MetadataWidget(directory: directory, isbns: widget.isbns, onSubmit: onSubmit)));
 }
 
 class MetadataWidget extends StatefulWidget {
   const MetadataWidget({
     required this.directory,
     required this.onSubmit,
+    required this.isbns,
   });
   final Directory directory;
   final void Function() onSubmit;
+  final List<String> isbns;
 
   @override
   State<MetadataWidget> createState() => _MetadataWidgetState();
 }
 
 class _MetadataWidgetState extends State<MetadataWidget> {
-  var metadata = common.Metadata();
+  late common.Metadata metadata;
+
+  @override
+  void initState() {
+    super.initState();
+    metadata = common.Metadata(isbns: widget.isbns);
+  }
 
   @override
   Widget build(BuildContext context) {
