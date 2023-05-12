@@ -2,12 +2,15 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:camera/camera.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:google_mlkit_barcode_scanning/google_mlkit_barcode_scanning.dart';
 import 'package:path/path.dart' as path;
 import 'package:permission_handler/permission_handler.dart';
 
 import '../bundle.dart';
 import '../common.dart' as common;
+import 'barcode_detector_painter.dart';
 import 'draggable_widget.dart';
 
 /// Camera example home widget.
@@ -29,6 +32,12 @@ void _logError(String code, String? message) {
 class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver, TickerProviderStateMixin {
   CameraController? controller;
   late String bundleName;
+
+  final BarcodeScanner _barcodeScanner = BarcodeScanner(formats: [BarcodeFormat.ean13]);
+  bool _isBusy = false;
+  bool _canProcessBarcode = true;
+  CustomPaint? _customPaint;
+  final Map<String, int> _registeredBarcodes = {};
 
   Directory get getBundleDir => Directory(path.join(common.bookyDir.path, bundleName));
   Bundle get getBundle => Bundle(getBundleDir);
@@ -57,6 +66,8 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _canProcessBarcode = false;
+    _barcodeScanner.close();
     super.dispose();
   }
 
@@ -108,23 +119,49 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
       body: Column(
         children: <Widget>[
           Expanded(
-            child: Padding(
-              padding: const EdgeInsets.all(1.0),
-              child: Center(
-                child: _cameraPreviewWidget(),
-              ),
+            child: Row(
+              children: [
+                SizedBox(
+                  width: 200,
+                  child: Column(
+                    children: _registeredBarcodes.entries.map((entry) {
+                      final barcode = entry.key;
+                      return Text(
+                        '$barcode ${entry.value}',
+                        style: TextStyle(
+                            fontWeight: barcode.startsWith('978') ? FontWeight.bold : FontWeight.normal,
+                            color: entry.value > 20 ? Colors.black : Colors.grey.shade200),
+                      );
+                    }).toList(),
+                  ),
+                ),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.all(1.0),
+                    child: Center(
+                      child: _cameraPreviewWidget(),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
           Padding(
             padding: const EdgeInsets.all(5.0),
             child: BottomWidget(
-                bundle: getBundle,
-                onSubmit: () {
-                  setState(() {
-                    _generateNewFolderPath();
-                  });
-                  Navigator.pop(context);
-                }),
+              bundle: getBundle,
+              onSubmit: () {
+                setState(() {
+                  _generateNewFolderPath();
+                });
+                Navigator.pop(context);
+              },
+              onBarcodeDetectStart: () => controller!.startImageStream(_processCameraImage),
+              onBarcodeDetectStop: () async {
+                await controller!.stopImageStream();
+                setState(() => _customPaint = null);
+              },
+            ),
           ),
         ],
       ),
@@ -145,22 +182,28 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
         ),
       );
     } else {
-      return CameraPreview(
-        controller!,
-        child: LayoutBuilder(
-          builder: (context, boxConstraints) => GestureDetector(
-            onTapDown: (TapDownDetails details) async {
-              _onViewFinderTap(details, boxConstraints);
-              // The auto focus is not instantaneous. We must wait a little while before taking the picture
-              // In release mode, if we
-              // wait 100 ms : blurry
-              // wait 300 ms : sharp
-              // The optimum delay shall lie between the bounds
-              await Future<void>.delayed(const Duration(milliseconds: 300));
-              _onTakePictureButtonPressed();
-            },
+      return Stack(
+        fit: StackFit.expand,
+        children: [
+          CameraPreview(
+            controller!,
+            child: LayoutBuilder(
+              builder: (context, boxConstraints) => GestureDetector(
+                onTapDown: (TapDownDetails details) async {
+                  _onViewFinderTap(details, boxConstraints);
+                  // The auto focus is not instantaneous. We must wait a little while before taking the picture
+                  // In release mode, if we
+                  // wait 100 ms : blurry
+                  // wait 300 ms : sharp
+                  // The optimum delay shall lie between the bounds
+                  await Future<void>.delayed(const Duration(milliseconds: 300));
+                  _onTakePictureButtonPressed();
+                },
+              ),
+            ),
           ),
-        ),
+          if (_customPaint != null) IgnorePointer(child: _customPaint!),
+        ],
       );
     }
   }
@@ -251,6 +294,65 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
     }
   }
 
+  Future<void> _processCameraImage(CameraImage image) async {
+    final WriteBuffer allBytes = WriteBuffer();
+    for (final Plane plane in image.planes) {
+      allBytes.putUint8List(plane.bytes);
+    }
+    final bytes = allBytes.done().buffer.asUint8List();
+
+    final Size imageSize = Size(image.width.toDouble(), image.height.toDouble());
+
+    final camera = controller!.description;
+    final imageRotation = InputImageRotationValue.fromRawValue(camera.sensorOrientation);
+    if (imageRotation == null) return;
+
+    final inputImageFormat = InputImageFormatValue.fromRawValue(image.format.raw as int);
+    if (inputImageFormat == null) return;
+
+    final planeData = image.planes.map(
+      (Plane plane) {
+        return InputImagePlaneMetadata(
+          bytesPerRow: plane.bytesPerRow,
+          height: plane.height,
+          width: plane.width,
+        );
+      },
+    ).toList();
+
+    final inputImageData = InputImageData(
+      size: imageSize,
+      imageRotation: imageRotation,
+      inputImageFormat: inputImageFormat,
+      planeData: planeData,
+    );
+
+    final inputImage = InputImage.fromBytes(bytes: bytes, inputImageData: inputImageData);
+
+    _extractBarcodeFromImage(inputImage);
+  }
+
+  Future<void> _extractBarcodeFromImage(InputImage inputImage) async {
+    if (!_canProcessBarcode) return;
+    if (_isBusy) return;
+    _isBusy = true;
+    final barcodes = await _barcodeScanner.processImage(inputImage);
+    if (inputImage.inputImageData?.size != null && inputImage.inputImageData?.imageRotation != null) {
+      final painter =
+          BarcodeDetectorPainter(barcodes, inputImage.inputImageData!.size, inputImage.inputImageData!.imageRotation);
+      _customPaint = CustomPaint(painter: painter);
+
+      final barcodesString = barcodes.map((barcode) => barcode.displayValue).whereType<String>();
+      for (final barcodeString in barcodesString) {
+        _registeredBarcodes.update(barcodeString, (oldCount) => oldCount + 1, ifAbsent: () => 1);
+      }
+    }
+    _isBusy = false;
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
   void _onTakePictureButtonPressed() {
     takePicture().then((XFile? file) async {
       if (mounted) {
@@ -311,9 +413,15 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
 }
 
 class BottomWidget extends StatefulWidget {
-  const BottomWidget({required this.bundle, required this.onSubmit});
+  const BottomWidget(
+      {required this.bundle,
+      required this.onSubmit,
+      required this.onBarcodeDetectStart,
+      required this.onBarcodeDetectStop});
   final Bundle bundle;
   final void Function() onSubmit;
+  final void Function() onBarcodeDetectStart;
+  final void Function() onBarcodeDetectStop;
 
   @override
   State<BottomWidget> createState() => _BottomWidgetState();
@@ -326,12 +434,25 @@ class _BottomWidgetState extends State<BottomWidget> {
       return Row(
         children: <Widget>[
           _thumbnailWidget(widget.bundle.images),
+          _barcodeDetectionButton(),
           _addMetadataButton(context: context, directory: widget.bundle.directory, onSubmit: widget.onSubmit),
         ],
       );
     } on PathNotFoundException {
       return const Text('Tap the screen to take a picture');
     }
+  }
+
+  Widget _barcodeDetectionButton() {
+    return GestureDetector(
+      onTapDown: (_) {
+        widget.onBarcodeDetectStart();
+      },
+      onTapUp: (_) {
+        widget.onBarcodeDetectStop();
+      },
+      child: const Icon(Icons.select_all_rounded),
+    );
   }
 
   /// Display the thumbnail of the captured image or video.
@@ -420,19 +541,3 @@ class _MetadataWidgetState extends State<MetadataWidget> {
 }
 
 List<CameraDescription> _cameras = <CameraDescription>[];
-/*
-
-Future<void> main() async {
-  runApp(const MaterialApp(home: Explorer()));
-  // Fetch the available cameras before initializing the app.
-  */
-/*try {
-    WidgetsFlutterBinding.ensureInitialized();
-    _cameras = await availableCameras();
-  } on CameraException catch (e) {
-    _logError(e.code, e.description);
-  }
-  runApp(const CameraApp());*/ /*
-
-}
-*/
