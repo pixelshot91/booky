@@ -99,22 +99,31 @@ class BundleList extends StatefulWidget {
 }
 
 class _BundleListState extends State<BundleList> {
+  int? bundleNb;
+  int compressedBundleNb = 0;
+
   @override
   void initState() {
     super.initState();
     Future(() async {
-      final futures = widget.bundles.map<Future<void>>((bundle) async {
-        for (final image in bundle.images) {
+      if (mounted) {
+        setState(() => bundleNb = widget.bundles.length);
+      }
+      final bundleFutures = widget.bundles.map<Future<void>>((bundle) async {
+        final imagesFutures = bundle.images.map((image) async {
           final segments = path.split(image.path);
           segments.insert(segments.length - 1, 'compressed');
-          print('new path ${path.joinAll(segments)}');
           final targetPath = path.joinAll(segments);
-          if (!File(targetPath).existsSync()) {
+          if (!(await File(targetPath).exists())) {
             await _testCompressAndGetFile(image, targetPath);
           }
+        });
+        await Future.wait(imagesFutures);
+        if (mounted) {
+          setState(() => compressedBundleNb += 1);
         }
       });
-      await Future.wait(futures);
+      await Future.wait(bundleFutures);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
           content: Text('Compression finished'),
@@ -139,26 +148,49 @@ class _BundleListState extends State<BundleList> {
     return result;
   }
 
+  Widget _compressIndicator() {
+    if (compressedBundleNb == bundleNb) return const SizedBox.shrink();
+    return bundleNb.ifIs(
+        nul: () => const LinearProgressIndicator(),
+        notnull: (bundleNb) => Row(
+              children: [
+                const Text('Compressing '),
+                Expanded(child: LinearProgressIndicator(value: compressedBundleNb / bundleNb)),
+                Text('$compressedBundleNb / $bundleNb')
+              ],
+            ));
+  }
+
   @override
   Widget build(BuildContext context) {
-    return GridView.extent(
-      maxCrossAxisExtent: 500,
-      childAspectRatio: 2,
-      children: widget.bundles
-          .map((bundle) => GestureDetector(
-                child: BundleWidget(bundle, onDelete: () {
-                  setState(() {});
-                }),
-                onTap: () {
-                  Navigator.push(
-                      context,
-                      MaterialPageRoute<void>(
-                          builder: (context) => ISBNDecodingWidget(
-                                step: ISBNDecodingStep(bundle: bundle),
-                              )));
-                },
-              ))
-          .toList(),
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: _compressIndicator(),
+        ),
+        Expanded(
+          child: GridView.extent(
+            maxCrossAxisExtent: 500,
+            childAspectRatio: 2,
+            children: widget.bundles
+                .map((bundle) => GestureDetector(
+                      child: BundleWidget(bundle, onDelete: () {
+                        setState(() {});
+                      }),
+                      onTap: () {
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute<void>(
+                                builder: (context) => ISBNDecodingWidget(
+                                      step: ISBNDecodingStep(bundle: bundle),
+                                    )));
+                      },
+                    ))
+                .toList(),
+          ),
+        ),
+      ],
     );
   }
 }
