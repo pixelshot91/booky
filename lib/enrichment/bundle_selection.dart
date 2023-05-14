@@ -1,9 +1,11 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:flutter_rust_bridge_template/camera/camera.dart';
+import 'package:kt_dart/kt.dart';
 import 'package:path/path.dart' as path;
 
 import '../bundle.dart';
@@ -21,6 +23,15 @@ class BundleSelection extends StatefulWidget {
 }
 
 class _BundleSelectionState extends State<BundleSelection> {
+  int? bundleNb;
+  int compressedBundleNb = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _listBundles()?.let((bundles) => _compressedAllBundleImages(bundles));
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -28,9 +39,16 @@ class _BundleSelectionState extends State<BundleSelection> {
           title: const Text('Bundle Section'),
           actions: [
             IconButton(
+              icon: const Icon(Icons.refresh),
+              onPressed: () {
+                setState(() {});
+                _listBundles()?.let((bundles) => _compressedAllBundleImages(bundles));
+              },
+            ),
+            IconButton(
               icon: const Icon(Icons.cloud_download),
               onPressed: () async {
-                _listBundles().forEach((bundle) async {
+                _listBundles()?.forEach((bundle) async {
                   final isbnsList = await Future.wait(bundle.images.map((img) => common.extractIsbnsFromImage(img)));
                   Set<String> isbns = isbnsList.expand((i) => i).toSet();
                   await api.getMetadataFromIsbns(
@@ -53,83 +71,70 @@ class _BundleSelectionState extends State<BundleSelection> {
   }
 
   Widget _getBody() {
-    try {
-      final bundles = _listBundles();
+    final bundles = _listBundles();
 
-      return BundleList(bundles);
+    if (bundles == null) {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'Device not connected',
+              style: TextStyle(fontSize: 30),
+            ),
+            IconButton(
+              icon: const Icon(Icons.refresh),
+              onPressed: () {
+                setState(() {});
+              },
+            ),
+          ],
+        ),
+      );
+    }
+    return _bundleListWidget(bundles);
+  }
+
+  static Iterable<Bundle>? _listBundles() {
+    try {
+      return common.bookyDir
+          .listSync()
+          .whereType<Directory>()
+          .sorted((d1, d2) => d1.path.compareTo(d2.path))
+          .map((d) => Bundle(d));
     } catch (e) {
       if (e is PathNotFoundException || e is FileSystemException) {
-        return Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text(
-                'Device not connected',
-                style: TextStyle(fontSize: 30),
-              ),
-              IconButton(
-                icon: const Icon(Icons.refresh),
-                onPressed: () {
-                  setState(() {});
-                },
-              ),
-            ],
-          ),
-        );
+        return null;
       }
+      print('Unhandled exception $e');
       rethrow;
     }
   }
 
-  static Iterable<Bundle> _listBundles() {
-    return common.bookyDir
-        .listSync()
-        .whereType<Directory>()
-        .sorted((d1, d2) => d1.path.compareTo(d2.path))
-        .map((d) => Bundle(d));
-  }
-}
-
-class BundleList extends StatefulWidget {
-  const BundleList(this.bundles);
-  final Iterable<Bundle> bundles;
-
-  @override
-  State<BundleList> createState() => _BundleListState();
-}
-
-class _BundleListState extends State<BundleList> {
-  int? bundleNb;
-  int compressedBundleNb = 0;
-
-  @override
-  void initState() {
-    super.initState();
-    Future(() async {
-      if (mounted) {
-        setState(() => bundleNb = widget.bundles.length);
-      }
-      final bundleFutures = widget.bundles.map<Future<void>>((bundle) async {
-        final imagesFutures = bundle.images.map((image) async {
-          final segments = path.split(image.path);
-          segments.insert(segments.length - 1, 'compressed');
-          final targetPath = path.joinAll(segments);
-          if (!(await File(targetPath).exists())) {
-            await _testCompressAndGetFile(image, targetPath);
-          }
-        });
-        await Future.wait(imagesFutures);
-        if (mounted) {
-          setState(() => compressedBundleNb += 1);
+  Future<void> _compressedAllBundleImages(Iterable<Bundle> bundles) async {
+    if (mounted) {
+      setState(() => bundleNb = bundles.length);
+    }
+    final bundleFutures = bundles.map<Future<void>>((bundle) async {
+      final imagesFutures = bundle.images.map((image) async {
+        final segments = path.split(image.path);
+        segments.insert(segments.length - 1, 'compressed');
+        final targetPath = path.joinAll(segments);
+        if (!(await File(targetPath).exists())) {
+          await _testCompressAndGetFile(image, targetPath);
         }
       });
-      await Future.wait(bundleFutures);
+      await Future.wait(imagesFutures);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('Compression finished'),
-        ));
+        setState(() => compressedBundleNb += 1);
       }
     });
+    await Future.wait(bundleFutures);
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('Compression finished'),
+      ));
+    }
   }
 
   Future<File?> _testCompressAndGetFile(File file, String targetPath) async {
@@ -161,8 +166,7 @@ class _BundleListState extends State<BundleList> {
             ));
   }
 
-  @override
-  Widget build(BuildContext context) {
+  Widget _bundleListWidget(Iterable<Bundle> bundles) {
     return Column(
       children: [
         Padding(
@@ -173,11 +177,9 @@ class _BundleListState extends State<BundleList> {
           child: GridView.extent(
             maxCrossAxisExtent: 500,
             childAspectRatio: 2,
-            children: widget.bundles
+            children: bundles
                 .map((bundle) => GestureDetector(
-                      child: BundleWidget(bundle, onDelete: () {
-                        setState(() {});
-                      }),
+                      child: BundleWidget(bundle, onDelete: () => setState(() {})),
                       onTap: () {
                         Navigator.push(
                             context,
