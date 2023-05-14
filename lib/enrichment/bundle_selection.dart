@@ -49,6 +49,9 @@ class _BundleSelectionState extends State<BundleSelection> {
               icon: const Icon(Icons.cloud_download),
               onPressed: () async {
                 _listBundles()?.forEach((bundle) async {
+                  if (await bundle.autoMetadataFile.exists()) {
+                    return;
+                  }
                   final isbnsList = await Future.wait(bundle.images.map((img) => common.extractIsbnsFromImage(img)));
                   Set<String> isbns = isbnsList.expand((i) => i).toSet();
                   await api.getMetadataFromIsbns(
@@ -112,8 +115,12 @@ class _BundleSelectionState extends State<BundleSelection> {
   }
 
   Future<void> _compressedAllBundleImages(Iterable<Bundle> bundles) async {
+    if (!Platform.isAndroid) return;
     if (mounted) {
-      setState(() => bundleNb = bundles.length);
+      setState(() {
+        bundleNb = bundles.length;
+        compressedBundleNb = 0;
+      });
     }
     final bundleFutures = bundles.map<Future<void>>((bundle) async {
       final imagesFutures = bundle.images.map((image) async {
@@ -154,7 +161,7 @@ class _BundleSelectionState extends State<BundleSelection> {
   }
 
   Widget _compressIndicator() {
-    if (compressedBundleNb == bundleNb) return const SizedBox.shrink();
+    if (compressedBundleNb == bundleNb || !Platform.isAndroid) return const SizedBox.shrink();
     return bundleNb.ifIs(
         nul: () => const LinearProgressIndicator(),
         notnull: (bundleNb) => Row(
