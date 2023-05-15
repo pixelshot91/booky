@@ -89,6 +89,18 @@ extension IfNullExt<T> on T? {
   }
 }
 
+extension ListExt<T> on List<T> {
+  List<T>? nullIfEmpty() => isEmpty ? null : this;
+}
+
+extension IterableListExt<T> on Iterable<List<T>> {
+  List<T> biggest() => fold([], (biggest, element) => element.length > biggest.length ? element : biggest);
+}
+
+extension IterableStringExt on Iterable<String> {
+  String? biggest() => fold(null, (biggest, element) => element.length > (biggest?.length ?? 0) ? element : biggest);
+}
+
 class BookMetaDataManual {
   String? title;
   List<Author> authors;

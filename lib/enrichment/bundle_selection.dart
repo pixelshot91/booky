@@ -13,7 +13,7 @@ import '../common.dart' as common;
 import '../ffi.dart';
 import '../helpers.dart';
 import 'enrichment.dart';
-import 'isbn_decoding.dart';
+import 'metadata_collecting.dart';
 
 class BundleSelection extends StatefulWidget {
   const BundleSelection();
@@ -52,8 +52,7 @@ class _BundleSelectionState extends State<BundleSelection> {
                   if (await bundle.autoMetadataFile.exists()) {
                     return;
                   }
-                  final isbnsList = await Future.wait(bundle.images.map((img) => common.extractIsbnsFromImage(img)));
-                  Set<String> isbns = isbnsList.expand((i) => i).toSet();
+                  Set<String> isbns = bundle.metadata.isbns?.toSet() ?? {};
                   await api.getMetadataFromIsbns(
                     isbns: isbns.toList(),
                     path: bundle.autoMetadataFile.path,
@@ -191,9 +190,8 @@ class _BundleSelectionState extends State<BundleSelection> {
                         Navigator.push(
                             context,
                             MaterialPageRoute<void>(
-                                builder: (context) => ISBNDecodingWidget(
-                                      step: ISBNDecodingStep(bundle: bundle),
-                                    )));
+                                builder: (context) =>
+                                    BooksMetadataCollectingWidget(step: MetadataCollectingStep(bundle: bundle))));
                       },
                     ))
                 .toList(),
