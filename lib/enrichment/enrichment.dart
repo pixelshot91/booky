@@ -13,8 +13,7 @@ class ISBNDecodingStep implements BookyStep {
 
 class MetadataCollectingStep implements BookyStep {
   Bundle bundle;
-  Set<String> isbns = {};
-  MetadataCollectingStep({required this.bundle, required this.isbns});
+  MetadataCollectingStep({required this.bundle});
 }
 
 class AdEditingStep implements BookyStep {

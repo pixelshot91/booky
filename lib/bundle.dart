@@ -4,6 +4,7 @@ import 'dart:typed_data';
 
 import 'package:collection/collection.dart';
 import 'package:flutter_rust_bridge_template/common.dart';
+import 'package:flutter_rust_bridge_template/helpers.dart';
 import 'package:path/path.dart' as path;
 
 import 'bridge_definitions.dart';
@@ -28,9 +29,11 @@ class Bundle {
 }
 
 extension ListProviderMetadataPairExt on List<ProviderMetadataPair> {
+  @Deprecated('Use MapProviderEnumBookMetaDataFromProviderExt')
   List<double> getPrices() =>
       map((e) => e.metadata?.marketPrice.toList()).whereNotNull().expand((i) => i).toList()..sort();
 
+  @Deprecated('Use MapProviderEnumBookMetaDataFromProviderExt')
   BookMetaDataFromProvider mergeAllProvider() {
     return BookMetaDataFromProvider(
         title: map((e) => e.metadata?.title)
@@ -38,6 +41,19 @@ extension ListProviderMetadataPairExt on List<ProviderMetadataPair> {
             .fold(null, (best, s) => s.length > (best?.length ?? 0) ? s : best),
         authors: [],
         keywords: [],
+        marketPrice: Float32List.fromList(getPrices()));
+  }
+}
+
+extension MapProviderEnumBookMetaDataFromProviderExt on Map<ProviderEnum, BookMetaDataFromProvider?> {
+  List<double> getPrices() =>
+      values.map((e) => e?.marketPrice.toList()).whereNotNull().expand((i) => i).toList()..sort();
+  BookMetaDataFromProvider mergeAllProvider() {
+    return BookMetaDataFromProvider(
+        title: entries.map((e) => e.value?.title).whereNotNull().biggest(),
+        authors: values.whereNotNull().map((md) => md.authors).biggest(),
+        blurb: values.map((e) => e?.blurb).whereNotNull().biggest(),
+        keywords: values.whereNotNull().map((e) => e.keywords).expand((e) => e).toList(),
         marketPrice: Float32List.fromList(getPrices()));
   }
 }
