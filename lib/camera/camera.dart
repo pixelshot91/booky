@@ -168,6 +168,7 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
               onSubmit: () {
                 setState(() {
                   _generateNewFolderPath();
+                  _registeredBarcodes.clear();
                 });
                 Navigator.pop(context);
               },
