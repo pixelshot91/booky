@@ -99,7 +99,6 @@ class _AdEditingWidgetState extends State<AdEditingWidget> {
             children: [
               CopiableTextField(TextFormField(
                 controller: TextEditingController(text: ad.title),
-                onChanged: (newText) => setState(() => ad.title = newText),
                 decoration: const InputDecoration(
                   icon: Icon(Icons.title),
                   labelText: 'Ad title',
@@ -118,7 +117,6 @@ class _AdEditingWidgetState extends State<AdEditingWidget> {
                 controller: TextEditingController(text: ad.description),
                 maxLines: null,
                 scrollPhysics: const NeverScrollableScrollPhysics(),
-                onChanged: (newText) => setState(() => ad.description = newText),
                 decoration: const InputDecoration(
                   icon: Icon(Icons.text_snippet),
                   labelText: 'Ad description',
@@ -126,8 +124,6 @@ class _AdEditingWidgetState extends State<AdEditingWidget> {
               )),
               CopiableTextField(TextFormField(
                 controller: TextEditingController(text: ad.priceCent.divide(100).toString()),
-                onChanged: (newText) =>
-                    setState(() => ad.priceCent = double.tryParse(newText)! /*?*/ .multiply(100).round()),
                 decoration: const InputDecoration(
                   icon: Icon(Icons.euro),
                   labelText: 'Price',
