@@ -1,3 +1,5 @@
+use std::path::Path;
+
 pub trait Client {
     fn make_request(
         &self,
@@ -49,6 +51,8 @@ impl Client for CachedClient {
             Err(_) => {
                 println!("No file name {} in the cache", &cache_file_path);
                 let resp = _make_request(&self.http_client);
+                let dir = Path::new(&cache_file_path).parent().unwrap();
+                std::fs::create_dir_all(dir).unwrap();
                 let write_res = std::fs::write(&cache_file_path, &resp);
                 write_res.expect(format!("Can't write to file {}", cache_file_path).as_str());
                 resp
