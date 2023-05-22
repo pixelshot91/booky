@@ -1,5 +1,7 @@
 # TODO
 
+* [ ] BUG: BundleList fail to refresh after: autoMetadata download
+* [ ] BUG: BundleList show autoMetadata from other bundle when some bundle are deleted
 * [ ] MetadataCollecting: Disable 'Validate Metadatas' button if price field is empty
 * [ ] AdEditing: Disable 'Mark as published' if the title is empty
 * [ ] Search with Selenium in headless mode
