@@ -7,7 +7,7 @@ use crate::common;
 use crate::common::Ad;
 use crate::common::{LbcCredential, Provider};
 use crate::publisher::Publisher;
-use crate::{abebooks, babelio, booksprice, google_books, leboncoin};
+use crate::{abebooks, babelio, booksprice, google_books, leboncoin, leslibraires};
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 use strum::IntoEnumIterator;
@@ -19,6 +19,7 @@ pub enum ProviderEnum {
     GoogleBooks,
     BooksPrice,
     AbeBooks,
+    LesLibraires,
 }
 
 pub fn get_metadata_from_isbns(isbns: Vec<String>, path: String) -> Result<(), anyhow::Error> {
@@ -113,6 +114,7 @@ pub fn get_metadata_from_provider(
         .get_book_metadata_from_isbn(&isbn),
         ProviderEnum::BooksPrice => booksprice::BooksPrice {}.get_book_metadata_from_isbn(&isbn),
         ProviderEnum::AbeBooks => abebooks::AbeBooks {}.get_book_metadata_from_isbn(&isbn),
+        ProviderEnum::LesLibraires => leslibraires::LesLibraires {}.get_book_metadata_from_isbn(&isbn),
     }
 }
 
