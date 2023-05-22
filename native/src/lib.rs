@@ -14,3 +14,4 @@ mod leboncoin;
 mod publisher;
 mod booksprice;
 mod abebooks;
+mod leslibraires;

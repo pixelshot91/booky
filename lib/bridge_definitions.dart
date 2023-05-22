@@ -94,6 +94,7 @@ enum ProviderEnum {
   GoogleBooks,
   BooksPrice,
   AbeBooks,
+  LesLibraires,
 }
 
 class ProviderMetadataPair {
