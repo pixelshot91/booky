@@ -93,6 +93,7 @@ enum ProviderEnum {
   Babelio,
   GoogleBooks,
   BooksPrice,
+  AbeBooks,
 }
 
 class ProviderMetadataPair {

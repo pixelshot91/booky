@@ -13,3 +13,4 @@ mod jwt_decoder;
 mod leboncoin;
 mod publisher;
 mod booksprice;
+mod abebooks;
