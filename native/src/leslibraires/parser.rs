@@ -9,32 +9,40 @@ pub fn extract_metadata(isbn_search_result: &str) -> Option<common::BookMetaData
     let title = doc
         .select(&title_selector)
         .exactly_one()
-        .unwrap()
-        .first_child()
-        .unwrap()
-        .value()
-        .as_text()
-        .unwrap()
-        .to_string();
+        .ok()
+        .map(|title_element| {
+            title_element
+                .first_child()
+                .unwrap()
+                .value()
+                .as_text()
+                .unwrap()
+                .to_string()
+        });
 
     let author_selector = scraper::Selector::parse(".main-infos [itemprop=\"author\"]").unwrap();
     let author_last_name = doc
         .select(&author_selector)
         .exactly_one()
-        .unwrap()
-        .first_child()
-        .unwrap()
-        .value()
-        .as_text()
-        .unwrap()
-        .to_string();
+        .ok()
+        .map(|author_element| {
+            author_element
+                .first_child()
+                .unwrap()
+                .value()
+                .as_text()
+                .unwrap()
+                .to_string()
+        });
 
     Some(common::BookMetaDataFromProvider {
-        title: Some(title),
-        authors: vec![Author {
-            first_name: "".to_owned(),
-            last_name: author_last_name,
-        }],
+        title,
+        authors: author_last_name.map_or(vec![], |author| {
+            vec![Author {
+                first_name: "".to_owned(),
+                last_name: author,
+            }]
+        }),
         ..Default::default()
     })
 }
