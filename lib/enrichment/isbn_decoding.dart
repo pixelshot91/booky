@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
@@ -54,14 +55,13 @@ class _ISBNDecodingWidgetState extends State<ISBNDecodingWidget> {
                                       if (snap.hasData == false) {
                                         return const CircularProgressIndicator();
                                       }
-                                      // convertFlutterUiToImage(ui.Image.file(imgPath));
-
                                       return Column(
                                           children: snap.data!
                                               .map(
                                                 (isbn) => Padding(
                                                   padding: const EdgeInsets.all(8.0),
                                                   child: Row(
+                                                    mainAxisSize: MainAxisSize.min,
                                                     children: [
                                                       ElevatedButton(
                                                           onPressed: selectedIsbns.contains(isbn)
@@ -74,24 +74,8 @@ class _ISBNDecodingWidgetState extends State<ISBNDecodingWidget> {
                                                                     ? null
                                                                     : TextDecoration.lineThrough),
                                                           )),
-                                                      SizedBox(width: 100, child: ISBNPreview(imgPath)),
-                                                      // image.copyRectify(src, topLeft: topLeft, topRight: topRight, bottomLeft: bottomLeft, bottomRight: bottomRight)
-                                                      /*SizedBox(
-                                                        width: 200,
-                                                        height: 200,
-                                                        child: ClipRect(
-                                                          child: Transform(
-                                                            transform: Matrix4.translationValues(-50, 0, 100)
-                                                              ..scale(3.0),
-                                                            child: Image.file(
-                                                              imgPath,
-                                                              alignment: Alignment.topLeft,
-                                                              fit: BoxFit.cover,
-                                                            ),
-                                                          ),
-                                                        ),
-                                                      ),*/
-                                                      /* copyCrop(Image(imgPath), x: x, y: y, width: width, height: height)*/
+                                                      const SizedBox(width: 20),
+                                                      SizedBox(width: 200, child: ISBNPreview(imgPath)),
                                                     ],
                                                   ),
                                                 ),
@@ -171,7 +155,6 @@ class ISBNPreview extends StatefulWidget {
 }
 
 class _ISBNPreviewState extends State<ISBNPreview> {
-  // image.Image? barcodePreview;
   ui.Image? barcodePreview;
 
   @override
@@ -179,11 +162,32 @@ class _ISBNPreviewState extends State<ISBNPreview> {
     super.initState();
     Future<void>(() async {
       final fullImage = image.decodeJpg(await widget.fullImageFile.readAsBytes())!;
-      final rectified = image.copyRectify(fullImage,
-          topLeft: image.Point(332, 2854),
-          topRight: image.Point(939, 2844),
-          bottomLeft: image.Point(337, 3162),
-          bottomRight: image.Point(944, 3152));
+      print('fullImage.width = ${fullImage.width}, fullImage.height= ${fullImage.height}');
+      const padding = 40;
+
+      final topLeft = image.Point(332, 2854);
+      final topRight = image.Point(939, 2844);
+      final bottomLeft = image.Point(337, 3162);
+      final bottomRight = image.Point(944, 3152);
+
+      /// By default, copyRectify try to conserve the ratio of the full image
+      /// But the barcode zone ratio is has no link with the full image ratio
+      /// So the barcode ratio is compute manually then given to `copyRectify` by its `toImage` parameter
+      final height = max(bottomLeft.y - topLeft.y, bottomRight.y - topRight.y);
+      final width = max(topRight.x - topLeft.x, bottomRight.x - bottomLeft.x);
+      final dest = image.Image(height: height.toInt(), width: width.toInt());
+
+      final rectified = image.copyRectify(
+        fullImage,
+        topLeft: topLeft + image.Point(-padding, -padding),
+        topRight: topRight + image.Point(padding, -padding),
+        bottomLeft: bottomLeft + image.Point(-padding, padding),
+        bottomRight: bottomRight + image.Point(padding, padding),
+        toImage: dest,
+      );
+      print('rectified.width = ${rectified.width}, rectified.height= ${rectified.height}');
+      print('dest.width = ${dest.width}, rectified.height= ${dest.height}');
+
       final rectifiedUi = await convertImageToFlutterUi(rectified);
       setState(() {
         barcodePreview = rectifiedUi;
@@ -197,7 +201,9 @@ class _ISBNPreviewState extends State<ISBNPreview> {
     if (barcodePreview == null) {
       return const CircularProgressIndicator();
     }
-    return RawImage(image: barcodePreview);
-    // return Image.memory(barcodePreview);
+    return RawImage(
+      image: barcodePreview,
+      fit: BoxFit.fitWidth,
+    );
   }
 }
