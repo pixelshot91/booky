@@ -1,8 +1,13 @@
+import 'dart:io';
+import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
+import 'package:image/image.dart' as image;
 import 'package:kt_dart/collection.dart';
 
 import '../common.dart' as common;
 import '../helpers.dart';
+import '../image_helper.dart';
 import 'enrichment.dart';
 
 class ISBNDecodingWidget extends StatefulWidget {
@@ -49,22 +54,46 @@ class _ISBNDecodingWidgetState extends State<ISBNDecodingWidget> {
                                       if (snap.hasData == false) {
                                         return const CircularProgressIndicator();
                                       }
+                                      // convertFlutterUiToImage(ui.Image.file(imgPath));
+
                                       return Column(
                                           children: snap.data!
                                               .map(
                                                 (isbn) => Padding(
                                                   padding: const EdgeInsets.all(8.0),
-                                                  child: ElevatedButton(
-                                                      onPressed: selectedIsbns.contains(isbn)
-                                                          ? null
-                                                          : () => setState(() => selectedIsbns.add(isbn)),
-                                                      child: Text(
-                                                        isbn,
-                                                        style: TextStyle(
-                                                            decoration: isbn.startsWith('978')
-                                                                ? null
-                                                                : TextDecoration.lineThrough),
-                                                      )),
+                                                  child: Row(
+                                                    children: [
+                                                      ElevatedButton(
+                                                          onPressed: selectedIsbns.contains(isbn)
+                                                              ? null
+                                                              : () => setState(() => selectedIsbns.add(isbn)),
+                                                          child: Text(
+                                                            isbn,
+                                                            style: TextStyle(
+                                                                decoration: isbn.startsWith('978')
+                                                                    ? null
+                                                                    : TextDecoration.lineThrough),
+                                                          )),
+                                                      SizedBox(width: 100, child: ISBNPreview(imgPath)),
+                                                      // image.copyRectify(src, topLeft: topLeft, topRight: topRight, bottomLeft: bottomLeft, bottomRight: bottomRight)
+                                                      /*SizedBox(
+                                                        width: 200,
+                                                        height: 200,
+                                                        child: ClipRect(
+                                                          child: Transform(
+                                                            transform: Matrix4.translationValues(-50, 0, 100)
+                                                              ..scale(3.0),
+                                                            child: Image.file(
+                                                              imgPath,
+                                                              alignment: Alignment.topLeft,
+                                                              fit: BoxFit.cover,
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ),*/
+                                                      /* copyCrop(Image(imgPath), x: x, y: y, width: width, height: height)*/
+                                                    ],
+                                                  ),
                                                 ),
                                               )
                                               .toList());
@@ -129,5 +158,46 @@ class _ISBNDecodingWidgetState extends State<ISBNDecodingWidget> {
         ),
       ),
     );
+  }
+}
+
+class ISBNPreview extends StatefulWidget {
+  const ISBNPreview(this.fullImageFile);
+
+  final File fullImageFile;
+
+  @override
+  State<ISBNPreview> createState() => _ISBNPreviewState();
+}
+
+class _ISBNPreviewState extends State<ISBNPreview> {
+  // image.Image? barcodePreview;
+  ui.Image? barcodePreview;
+
+  @override
+  void initState() {
+    super.initState();
+    Future<void>(() async {
+      final fullImage = image.decodeJpg(await widget.fullImageFile.readAsBytes())!;
+      final rectified = image.copyRectify(fullImage,
+          topLeft: image.Point(332, 2854),
+          topRight: image.Point(939, 2844),
+          bottomLeft: image.Point(337, 3162),
+          bottomRight: image.Point(944, 3152));
+      final rectifiedUi = await convertImageToFlutterUi(rectified);
+      setState(() {
+        barcodePreview = rectifiedUi;
+      });
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final barcodePreview = this.barcodePreview;
+    if (barcodePreview == null) {
+      return const CircularProgressIndicator();
+    }
+    return RawImage(image: barcodePreview);
+    // return Image.memory(barcodePreview);
   }
 }
