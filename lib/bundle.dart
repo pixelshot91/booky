@@ -20,9 +20,28 @@ class Bundle {
 
   Iterable<File> get compressedImages => compressedImagesDir.listImages();
 
+  File get metadataFile => File(path.join(directory.path, 'metadata.json'));
+
   Metadata get metadata {
-    final metadataFile = File(path.join(directory.path, 'metadata.json'));
     return Metadata.fromJson(jsonDecode(metadataFile.readAsStringSync()) as Map<String, dynamic>);
+  }
+
+  Future<bool> overwriteMetadata(Metadata md) async {
+    final tmpFile = File('tmp.json');
+
+    try {
+      await tmpFile.writeAsString(jsonEncode(md.toJson()));
+    } on FileSystemException catch (e) {
+      print(e);
+      return false;
+    }
+    final decoderProcess = await Process.run('gio', ['move', tmpFile.path, metadataFile.path]);
+    if (decoderProcess.exitCode != 0) {
+      print('stdout is ${decoderProcess.stdout}');
+      print('stderr is ${decoderProcess.stderr}');
+      return false;
+    }
+    return true;
   }
 
   File get autoMetadataFile => File(path.join(directory.path, 'automatic_metadata.json'));

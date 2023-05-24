@@ -5,6 +5,7 @@ import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:flutter_rust_bridge_template/camera/camera.dart';
+import 'package:flutter_rust_bridge_template/enrichment/isbn_decoding.dart';
 import 'package:kt_dart/kt.dart';
 import 'package:path/path.dart' as path;
 
@@ -290,6 +291,16 @@ class _BundleWidgetState extends State<BundleWidget> {
                         IconButton(
                             onPressed: () => Process.run('pcmanfm', [widget.bundle.directory.path]),
                             icon: const Icon(Icons.open_in_new)),
+                      IconButton(
+                        icon: const Icon(Icons.image_search),
+                        onPressed: () {
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute<void>(
+                                  builder: (context) =>
+                                      ISBNDecodingWidget(step: ISBNDecodingStep(bundle: widget.bundle))));
+                        },
+                      ),
                       IconButton(
                         icon: const Icon(Icons.delete),
                         onPressed: () {
