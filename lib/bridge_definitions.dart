@@ -8,6 +8,11 @@ import 'package:meta/meta.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge.dart';
 
 abstract class Native {
+  Future<BarcodeDetectResults> detectBarcodeInImage(
+      {required String imgPath, dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta get kDetectBarcodeInImageConstMeta;
+
   Future<void> getMetadataFromIsbns(
       {required List<String> isbns, required String path, dynamic hint});
 
@@ -53,6 +58,24 @@ class Author {
   });
 }
 
+class BarcodeDetectResult {
+  final String value;
+  final List<Point> corners;
+
+  const BarcodeDetectResult({
+    required this.value,
+    required this.corners,
+  });
+}
+
+class BarcodeDetectResults {
+  final List<BarcodeDetectResult> results;
+
+  const BarcodeDetectResults({
+    required this.results,
+  });
+}
+
 class BookMetaDataFromProvider {
   String? title;
   List<Author> authors;
@@ -86,6 +109,16 @@ class LbcCredential {
   LbcCredential({
     required this.lbcToken,
     required this.datadomeCookie,
+  });
+}
+
+class Point {
+  final int x;
+  final int y;
+
+  const Point({
+    required this.x,
+    required this.y,
   });
 }
 

@@ -3,10 +3,10 @@ import 'dart:math';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import 'package:flutter_rust_bridge_template/ffi.dart';
 import 'package:image/image.dart' as image;
 import 'package:kt_dart/collection.dart';
 
-import '../common.dart' as common;
 import '../helpers.dart';
 import '../image_helper.dart';
 import 'enrichment.dart';
@@ -20,15 +20,18 @@ class ISBNDecodingWidget extends StatefulWidget {
 }
 
 class _ISBNDecodingWidgetState extends State<ISBNDecodingWidget> {
-  KtMutableMap<String, Future<List<String>>> decodedIsbns = KtMutableMap.empty();
+  KtMutableMap<String, Future<BarcodeDetectResults>> decodedIsbns = KtMutableMap.empty();
   KtMutableSet<String> selectedIsbns = KtMutableSet.empty();
 
   @override
   void initState() {
     super.initState();
+
     widget.step.bundle.images.forEach((image) {
-      decodedIsbns[image.path] = common.extractIsbnsFromImage(image);
+      print('image.path = ${image.path}');
+      decodedIsbns[image.path] = api.detectBarcodeInImage(imgPath: image.path);
     });
+
     selectedIsbns = (widget.step.bundle.metadata.isbns ?? []).toSet().kt;
   }
 
@@ -49,38 +52,37 @@ class _ISBNDecodingWidgetState extends State<ISBNDecodingWidget> {
                             child: Column(
                               children: [
                                 SizedBox(height: 600, child: ImageWidget(imgPath)),
-                                FutureBuilder(
+                                FutureWidget(
                                     future: decodedIsbns[imgPath.path]!,
-                                    builder: (context, snap) {
-                                      if (snap.hasData == false) {
-                                        return const CircularProgressIndicator();
-                                      }
+                                    builder: (results) {
                                       return Column(
-                                          children: snap.data!
-                                              .map(
-                                                (isbn) => Padding(
-                                                  padding: const EdgeInsets.all(8.0),
-                                                  child: Row(
-                                                    mainAxisSize: MainAxisSize.min,
-                                                    children: [
-                                                      ElevatedButton(
-                                                          onPressed: selectedIsbns.contains(isbn)
+                                          children: results.results.map(
+                                        (result) {
+                                          final isbn = result.value;
+                                          return Padding(
+                                            padding: const EdgeInsets.all(8.0),
+                                            child: Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                ElevatedButton(
+                                                    onPressed: selectedIsbns.contains(isbn)
+                                                        ? null
+                                                        : () => setState(() => selectedIsbns.add(isbn)),
+                                                    child: Text(
+                                                      isbn,
+                                                      style: TextStyle(
+                                                          decoration: isbn.startsWith('978')
                                                               ? null
-                                                              : () => setState(() => selectedIsbns.add(isbn)),
-                                                          child: Text(
-                                                            isbn,
-                                                            style: TextStyle(
-                                                                decoration: isbn.startsWith('978')
-                                                                    ? null
-                                                                    : TextDecoration.lineThrough),
-                                                          )),
-                                                      const SizedBox(width: 20),
-                                                      SizedBox(width: 200, child: ISBNPreview(imgPath)),
-                                                    ],
-                                                  ),
-                                                ),
-                                              )
-                                              .toList());
+                                                              : TextDecoration.lineThrough),
+                                                    )),
+                                                const SizedBox(width: 20),
+                                                SizedBox(
+                                                    width: 200, child: ISBNPreview(imgPath, corners: result.corners)),
+                                              ],
+                                            ),
+                                          );
+                                        },
+                                      ).toList());
                                     })
                               ],
                             ),
@@ -146,12 +148,17 @@ class _ISBNDecodingWidgetState extends State<ISBNDecodingWidget> {
 }
 
 class ISBNPreview extends StatefulWidget {
-  const ISBNPreview(this.fullImageFile);
+  const ISBNPreview(this.fullImageFile, {required this.corners});
 
   final File fullImageFile;
+  final List<Point> corners;
 
   @override
   State<ISBNPreview> createState() => _ISBNPreviewState();
+}
+
+extension PointExt on Point {
+  image.Point toImg() => image.Point(x, y);
 }
 
 class _ISBNPreviewState extends State<ISBNPreview> {
@@ -165,10 +172,10 @@ class _ISBNPreviewState extends State<ISBNPreview> {
       print('fullImage.width = ${fullImage.width}, fullImage.height= ${fullImage.height}');
       const padding = 40;
 
-      final topLeft = image.Point(332, 2854);
-      final topRight = image.Point(939, 2844);
-      final bottomLeft = image.Point(337, 3162);
-      final bottomRight = image.Point(944, 3152);
+      final topLeft = widget.corners[1].toImg();
+      final topRight = widget.corners[2].toImg();
+      final bottomLeft = widget.corners[0].toImg();
+      final bottomRight = widget.corners[3].toImg();
 
       /// By default, copyRectify try to conserve the ratio of the full image
       /// But the barcode zone ratio is has no link with the full image ratio
@@ -186,7 +193,6 @@ class _ISBNPreviewState extends State<ISBNPreview> {
         toImage: dest,
       );
       print('rectified.width = ${rectified.width}, rectified.height= ${rectified.height}');
-      print('dest.width = ${dest.width}, rectified.height= ${dest.height}');
 
       final rectifiedUi = await convertImageToFlutterUi(rectified);
       setState(() {

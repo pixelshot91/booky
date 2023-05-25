@@ -2,6 +2,11 @@ use super::*;
 // Section: wire functions
 
 #[no_mangle]
+pub extern "C" fn wire_detect_barcode_in_image(port_: i64, img_path: *mut wire_uint_8_list) {
+    wire_detect_barcode_in_image_impl(port_, img_path)
+}
+
+#[no_mangle]
 pub extern "C" fn wire_get_metadata_from_isbns(
     port_: i64,
     isbns: *mut wire_StringList,

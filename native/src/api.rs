@@ -25,24 +25,26 @@ pub enum ProviderEnum {
 
 #[derive(PartialEq, Debug, Deserialize, Serialize)]
 pub struct Point {
-    x: u16,
-    y: u16,
+    pub x: u16,
+    pub y: u16,
 }
 #[derive(PartialEq, Debug, Deserialize, Serialize)]
 pub struct BarcodeDetectResult {
-    value: String,
-    corners: Vec<Point>,
+    pub value: String,
+    pub corners: Vec<Point>,
 }
 
 #[derive(PartialEq, Debug, Deserialize, Serialize)]
 pub struct BarcodeDetectResults {
-    results: Vec<BarcodeDetectResult>,
+    pub results: Vec<BarcodeDetectResult>,
 }
 
 pub fn detect_barcode_in_image(img_path: String) -> anyhow::Result<BarcodeDetectResults> {
-    let output = std::process::Command::new("./detect_barcode")
-        .arg(format!("--in={}", img_path))
-        .output()?;
+    let output = std::process::Command::new(
+        "/home/julien/Perso/LeBonCoin/chain_automatisation/booky/native/detect_barcode",
+    )
+    .arg(format!("--in={}", img_path))
+    .output()?;
 
     if !output.status.success() {
         println!("status: {}", output.status);
