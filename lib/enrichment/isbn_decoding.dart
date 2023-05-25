@@ -172,7 +172,7 @@ class _ISBNPreviewState extends State<ISBNPreview> {
       print('fullImage.width = ${fullImage.width}, fullImage.height= ${fullImage.height}');
 
       /// Add some space around the barcode to be sure the text ISBN will be in the frame
-      const padding = 40;
+      const padding = 50;
 
       final topLeft = widget.corners[1].toImg() + image.Point(-padding, -padding);
       final topRight = widget.corners[2].toImg() + image.Point(padding, -padding);
