@@ -120,21 +120,31 @@ class _ISBNDecodingWidgetState extends State<ISBNDecodingWidget> {
                             ],
                           )),
                       const SizedBox(height: 20),
-                      ElevatedButton(
-                          onPressed: () async {
-                            final md = widget.step.bundle.metadata;
-                            md.isbns = selectedIsbns.toList().asList();
-                            final res = await widget.step.bundle.overwriteMetadata(md);
-                            print('res = $res');
-                            if (!mounted) return;
-                            if (res) {
-                              Navigator.pop(context);
-                            } else {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text('Error while trying to update metadata.json')));
-                            }
-                          },
-                          child: const Text('Validate ISBNs')),
+                      () {
+                        final md = widget.step.bundle.metadata;
+                        final isbnsDidNotChanged = (md.isbns ?? []).toImmutableSet() == selectedIsbns;
+                        return ElevatedButton(
+                            onPressed: isbnsDidNotChanged
+                                ? null
+                                : () async {
+                                    final md = widget.step.bundle.metadata;
+
+                                    md.isbns = selectedIsbns.toList().asList();
+                                    final res = await widget.step.bundle.overwriteMetadata(md);
+                                    print('res = $res');
+                                    if (res) {
+                                      widget.step.bundle.autoMetadataFile.delete();
+                                    }
+                                    if (!mounted) return;
+                                    if (res) {
+                                      Navigator.pop(context);
+                                    } else {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                          const SnackBar(content: Text('Error while trying to update metadata.json')));
+                                    }
+                                  },
+                            child: const Text('Validate ISBNs'));
+                      }(),
                     ],
                   ),
                 ),
