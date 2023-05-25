@@ -91,7 +91,7 @@ class _ISBNDecodingWidgetState extends State<ISBNDecodingWidget> {
                     .toList(),
               ),
             ),
-            const Spacer(),
+            // const Spacer(),
             SizedBox(
               width: 300,
               child: Card(
@@ -170,12 +170,14 @@ class _ISBNPreviewState extends State<ISBNPreview> {
     Future<void>(() async {
       final fullImage = image.decodeJpg(await widget.fullImageFile.readAsBytes())!;
       print('fullImage.width = ${fullImage.width}, fullImage.height= ${fullImage.height}');
+
+      /// Add some space around the barcode to be sure the text ISBN will be in the frame
       const padding = 40;
 
-      final topLeft = widget.corners[1].toImg();
-      final topRight = widget.corners[2].toImg();
-      final bottomLeft = widget.corners[0].toImg();
-      final bottomRight = widget.corners[3].toImg();
+      final topLeft = widget.corners[1].toImg() + image.Point(-padding, -padding);
+      final topRight = widget.corners[2].toImg() + image.Point(padding, -padding);
+      final bottomLeft = widget.corners[0].toImg() + image.Point(-padding, padding);
+      final bottomRight = widget.corners[3].toImg() + image.Point(padding, padding);
 
       /// By default, copyRectify try to conserve the ratio of the full image
       /// But the barcode zone ratio is has no link with the full image ratio
@@ -186,10 +188,10 @@ class _ISBNPreviewState extends State<ISBNPreview> {
 
       final rectified = image.copyRectify(
         fullImage,
-        topLeft: topLeft + image.Point(-padding, -padding),
-        topRight: topRight + image.Point(padding, -padding),
-        bottomLeft: bottomLeft + image.Point(-padding, padding),
-        bottomRight: bottomRight + image.Point(padding, padding),
+        topLeft: topLeft,
+        topRight: topRight,
+        bottomLeft: bottomLeft,
+        bottomRight: bottomRight,
         toImage: dest,
       );
       print('rectified.width = ${rectified.width}, rectified.height= ${rectified.height}');
