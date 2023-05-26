@@ -214,11 +214,16 @@ class BundleWidget extends StatefulWidget {
 }
 
 class _BundleWidgetState extends State<BundleWidget> {
-  late Future<List<ISBNMetadataPair>> cachedAutoMetadata;
+  late Future<KtMutableMap<String, KtMutableMap<ProviderEnum, BookMetaDataFromProvider?>>> cachedAutoMetadata;
   @override
   void initState() {
     super.initState();
-    cachedAutoMetadata = api.getAutoMetadataFromBundle(path: widget.bundle.autoMetadataFile.path);
+    cachedAutoMetadata = api.getAutoMetadataFromBundle(path: widget.bundle.autoMetadataFile.path).then((value) {
+      return Map.fromEntries(value.map((e) {
+        final providerMdMap = Map.fromEntries(e.metadatas.map((e) => MapEntry(e.provider, e.metadata))).kt;
+        return MapEntry(e.isbn, providerMdMap);
+      })).kt;
+    });
   }
 
   @override
@@ -261,9 +266,9 @@ class _BundleWidgetState extends State<BundleWidget> {
             FutureWidget(
                 future: cachedAutoMetadata,
                 builder: (autoMetadata) {
-                  final firstBook = autoMetadata.firstOrNull;
+                  final firstBook = autoMetadata.iter.firstOrNull;
                   if (firstBook == null) return const Text('No book identified');
-                  final md = firstBook.metadatas.mergeAllProvider();
+                  final md = firstBook.value.dart.mergeAllProvider();
                   final priceRange = md.marketPrice.toList();
                   return Row(children: [
                     // Text(firstBook.isbn),
@@ -282,6 +287,7 @@ class _BundleWidgetState extends State<BundleWidget> {
             Expanded(
               child: Row(
                 children: [
+                  FutureWidget(future: cachedAutoMetadata, builder: (md) => MetadataIcons(md)),
                   ...imagesShown,
                   const Expanded(child: SizedBox.expand()),
                   Column(
@@ -320,6 +326,65 @@ class _BundleWidgetState extends State<BundleWidget> {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class MetadataIcons extends StatelessWidget {
+  const MetadataIcons(this.metadata);
+  final KtMutableMap<String, KtMutableMap<ProviderEnum, BookMetaDataFromProvider?>> metadata;
+
+  @override
+  Widget build(BuildContext context) {
+    if (metadata.size == 0) return const SizedBox.shrink();
+
+    final mergedMd = metadata.mapValues((p0) => p0.value.dart.mergeAllProvider()); //map((entry) => entry.)
+    final allBooksHaveTitle = mergedMd.all((key, value) => (value.title?.length ?? 0) > 5);
+    final allBooksHaveAuthor = mergedMd.all((key, value) => (value.authors.length) >= 1);
+    final allBooksHaveBlurb = mergedMd.all((key, value) => (value.blurb?.length ?? 0) > 50);
+    final allBooksHaveKeywords = mergedMd.all((key, value) => (value.keywords.length) > 5);
+    final allBooksHavePrice = mergedMd.all((key, value) => (value.marketPrice.length) > 1);
+
+    return Column(
+      children: [
+        _IconStatus(Icons.title, allBooksHaveTitle),
+        _IconStatus(Icons.person, allBooksHaveAuthor),
+        _IconStatus(Icons.description, allBooksHaveBlurb),
+        _IconStatus(Icons.manage_search, allBooksHaveKeywords),
+        _IconStatus(Icons.euro, allBooksHavePrice),
+      ],
+    );
+  }
+}
+
+class _IconStatus extends StatelessWidget {
+  const _IconStatus(this.icon, this.isChecked);
+  final IconData icon;
+  final bool isChecked;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(2.0),
+      child: Stack(
+        children: [
+          Icon(
+            icon,
+            color: Colors.black26,
+          ),
+          if (isChecked)
+            const Positioned(
+              right: 0,
+              bottom: 0,
+              child: Icon(
+                Icons.check_circle,
+                color: Colors.green,
+                shadows: [Shadow(blurRadius: 1, color: Colors.white)],
+                size: 14,
+              ),
+            )
+        ],
       ),
     );
   }

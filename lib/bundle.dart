@@ -47,23 +47,6 @@ class Bundle {
   File get autoMetadataFile => File(path.join(directory.path, 'automatic_metadata.json'));
 }
 
-extension ListProviderMetadataPairExt on List<ProviderMetadataPair> {
-  @Deprecated('Use MapProviderEnumBookMetaDataFromProviderExt')
-  List<double> getPrices() =>
-      map((e) => e.metadata?.marketPrice.toList()).whereNotNull().expand((i) => i).toList()..sort();
-
-  @Deprecated('Use MapProviderEnumBookMetaDataFromProviderExt')
-  BookMetaDataFromProvider mergeAllProvider() {
-    return BookMetaDataFromProvider(
-        title: map((e) => e.metadata?.title)
-            .whereNotNull()
-            .fold(null, (best, s) => s.length > (best?.length ?? 0) ? s : best),
-        authors: [],
-        keywords: [],
-        marketPrice: Float32List.fromList(getPrices()));
-  }
-}
-
 extension MapProviderEnumBookMetaDataFromProviderExt on Map<ProviderEnum, BookMetaDataFromProvider?> {
   List<double> getPrices() =>
       values.map((e) => e?.marketPrice.toList()).whereNotNull().expand((i) => i).toList()..sort();
