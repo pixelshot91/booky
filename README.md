@@ -62,7 +62,9 @@ In the first response, the title use a big C for "Cité", but in the second, it 
 ### Build the barcode detector binary
 Clone the 3 OpenCV repo:
 - https://github.com/opencv/opencv.git (main repo)
-- https://github.com/opencv/opencv_contrib.git (contain the barcode contrib module)
+- https://github.com/pixelshot91/open_cv_barcode_book_metadata_finder  
+  (fork of https://github.com/opencv/opencv_contrib.git)  
+  Contain the barcode contrib module
 - https://github.com/opencv/opencv_extra.git (optionnal, contain the test data to test OpenCV)
 
 ```shell
