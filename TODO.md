@@ -2,12 +2,15 @@
 
 * [ ] BUG: BundleList fail to refresh after: autoMetadata download
 * [ ] BUG: BundleList show autoMetadata from other bundle when some bundle are deleted
+* [ ] BundleSelection: Delete some bundle
+* [ ] BundleSelection: Show icons to represent how much metadata is available
 * [ ] MetadataCollecting: Disable 'Validate Metadatas' button if price field is empty
 * [ ] AdEditing: Disable 'Mark as published' if the title is empty
 * [ ] Search with Selenium in headless mode
 
 # DONE
 
+* [x] ISBNDecoding: Show barcode zone, add and remove barcode 
 * [x] BundleSelection: Automatically update bundle list when a bundle is removed or added by the app
 * [x] BundleSelection: Allow manual refresh if the bundle list has been modified by external device
 * [x] Launch the scrapping asynchronously to avoid waiting for the provider (notably BooksPrice)
