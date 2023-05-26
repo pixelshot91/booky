@@ -26,6 +26,22 @@ use crate::common::LbcCredential;
 
 // Section: wire functions
 
+fn wire_detect_barcode_in_image_impl(
+    port_: MessagePort,
+    img_path: impl Wire2Api<String> + UnwindSafe,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap(
+        WrapInfo {
+            debug_name: "detect_barcode_in_image",
+            port: Some(port_),
+            mode: FfiCallMode::Normal,
+        },
+        move || {
+            let api_img_path = img_path.wire2api();
+            move |task_callback| detect_barcode_in_image(api_img_path)
+        },
+    )
+}
 fn wire_get_metadata_from_isbns_impl(
     port_: MessagePort,
     isbns: impl Wire2Api<Vec<String>> + UnwindSafe,
@@ -152,6 +168,20 @@ impl support::IntoDart for Author {
 }
 impl support::IntoDartExceptPrimitive for Author {}
 
+impl support::IntoDart for BarcodeDetectResult {
+    fn into_dart(self) -> support::DartAbi {
+        vec![self.value.into_dart(), self.corners.into_dart()].into_dart()
+    }
+}
+impl support::IntoDartExceptPrimitive for BarcodeDetectResult {}
+
+impl support::IntoDart for BarcodeDetectResults {
+    fn into_dart(self) -> support::DartAbi {
+        vec![self.results.into_dart()].into_dart()
+    }
+}
+impl support::IntoDartExceptPrimitive for BarcodeDetectResults {}
+
 impl support::IntoDart for BookMetaDataFromProvider {
     fn into_dart(self) -> support::DartAbi {
         vec![
@@ -172,6 +202,13 @@ impl support::IntoDart for ISBNMetadataPair {
     }
 }
 impl support::IntoDartExceptPrimitive for ISBNMetadataPair {}
+
+impl support::IntoDart for Point {
+    fn into_dart(self) -> support::DartAbi {
+        vec![self.x.into_dart(), self.y.into_dart()].into_dart()
+    }
+}
+impl support::IntoDartExceptPrimitive for Point {}
 
 impl support::IntoDart for ProviderEnum {
     fn into_dart(self) -> support::DartAbi {

@@ -24,6 +24,25 @@ class NativeImpl implements Native {
   factory NativeImpl.wasm(FutureOr<WasmModule> module) =>
       NativeImpl(module as ExternalLibrary);
   NativeImpl.raw(this._platform);
+  Future<BarcodeDetectResults> detectBarcodeInImage(
+      {required String imgPath, dynamic hint}) {
+    var arg0 = _platform.api2wire_String(imgPath);
+    return _platform.executeNormal(FlutterRustBridgeTask(
+      callFfi: (port_) =>
+          _platform.inner.wire_detect_barcode_in_image(port_, arg0),
+      parseSuccessData: _wire2api_barcode_detect_results,
+      constMeta: kDetectBarcodeInImageConstMeta,
+      argValues: [imgPath],
+      hint: hint,
+    ));
+  }
+
+  FlutterRustBridgeTaskConstMeta get kDetectBarcodeInImageConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "detect_barcode_in_image",
+        argNames: ["imgPath"],
+      );
+
   Future<void> getMetadataFromIsbns(
       {required List<String> isbns, required String path, dynamic hint}) {
     var arg0 = _platform.api2wire_StringList(isbns);
@@ -125,6 +144,25 @@ class NativeImpl implements Native {
     );
   }
 
+  BarcodeDetectResult _wire2api_barcode_detect_result(dynamic raw) {
+    final arr = raw as List<dynamic>;
+    if (arr.length != 2)
+      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    return BarcodeDetectResult(
+      value: _wire2api_String(arr[0]),
+      corners: _wire2api_list_point(arr[1]),
+    );
+  }
+
+  BarcodeDetectResults _wire2api_barcode_detect_results(dynamic raw) {
+    final arr = raw as List<dynamic>;
+    if (arr.length != 1)
+      throw Exception('unexpected arr length: expect 1 but see ${arr.length}');
+    return BarcodeDetectResults(
+      results: _wire2api_list_barcode_detect_result(arr[0]),
+    );
+  }
+
   BookMetaDataFromProvider _wire2api_book_meta_data_from_provider(dynamic raw) {
     final arr = raw as List<dynamic>;
     if (arr.length != 5)
@@ -173,8 +211,16 @@ class NativeImpl implements Native {
     return (raw as List<dynamic>).map(_wire2api_author).toList();
   }
 
+  List<BarcodeDetectResult> _wire2api_list_barcode_detect_result(dynamic raw) {
+    return (raw as List<dynamic>).map(_wire2api_barcode_detect_result).toList();
+  }
+
   List<ISBNMetadataPair> _wire2api_list_isbn_metadata_pair(dynamic raw) {
     return (raw as List<dynamic>).map(_wire2api_isbn_metadata_pair).toList();
+  }
+
+  List<Point> _wire2api_list_point(dynamic raw) {
+    return (raw as List<dynamic>).map(_wire2api_point).toList();
   }
 
   List<ProviderMetadataPair> _wire2api_list_provider_metadata_pair(
@@ -195,6 +241,16 @@ class NativeImpl implements Native {
         : _wire2api_box_autoadd_book_meta_data_from_provider(raw);
   }
 
+  Point _wire2api_point(dynamic raw) {
+    final arr = raw as List<dynamic>;
+    if (arr.length != 2)
+      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    return Point(
+      x: _wire2api_u16(arr[0]),
+      y: _wire2api_u16(arr[1]),
+    );
+  }
+
   ProviderEnum _wire2api_provider_enum(dynamic raw) {
     return ProviderEnum.values[raw as int];
   }
@@ -207,6 +263,10 @@ class NativeImpl implements Native {
       provider: _wire2api_provider_enum(arr[0]),
       metadata: _wire2api_opt_box_autoadd_book_meta_data_from_provider(arr[1]),
     );
+  }
+
+  int _wire2api_u16(dynamic raw) {
+    return raw as int;
   }
 
   int _wire2api_u8(dynamic raw) {
@@ -403,6 +463,23 @@ class NativeWire implements FlutterRustBridgeWireBase {
           'init_frb_dart_api_dl');
   late final _init_frb_dart_api_dl = _init_frb_dart_api_dlPtr
       .asFunction<int Function(ffi.Pointer<ffi.Void>)>();
+
+  void wire_detect_barcode_in_image(
+    int port_,
+    ffi.Pointer<wire_uint_8_list> img_path,
+  ) {
+    return _wire_detect_barcode_in_image(
+      port_,
+      img_path,
+    );
+  }
+
+  late final _wire_detect_barcode_in_imagePtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Void Function(ffi.Int64,
+              ffi.Pointer<wire_uint_8_list>)>>('wire_detect_barcode_in_image');
+  late final _wire_detect_barcode_in_image = _wire_detect_barcode_in_imagePtr
+      .asFunction<void Function(int, ffi.Pointer<wire_uint_8_list>)>();
 
   void wire_get_metadata_from_isbns(
     int port_,
