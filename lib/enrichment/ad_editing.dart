@@ -25,7 +25,8 @@ String vecFmt(Iterable<String> it) {
   if (vec.length == 0) return '';
   if (vec.length == 1) return 'de ${vec[0]}';
   if (vec.length == 2) return 'de ${vec[0]} et ${vec[1]}';
-  throw UnimplementedError('More than 2 authors');
+  print('Warning: more than 2 authors, only show the first one');
+  return 'de ${vec[0]}';
 }
 
 String _bookFormatTitleAndAuthor(String title, Iterable<Author> authors) {
