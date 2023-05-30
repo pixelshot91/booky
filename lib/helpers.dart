@@ -57,7 +57,13 @@ class AsyncSnapshotWidget<T> extends StatelessWidget {
         return const CircularProgressIndicator();
       case ConnectionState.done:
         if (snap.hasError) {
-          return Text(snap.error.toString());
+          return Tooltip(
+            message: snap.error.toString(),
+            child: const Icon(
+              Icons.error,
+              color: Colors.red,
+            ),
+          );
         }
         return builder(snap.data as T);
       default:
