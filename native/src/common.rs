@@ -35,6 +35,7 @@ pub struct Ad {
     pub title: String,
     pub description: String,
     pub price_cent: i32,
+    pub weight_grams: i32,
     pub imgs_path: Vec<String>,
 }
 

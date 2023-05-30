@@ -38,12 +38,14 @@ class Ad {
   String title;
   String description;
   int priceCent;
+  final int weightGrams;
   List<String> imgsPath;
 
   Ad({
     required this.title,
     required this.description,
     required this.priceCent,
+    required this.weightGrams,
     required this.imgsPath,
   });
 }

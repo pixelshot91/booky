@@ -349,6 +349,7 @@ class NativePlatform extends FlutterRustBridgeBase<NativeWire> {
     wireObj.title = api2wire_String(apiObj.title);
     wireObj.description = api2wire_String(apiObj.description);
     wireObj.price_cent = api2wire_i32(apiObj.priceCent);
+    wireObj.weight_grams = api2wire_i32(apiObj.weightGrams);
     wireObj.imgs_path = api2wire_StringList(apiObj.imgsPath);
   }
 
@@ -649,6 +650,9 @@ class wire_Ad extends ffi.Struct {
 
   @ffi.Int32()
   external int price_cent;
+
+  @ffi.Int32()
+  external int weight_grams;
 
   external ffi.Pointer<wire_StringList> imgs_path;
 }

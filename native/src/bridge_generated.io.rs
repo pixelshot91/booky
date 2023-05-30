@@ -93,6 +93,7 @@ impl Wire2Api<Ad> for wire_Ad {
             title: self.title.wire2api(),
             description: self.description.wire2api(),
             price_cent: self.price_cent.wire2api(),
+            weight_grams: self.weight_grams.wire2api(),
             imgs_path: self.imgs_path.wire2api(),
         }
     }
@@ -142,6 +143,7 @@ pub struct wire_Ad {
     title: *mut wire_uint_8_list,
     description: *mut wire_uint_8_list,
     price_cent: i32,
+    weight_grams: i32,
     imgs_path: *mut wire_StringList,
 }
 
@@ -177,6 +179,7 @@ impl NewWithNullPtr for wire_Ad {
             title: core::ptr::null_mut(),
             description: core::ptr::null_mut(),
             price_cent: Default::default(),
+            weight_grams: Default::default(),
             imgs_path: core::ptr::null_mut(),
         }
     }
