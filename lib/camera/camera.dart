@@ -43,7 +43,7 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
   Bundle get getBundle => Bundle(getBundleDir);
 
   void _generateNewFolderPath() {
-    bundleName = DateTime.now().toIso8601String().replaceAll(':', '_');
+    bundleName = common.nowAsFileName();
   }
 
   @override

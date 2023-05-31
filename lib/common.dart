@@ -8,6 +8,8 @@ extension IterableFutureMapEntryExt<K, V> on Iterable<Future<MapEntry<K, V>>> {
   Future<Map<K, V>> toMap() async => Map.fromEntries(await Future.wait(this));
 }
 
+String nowAsFileName() => DateTime.now().toIso8601String().replaceAll(':', '_');
+
 final bookyDir = Platform.isAndroid
     ? Directory('/storage/emulated/0/DCIM/booky/')
     : Directory('/run/user/1000/gvfs/mtp:host=SAMSUNG_SAMSUNG_Android_RFCRA1CG6KT/Internal storage/DCIM/booky/');

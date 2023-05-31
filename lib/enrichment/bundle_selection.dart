@@ -63,7 +63,36 @@ class _BundleSelectionState extends State<BundleSelection> {
                   }
                 });
               },
-            )
+            ),
+            PopupMenuButton(
+              itemBuilder: (BuildContext context) {
+                return [
+                  PopupMenuItem<void>(
+                    child: const Text('Invalidate all metadata from provider'),
+                    onTap: () async {
+                      await _listBundles()?.map((bundle) async {
+                        if (!await bundle.autoMetadataFile.exists()) {
+                          print('Nothing to do');
+                          return;
+                        }
+                        final destinationName =
+                            path.basename(bundle.autoMetadataFile.path) + '_backup_' + common.nowAsFileName();
+                        final res = await Process.run('gio', ['rename', bundle.autoMetadataFile.path, destinationName]);
+                        if (res.exitCode != 0) {
+                          print('stdout is ${res.stdout}');
+                          print('stderr is ${res.stderr}');
+                          throw Exception('rename status is ${res.exitCode}');
+                        }
+                      }).let((futures) async => await Future.wait(futures));
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('All automatic metadata have been invalidated')));
+                      }
+                    },
+                  )
+                ];
+              },
+            ),
           ],
         ),
         floatingActionButton: FloatingActionButton(
