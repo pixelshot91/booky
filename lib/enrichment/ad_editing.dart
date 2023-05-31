@@ -55,12 +55,15 @@ class _AdEditingWidgetState extends State<AdEditingWidget> {
       description += '\n\nMots-clés:\n' + keywords;
     }
 
-    final totalPrice = metadataFromIsbn.map((e) => e.value.priceCent ?? 0).sum;
-
+    final totalPriceIncludingShipping = metadataFromIsbn.map((e) => e.value.priceCent ?? 0).sum;
+    final weightGramsWithWrapping = (widget.step.bundle.metadata.weightGrams! * 1.2).toInt();
+    final totalPriceExcludingShipping =
+        totalPriceIncludingShipping - _estimatedShippingCost(grams: weightGramsWithWrapping);
     ad = Ad(
         title: title,
         description: description,
-        priceCent: totalPrice,
+        priceCent: totalPriceExcludingShipping,
+        weightGrams: weightGramsWithWrapping,
         imgsPath: widget.step.bundle.compressedImages.map((e) => e.path).toList());
   }
 
@@ -127,15 +130,15 @@ class _AdEditingWidgetState extends State<AdEditingWidget> {
                 controller: TextEditingController(text: ad.priceCent.divide(100).toString()),
                 decoration: const InputDecoration(
                   icon: Icon(Icons.euro),
-                  labelText: 'Price',
+                  labelText: 'Price (without shipping cost)',
                 ),
                 style: const TextStyle(fontSize: 20),
               )),
               TextFormField(
-                initialValue: metadata.weightGrams?.toString(),
+                initialValue: ad.weightGrams.toString(),
                 decoration: const InputDecoration(
                   icon: Icon(Icons.scale),
-                  labelText: 'Weight (grams)',
+                  labelText: 'Weight with wrapping (grams)',
                 ),
                 style: const TextStyle(fontSize: 20),
               ),
@@ -179,4 +182,21 @@ class _AdEditingWidgetState extends State<AdEditingWidget> {
       ),
     );
   }
+
+  int _estimatedShippingCost({required int grams}) {
+    final shippingCosts = [
+      _ShippingCostIfWeightIsUnder(maxWeightGram: 500, priceCent: 349),
+      _ShippingCostIfWeightIsUnder(maxWeightGram: 1000, priceCent: 399),
+      _ShippingCostIfWeightIsUnder(maxWeightGram: 2000, priceCent: 499),
+      _ShippingCostIfWeightIsUnder(maxWeightGram: 5000, priceCent: 649),
+    ];
+    final shippingCost = shippingCosts.firstWhere((sc) => sc.maxWeightGram > grams);
+    return shippingCost.priceCent;
+  }
+}
+
+class _ShippingCostIfWeightIsUnder {
+  _ShippingCostIfWeightIsUnder({required this.maxWeightGram, required this.priceCent});
+  final int maxWeightGram;
+  final int priceCent;
 }
