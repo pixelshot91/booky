@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math';
 
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
@@ -57,8 +58,11 @@ class _AdEditingWidgetState extends State<AdEditingWidget> {
 
     final totalPriceIncludingShipping = metadataFromIsbn.map((e) => e.value.priceCent ?? 0).sum;
     final weightGramsWithWrapping = (widget.step.bundle.metadata.weightGrams! * 1.2).toInt();
-    final totalPriceExcludingShipping =
+    var totalPriceExcludingShipping =
         totalPriceIncludingShipping - _estimatedShippingCost(grams: weightGramsWithWrapping);
+
+    const minimumSellingPrice = 100;
+    totalPriceExcludingShipping = max(totalPriceExcludingShipping, minimumSellingPrice);
     ad = Ad(
         title: title,
         description: description,

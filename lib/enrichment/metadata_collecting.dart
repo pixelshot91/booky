@@ -134,9 +134,7 @@ class _BookMetadataCollectingWidgetState extends State<_BookMetadataCollectingWi
       controllers.priceTextFieldController.text = '';
     } else {
       final minMarketPrice = manualMD.marketPrice.min;
-      const minimumSellingPrice = 1.0;
-      controllers.priceTextFieldController.text =
-          minMarketPrice < minimumSellingPrice ? minimumSellingPrice.toString() : minMarketPrice.round().toString();
+      controllers.priceTextFieldController.text = minMarketPrice.round().toString();
     }
   }
 
