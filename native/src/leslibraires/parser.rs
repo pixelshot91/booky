@@ -36,7 +36,9 @@ pub fn extract_metadata(isbn_search_result: &str) -> Option<common::BookMetaData
         });
 
         let price_selector = scraper::Selector::parse("#product-offers .price").unwrap();
-        let price = doc
+        let shipping_price: f32 = 10.0;
+
+        let price_with_shipping = doc
             .select(&price_selector)
             .exactly_one()
             .ok()
@@ -47,7 +49,7 @@ pub fn extract_metadata(isbn_search_result: &str) -> Option<common::BookMetaData
                     .value()
                     .as_text()
                     .unwrap()
-                    .to_string().parse().unwrap()
+                    .to_string().parse::<f32>().unwrap() + shipping_price
             });
 
     Some(common::BookMetaDataFromProvider {
@@ -58,7 +60,7 @@ pub fn extract_metadata(isbn_search_result: &str) -> Option<common::BookMetaData
                 last_name: author,
             }]
         }),
-        market_price: price.map_or(vec![], |p| vec![p]),
+        market_price: price_with_shipping.map_or(vec![], |p| vec![p]),
         ..Default::default()
     })
 }
