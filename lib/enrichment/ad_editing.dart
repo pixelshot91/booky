@@ -98,6 +98,7 @@ class _AdEditingWidgetState extends State<AdEditingWidget> {
   @override
   Widget build(BuildContext context) {
     final metadata = widget.step.bundle.metadata;
+    const iconColor = Color(0xff898989);
     return Scaffold(
       appBar: AppBar(title: const Text('Ad editing')),
       body: Padding(
@@ -106,7 +107,7 @@ class _AdEditingWidgetState extends State<AdEditingWidget> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              CopiableTextField(TextFormField(
+              CopyableTextField(TextFormField(
                 controller: TextEditingController(text: ad.title),
                 decoration: const InputDecoration(
                   icon: Icon(Icons.title),
@@ -114,15 +115,17 @@ class _AdEditingWidgetState extends State<AdEditingWidget> {
                 ),
                 style: const TextStyle(fontSize: 30),
               )),
-              TextFormField(
-                initialValue: metadata.itemState?.loc,
-                decoration: const InputDecoration(
-                  icon: Icon(Icons.diamond),
-                  labelText: 'State',
+              NonCopyableTextField(
+                child: TextFormField(
+                  initialValue: metadata.itemState?.loc,
+                  decoration: const InputDecoration(
+                    icon: Icon(Icons.diamond),
+                    labelText: 'State',
+                  ),
+                  style: const TextStyle(fontSize: 20),
                 ),
-                style: const TextStyle(fontSize: 20),
               ),
-              CopiableTextField(TextFormField(
+              CopyableTextField(TextFormField(
                 controller: TextEditingController(text: ad.description),
                 maxLines: null,
                 scrollPhysics: const NeverScrollableScrollPhysics(),
@@ -131,7 +134,7 @@ class _AdEditingWidgetState extends State<AdEditingWidget> {
                   labelText: 'Ad description',
                 ),
               )),
-              CopiableTextField(TextFormField(
+              CopyableTextField(TextFormField(
                 controller: TextEditingController(text: ad.priceCent.divide(100).toString()),
                 decoration: const InputDecoration(
                   icon: Icon(Icons.euro),
@@ -139,24 +142,22 @@ class _AdEditingWidgetState extends State<AdEditingWidget> {
                 ),
                 style: const TextStyle(fontSize: 20),
               )),
-              Padding(
-                padding: const EdgeInsets.all(8.0),
+              NonCopyableTextField(
                 child: Row(
                   children: [
                     const Icon(
                       Icons.scale,
-                      color: Colors.grey,
+                      color: iconColor,
                     ),
                     Expanded(child: _LBCStyledWeight(ad.weightGrams)),
                   ],
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8.0),
+              NonCopyableTextField(
                 child: Row(children: [
                   const Icon(
                     Icons.collections,
-                    color: Colors.grey,
+                    color: iconColor,
                   ),
                   const SizedBox(width: 16),
                   DraggableFilesWidget(
@@ -187,7 +188,12 @@ class _AdEditingWidgetState extends State<AdEditingWidget> {
                     },
                     child: const Text('Mark as published')),
               )
-            ],
+            ]
+                .map((e) => Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 4.0),
+                      child: e,
+                    ))
+                .toList(),
           ),
         ),
       ),
