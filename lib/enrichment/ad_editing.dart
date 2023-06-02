@@ -104,6 +104,7 @@ class _AdEditingWidgetState extends State<AdEditingWidget> {
         padding: const EdgeInsets.all(8.0),
         child: SingleChildScrollView(
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               CopiableTextField(TextFormField(
                 controller: TextEditingController(text: ad.title),
@@ -138,13 +139,17 @@ class _AdEditingWidgetState extends State<AdEditingWidget> {
                 ),
                 style: const TextStyle(fontSize: 20),
               )),
-              TextFormField(
-                initialValue: ad.weightGrams.toString(),
-                decoration: const InputDecoration(
-                  icon: Icon(Icons.scale),
-                  labelText: 'Weight with wrapping (grams)',
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.scale,
+                      color: Colors.grey,
+                    ),
+                    Expanded(child: _LBCStyledWeight(ad.weightGrams)),
+                  ],
                 ),
-                style: const TextStyle(fontSize: 20),
               ),
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 8.0),
@@ -168,18 +173,20 @@ class _AdEditingWidgetState extends State<AdEditingWidget> {
                   ),
                 ]),
               ),
-              ElevatedButton(
-                  onPressed: () {
-                    final d = widget.step.bundle.directory;
-                    final segments = path.split(d.path);
-                    segments[segments.length - 2] = 'booky_done';
-                    d.renameSync(path.joinAll(segments));
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                      content: Text('Moved'),
-                    ));
-                    Navigator.push(context, MaterialPageRoute<void>(builder: (context) => const BundleSelection()));
-                  },
-                  child: const Text('Mark as published'))
+              Center(
+                child: ElevatedButton(
+                    onPressed: () {
+                      final d = widget.step.bundle.directory;
+                      final segments = path.split(d.path);
+                      segments[segments.length - 2] = 'booky_done';
+                      d.renameSync(path.joinAll(segments));
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                        content: Text('Moved'),
+                      ));
+                      Navigator.push(context, MaterialPageRoute<void>(builder: (context) => const BundleSelection()));
+                    },
+                    child: const Text('Mark as published')),
+              )
             ],
           ),
         ),
@@ -203,4 +210,30 @@ class _ShippingCostIfWeightIsUnder {
   _ShippingCostIfWeightIsUnder({required this.maxWeightGram, required this.priceCent});
   final int maxWeightGram;
   final int priceCent;
+}
+
+class _WeightCategory<T> {
+  const _WeightCategory({required this.maxWeight, required this.description});
+  final int maxWeight;
+  final T description;
+}
+
+class _LBCStyledWeight extends StatelessWidget {
+  const _LBCStyledWeight(this.weightGrams);
+  final num weightGrams;
+  @override
+  Widget build(BuildContext context) {
+    const weightCategories = [
+      _WeightCategory(maxWeight: 100, description: "Jusqu'à 100 g"),
+      _WeightCategory(maxWeight: 250, description: 'De 100 g à 250 g'),
+      _WeightCategory(maxWeight: 500, description: 'De 250 g à 500 g'),
+      _WeightCategory(maxWeight: 1000, description: 'De 500 g à 1 kg'),
+      _WeightCategory(maxWeight: 2000, description: 'De 1 kg à 2 kg'),
+      _WeightCategory(maxWeight: 5000, description: 'De 2 kg à 5 kg'),
+      _WeightCategory(maxWeight: 10000, description: 'De 5 kg à 10 kg'),
+      _WeightCategory(maxWeight: 20000, description: 'De 10 kg à 20 kg'),
+      _WeightCategory(maxWeight: 20000, description: 'De 20 kg à 30 kg'),
+    ];
+    return LBCRadioButton(weightCategories.firstWhere((c) => c.maxWeight > weightGrams).description);
+  }
 }

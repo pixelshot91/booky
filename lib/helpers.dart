@@ -4,6 +4,24 @@ import 'package:flutter/material.dart';
 
 import 'bridge_definitions.dart';
 
+class LBCRadioButton extends StatelessWidget {
+  const LBCRadioButton(this.text);
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return IgnorePointer(
+      child: RadioListTile<bool>(
+        value: true,
+        groupValue: true,
+        onChanged: (_) {},
+        title: Text(text),
+        activeColor: const Color(0xffff6e14),
+      ),
+    );
+  }
+}
+
 class ImageWidget extends StatelessWidget {
   const ImageWidget(this.image);
   final File image;
