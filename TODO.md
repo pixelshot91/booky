@@ -1,5 +1,6 @@
 # TODO
 
+* [ ] ISBNDecoding: Check the ISBN checksum
 * [ ] Add the ISBNs in the ad description for better indexing
 * [ ] Show LBC weight category instead of weight in grams
 * [ ] BUG: BundleList fail to refresh after: autoMetadata download
