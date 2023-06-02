@@ -247,6 +247,16 @@ class _BundleWidgetState extends State<BundleWidget> {
   @override
   void initState() {
     super.initState();
+    _loadAutoMetadata();
+  }
+
+  @override
+  void didUpdateWidget(covariant BundleWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _loadAutoMetadata();
+  }
+
+  void _loadAutoMetadata() {
     cachedAutoMetadata = api.getAutoMetadataFromBundle(path: widget.bundle.autoMetadataFile.path).then((value) {
       return Map.fromEntries(value.map((e) {
         final providerMdMap = Map.fromEntries(e.metadatas.map((e) => MapEntry(e.provider, e.metadata))).kt;
