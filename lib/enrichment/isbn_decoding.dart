@@ -1,14 +1,13 @@
+import 'dart:async';
 import 'dart:io';
-import 'dart:math';
-import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_rust_bridge_template/ffi.dart';
 import 'package:image/image.dart' as image;
 import 'package:kt_dart/collection.dart';
+import 'package:vector_math/vector_math_64.dart';
 
 import '../helpers.dart';
-import '../image_helper.dart';
 import 'enrichment.dart';
 
 class ISBNDecodingWidget extends StatefulWidget {
@@ -56,6 +55,7 @@ class _ISBNDecodingWidgetState extends State<ISBNDecodingWidget> {
                                           children: results.results.map(
                                         (result) {
                                           final isbn = result.value;
+
                                           return Padding(
                                             padding: const EdgeInsets.all(8.0),
                                             child: Row(
@@ -73,8 +73,7 @@ class _ISBNDecodingWidgetState extends State<ISBNDecodingWidget> {
                                                               : TextDecoration.lineThrough),
                                                     )),
                                                 const SizedBox(width: 20),
-                                                SizedBox(
-                                                    width: 200, child: ISBNPreview(imgPath, corners: result.corners)),
+                                                ISBNPreview(imgFile: imgPath, result: result),
                                               ],
                                             ),
                                           );
@@ -154,69 +153,61 @@ class _ISBNDecodingWidgetState extends State<ISBNDecodingWidget> {
   }
 }
 
-class ISBNPreview extends StatefulWidget {
-  const ISBNPreview(this.fullImageFile, {required this.corners});
+extension _PointExt on Point {
+  image.Point toImgPoint() => image.Point(x, y);
+}
 
-  final File fullImageFile;
-  final List<Point> corners;
+class ISBNPreview extends StatefulWidget {
+  const ISBNPreview({required this.imgFile, required this.result});
+  final File imgFile;
+  final BarcodeDetectResult result;
 
   @override
   State<ISBNPreview> createState() => _ISBNPreviewState();
 }
 
-extension PointExt on Point {
-  image.Point toImgPoint() => image.Point(x, y);
-}
-
 class _ISBNPreviewState extends State<ISBNPreview> {
-  ui.Image? barcodePreview;
-
+  late num barcodeWidth;
+  late Vector3 translate;
   @override
   void initState() {
     super.initState();
-    Future<void>(() async {
-      final fullImage = image.decodeJpg(await widget.fullImageFile.readAsBytes())!;
 
-      /// Add some space around the barcode to be sure the text ISBN will be in the frame
-      const padding = 50;
-
-      final topLeft = widget.corners[1].toImgPoint() + image.Point(-padding, -padding);
-      final topRight = widget.corners[2].toImgPoint() + image.Point(padding, -padding);
-      final bottomLeft = widget.corners[0].toImgPoint() + image.Point(-padding, padding);
-      final bottomRight = widget.corners[3].toImgPoint() + image.Point(padding, padding);
-
-      /// By default, copyRectify try to conserve the ratio of the full image
-      /// But the barcode zone ratio is has no link with the full image ratio
-      /// So the barcode ratio is computed manually then given to `copyRectify` through its `toImage` parameter
-      final height = max(bottomLeft.y - topLeft.y, bottomRight.y - topRight.y);
-      final width = max(topRight.x - topLeft.x, bottomRight.x - bottomLeft.x);
-      final dest = image.Image(height: height.toInt(), width: width.toInt());
-
-      final rectified = image.copyRectify(
-        fullImage,
-        topLeft: topLeft,
-        topRight: topRight,
-        bottomLeft: bottomLeft,
-        bottomRight: bottomRight,
-        toImage: dest,
-      );
-
-      final rectifiedUi = await convertImageToFlutterUi(rectified);
-      setState(() {
-        barcodePreview = rectifiedUi;
-      });
-    });
+    /// Add some space around the barcode to be sure the text ISBN will be in the frame
+    const padding = 50;
+    final topLeft = widget.result.corners[1].toImgPoint() + image.Point(-padding, -padding);
+    final topRight = widget.result.corners[2].toImgPoint() + image.Point(padding, -padding);
+    barcodeWidth = topRight.x - topLeft.x;
+    translate = Vector3(-topLeft.x.toDouble(), -topLeft.y.toDouble(), 0.0);
   }
 
   @override
   Widget build(BuildContext context) {
-    final barcodePreview = this.barcodePreview;
-    if (barcodePreview == null) {
-      return const CircularProgressIndicator();
-    }
-    return RawImage(
-      image: barcodePreview,
-      fit: BoxFit.fitWidth,
-    );
+    const maxWidth = 300.0;
+
+    return SizedBox(
+        width: maxWidth,
+        height: maxWidth,
+        child: Column(
+          children: [
+            Expanded(
+              child: InteractiveViewer(
+                maxScale: 4,
+                minScale: 0.01,
+                // Allow to scale down so much that the image does not fill the viewport anymore
+                boundaryMargin: const EdgeInsets.all(500.0),
+                transformationController: TransformationController(Matrix4.identity()
+                  ..scale(maxWidth / barcodeWidth)
+                  ..translate(translate)),
+                constrained: false,
+                child: ImageWidget(widget.imgFile),
+              ),
+            ),
+            // TODO: When scrolling over the InteractiveViewer, both the InteractiveViewer and the surrounding SingleChildScrollView handle it
+            // Ideally, if the InteractiveViewer handles the scroll event, it should absorb it and prevent the SingleChildScrollView from scrolling
+            // For some reason holding shift while scrolling prevent the SingleChildScrollView from scrolling
+            const Text('Shift+scroll to zoom in and out of the image'),
+          ],
+        ));
   }
 }
