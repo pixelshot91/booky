@@ -191,24 +191,24 @@ class _BundleSelectionState extends State<BundleSelection> {
 
   Widget _compressIndicator() {
     if (compressedBundleNb == bundleNb || !Platform.isAndroid) return const SizedBox.shrink();
-    return bundleNb.ifIs(
-        nul: () => const LinearProgressIndicator(),
-        notnull: (bundleNb) => Row(
-              children: [
-                const Text('Compressing '),
-                Expanded(child: LinearProgressIndicator(value: compressedBundleNb / bundleNb)),
-                Text('$compressedBundleNb / $bundleNb')
-              ],
-            ));
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: bundleNb.ifIs(
+          nul: () => const LinearProgressIndicator(),
+          notnull: (bundleNb) => Row(
+                children: [
+                  const Text('Compressing '),
+                  Expanded(child: LinearProgressIndicator(value: compressedBundleNb / bundleNb)),
+                  Text('$compressedBundleNb / $bundleNb')
+                ],
+              )),
+    );
   }
 
   Widget _bundleListWidget(Iterable<Bundle> bundles) {
     return Column(
       children: [
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: _compressIndicator(),
-        ),
+        _compressIndicator(),
         Expanded(
           child: GridView.extent(
             maxCrossAxisExtent: 500,
