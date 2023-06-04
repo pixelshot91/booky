@@ -545,6 +545,7 @@ class MetadataWidget extends StatefulWidget {
 
 class _MetadataWidgetState extends State<MetadataWidget> {
   late common.Metadata metadata;
+  final additionalISBNController = TextEditingController();
 
   @override
   void initState() {
@@ -556,6 +557,7 @@ class _MetadataWidgetState extends State<MetadataWidget> {
   Widget build(BuildContext context) {
     return SimpleDialog(
       title: const Text('Add the final metadata'),
+      contentPadding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 16),
       children: [
         TextFormField(
           initialValue: '',
@@ -575,15 +577,31 @@ class _MetadataWidgetState extends State<MetadataWidget> {
             onChanged: (state) => setState(() {
                   metadata.itemState = state;
                 })),
+        TextFormField(
+          controller: additionalISBNController,
+          keyboardType: TextInputType.number,
+          decoration: const InputDecoration(
+            icon: Icon(Icons.text_snippet),
+            labelText: 'Additional ISBN, separated by space',
+            labelStyle: TextStyle(fontSize: 10),
+          ),
+          style: const TextStyle(fontSize: 15),
+        ),
         IconButton(
             icon: const Icon(Icons.save),
             onPressed: () async {
               final managePerm = await Permission.manageExternalStorage.request();
               print('managePerm = $managePerm');
+              metadata.isbns!.addAll(additionalISBNController.text.split(' '));
               File(path.join(widget.directory.path, 'metadata.json')).writeAsStringSync(jsonEncode(metadata.toJson()));
               widget.onSubmit();
             })
-      ],
+      ]
+          .map((w) => Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4.0),
+                child: w,
+              ))
+          .toList(),
     );
   }
 }
