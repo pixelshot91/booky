@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_rust_bridge_template/personal_info.dart' as personal_info;
+import 'package:kt_dart/kt.dart';
 import 'package:path/path.dart' as path;
 
 import '../copiable_text_field.dart';
@@ -30,8 +31,8 @@ String vecFmt(Iterable<String> it) {
   return 'de ${vec[0]}';
 }
 
-String _bookFormatTitleAndAuthor(String title, Iterable<Author> authors) {
-  return '"$title" ${vecFmt(authors.map((a) => a.toText()))}';
+String _bookFormat(BookMetaDataManual book, {bool withISBN = false}) {
+  return '"${book.title}" ${vecFmt(book.authors.map((a) => a.toText()))}' + (withISBN ? ' (ISBN: ${book.isbn})' : '');
 }
 
 class _AdEditingWidgetState extends State<AdEditingWidget> {
@@ -40,23 +41,29 @@ class _AdEditingWidgetState extends State<AdEditingWidget> {
   @override
   void initState() {
     super.initState();
-    final metadataFromIsbn = widget.step.metadata.entries;
+    final metadataFromIsbn = widget.step.metadata;
 
     var title = '';
     if (metadataFromIsbn.length == 1) {
-      final onlyMetadata = metadataFromIsbn.single.value;
-      title = _bookFormatTitleAndAuthor(onlyMetadata.title!, onlyMetadata.authors);
+      final onlyMetadata = metadataFromIsbn.single;
+      title = _bookFormat(onlyMetadata);
     }
-    var description = _getDescription(metadataFromIsbn);
 
-    description += '\n\n' + personal_info.customMessage;
+    var description = '';
 
-    final keywords = metadataFromIsbn.map((entry) => entry.value.keywords).expand((kw) => kw).toSet().join(', ');
+    final bookTitles = metadataFromIsbn.map((md) => _bookFormat(md, withISBN: true)).join('\n');
+    description += bookTitles + '\n\n';
+
+    _getDescription(metadataFromIsbn)?.let((d) => description += d + '\n\n');
+
+    description += personal_info.customMessage;
+
+    final keywords = metadataFromIsbn.map((entry) => entry.keywords).expand((kw) => kw).toSet().join(', ');
     if (keywords.isNotEmpty) {
       description += '\n\nMots-clés:\n' + keywords;
     }
 
-    final totalPriceIncludingShipping = metadataFromIsbn.map((e) => e.value.priceCent ?? 0).sum;
+    final totalPriceIncludingShipping = metadataFromIsbn.map((e) => e.priceCent ?? 0).sum;
     final weightGramsWithWrapping = (widget.step.bundle.metadata.weightGrams! * 1.2).toInt();
     var totalPriceExcludingShipping =
         totalPriceIncludingShipping - _estimatedShippingCost(grams: weightGramsWithWrapping);
@@ -71,27 +78,21 @@ class _AdEditingWidgetState extends State<AdEditingWidget> {
         imgsPath: widget.step.bundle.compressedImages.map((e) => e.path).toList());
   }
 
-  String _getDescription(Iterable<MapEntry<String, BookMetaDataManual>> metadataFromIsbn) {
-    final booksWithBlurb = metadataFromIsbn.where((entry) => entry.value.blurb?.isNotEmpty == true);
+  String? _getDescription(Iterable<BookMetaDataManual> metadataFromIsbn) {
+    final booksWithBlurb = metadataFromIsbn.where((entry) => entry.blurb?.isNotEmpty == true);
     if (booksWithBlurb.length == 0) {
-      return '';
+      return null;
     } else if (booksWithBlurb.length == 1) {
-      final onlyBookWithBlurb = booksWithBlurb.single.value;
+      final onlyBookWithBlurb = booksWithBlurb.single;
       String titleAndAuthor = '';
       // Even if only one book has a blurb, multiple book are in the same ad, so we need to specify which book this blurb is about
       if (metadataFromIsbn.length > 1) {
-        titleAndAuthor = _bookFormatTitleAndAuthor(onlyBookWithBlurb.title!, onlyBookWithBlurb.authors) + '\n';
+        titleAndAuthor = _bookFormat(onlyBookWithBlurb) + '\n';
       }
       return 'Résumé:\n' + titleAndAuthor + onlyBookWithBlurb.blurb!;
     } else {
-      final bookTitles =
-          booksWithBlurb.map((entry) => _bookFormatTitleAndAuthor(entry.value.title!, entry.value.authors)).join('\n ');
-      final blurbs = booksWithBlurb
-          .map((entry) =>
-              _bookFormatTitleAndAuthor(entry.value.title!, entry.value.authors) + ':\n' + entry.value.blurb!)
-          .join('\n');
-      final description = bookTitles + '\n\nRésumés:\n' + blurbs;
-      return description;
+      final blurbs = booksWithBlurb.map((entry) => _bookFormat(entry) + ':\n' + entry.blurb!).join('\n\n');
+      return 'Résumés:\n' + blurbs;
     }
   }
 

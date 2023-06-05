@@ -126,6 +126,7 @@ extension IterableStringExt on Iterable<String> {
 }
 
 class BookMetaDataManual {
+  String isbn;
   String? title;
   List<Author> authors;
   String? blurb;
@@ -133,6 +134,7 @@ class BookMetaDataManual {
   int? priceCent;
 
   BookMetaDataManual({
+    required this.isbn,
     this.title,
     required this.authors,
     this.blurb,

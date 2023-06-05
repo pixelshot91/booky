@@ -19,7 +19,7 @@ class MetadataCollectingStep implements BookyStep {
 class AdEditingStep implements BookyStep {
   Bundle bundle;
 
-  Map<String, BookMetaDataManual> metadata = {};
+  Iterable<BookMetaDataManual> metadata = {};
 
   AdEditingStep({required this.bundle, required this.metadata});
 }

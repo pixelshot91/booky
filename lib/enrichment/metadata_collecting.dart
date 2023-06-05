@@ -73,20 +73,22 @@ class _BooksMetadataCollectingWidgetState extends State<BooksMetadataCollectingW
                                       builder: (context) => AdEditingWidget(
                                           step: AdEditingStep(
                                               bundle: widget.step.bundle,
-                                              metadata: controllers.map((key, value) => MapEntry(
-                                                  key,
-                                                  BookMetaDataManual(
-                                                    title: value.bookControllerSet.titleTextFieldController.text,
-                                                    authors: _stringToAuthors(
-                                                        value.bookControllerSet.authorsTextFieldController.text),
-                                                    blurb: value.bookControllerSet.blurbTextFieldController.text,
-                                                    keywords: _stringToKeywords(
-                                                        value.bookControllerSet.keywordsTextFieldController.text),
-                                                    priceCent: double.parse(
-                                                            value.bookControllerSet.priceTextFieldController.text)
-                                                        .multiply(100)
-                                                        .round(),
-                                                  )))))));
+                                              metadata: controllers.entries.map((entry) {
+                                                final bookControllerSet = entry.value.bookControllerSet;
+                                                return BookMetaDataManual(
+                                                  isbn: entry.key,
+                                                  title: bookControllerSet.titleTextFieldController.text,
+                                                  authors: _stringToAuthors(
+                                                      bookControllerSet.authorsTextFieldController.text),
+                                                  blurb: bookControllerSet.blurbTextFieldController.text,
+                                                  keywords: _stringToKeywords(
+                                                      bookControllerSet.keywordsTextFieldController.text),
+                                                  priceCent:
+                                                      double.parse(bookControllerSet.priceTextFieldController.text)
+                                                          .multiply(100)
+                                                          .round(),
+                                                );
+                                              })))));
                             },
                             child: const Text('Validate Metadatas')),
                       )

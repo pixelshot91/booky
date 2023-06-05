@@ -3,7 +3,6 @@
 * [ ] ISBNDecoding: Delete an image
 * [ ] ISBNDecoding: Pan and zoom on an image
 * [ ] ISBNDecoding: Check the ISBN checksum
-* [ ] Add the ISBNs in the ad description for better indexing
 * [ ] BUG: BundleList fail to refresh after: autoMetadata download
 * [ ] BUG: BundleList show autoMetadata from other bundle when some bundle are deleted
 * [ ] MetadataCollecting: Disable 'Validate Metadatas' button if price field is empty
@@ -12,6 +11,7 @@
 
 # DONE
 
+* [x] Add the ISBNs in the ad description for better indexing
 * [x] Show LBC weight category instead of weight in grams
 * [x] Better price suggestion. Take into account shipping cost
 * [x] BundleSelection: Delete some bundle
