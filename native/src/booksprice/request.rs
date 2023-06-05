@@ -36,11 +36,13 @@ async fn extract_price_from_url(
 ) -> Result<Vec<f32>, WebDriverError> {
     c.goto(&url).await?;
 
-    let wait_res = c
+    let chart_element_exists = c
         .query(By::XPath("//*[@id='chart']"))
         .wait(Duration::from_secs(10), Duration::from_secs(1))
         .exists()
-        .await;
+        .await?;
+    assert!(chart_element_exists);
+
     let source_file = c.source().await.unwrap();
 
     if let Some(cache_file_path) = cache_file_path {
@@ -70,7 +72,7 @@ async fn extract_price_from_url(
     .await
     .unwrap();
 
-    c.close_window().await;
+    c.close_window().await?;
 
     Ok(prices)
 }
