@@ -10,7 +10,6 @@ use crate::publisher::Publisher;
 use crate::{abebooks, babelio, booksprice, google_books, leboncoin, leslibraires};
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
-use serde_json::json;
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 
