@@ -35,22 +35,25 @@ pub fn extract_metadata(isbn_search_result: &str) -> Option<common::BookMetaData
                 .to_string()
         });
 
-        let price_selector = scraper::Selector::parse("#product-offers .price").unwrap();
-        let shipping_price: f32 = 10.0;
+    let price_selector = scraper::Selector::parse("#product-offers .price").unwrap();
+    let shipping_price: f32 = 10.0;
 
-        let price_with_shipping = doc
-            .select(&price_selector)
-            .exactly_one()
-            .ok()
-            .map(|price_element| {
-                price_element
-                    .first_child()
-                    .unwrap()
-                    .value()
-                    .as_text()
-                    .unwrap()
-                    .to_string().parse::<f32>().unwrap() + shipping_price
-            });
+    let price_with_shipping = doc
+        .select(&price_selector)
+        .exactly_one()
+        .ok()
+        .map(|price_element| {
+            price_element
+                .first_child()
+                .unwrap()
+                .value()
+                .as_text()
+                .unwrap()
+                .to_string()
+                .parse::<f32>()
+                .unwrap()
+                + shipping_price
+        });
 
     Some(common::BookMetaDataFromProvider {
         title,
@@ -85,7 +88,7 @@ mod tests {
                     first_name: "".to_owned(),
                     last_name: "Isabelle Filliozat".to_owned()
                 }],
-                market_price: vec![12.00],
+                market_price: vec![22.00],
                 ..Default::default()
             })
         );
