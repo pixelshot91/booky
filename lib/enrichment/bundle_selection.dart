@@ -311,7 +311,7 @@ class _BundleWidgetState extends State<BundleWidget> {
                   final md = firstBook.value.dart.mergeAllProvider();
                   final priceRange = md.marketPrice.toList();
                   return Row(children: [
-                    // Text(firstBook.isbn),
+                    if (autoMetadata.size > 1) _NumberOfBookBadge(autoMetadata.size),
                     Expanded(
                         child: md.title.ifIs(
                             notnull: (t) => TextWithTooltip(t),
@@ -367,6 +367,31 @@ class _BundleWidgetState extends State<BundleWidget> {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _NumberOfBookBadge extends StatelessWidget {
+  const _NumberOfBookBadge(this.number);
+  final int number;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 2.0, right: 4.0),
+      child: Container(
+          decoration: const BoxDecoration(borderRadius: BorderRadius.all(Radius.circular(10)), color: Colors.black87),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 6.0),
+            child: Text(
+              number.toString(),
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+          )),
     );
   }
 }
