@@ -130,6 +130,7 @@ enum ProviderEnum {
   BooksPrice,
   AbeBooks,
   LesLibraires,
+  JustBooks,
 }
 
 class ProviderMetadataPair {
