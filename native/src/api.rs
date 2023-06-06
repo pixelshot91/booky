@@ -3,11 +3,11 @@ use std::fs::File;
 use std::io::{Read, Write};
 
 use crate::cached_client::CachedClient;
-use crate::common;
 use crate::common::Ad;
 use crate::common::{LbcCredential, Provider};
 use crate::publisher::Publisher;
-use crate::{abebooks, babelio, booksprice, google_books, leboncoin, leslibraires};
+use crate::{abebooks, babelio, booksprice, google_books, leboncoin, leslibraires, justbooks};
+use crate::common;
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 use strum::IntoEnumIterator;
@@ -20,6 +20,7 @@ pub enum ProviderEnum {
     BooksPrice,
     AbeBooks,
     LesLibraires,
+    JustBooks,
 }
 
 #[derive(PartialEq, Debug, Deserialize, Serialize)]
@@ -180,6 +181,7 @@ pub fn get_metadata_from_provider(
         ProviderEnum::LesLibraires => {
             leslibraires::LesLibraires {}.get_book_metadata_from_isbn(&isbn)
         }
+        ProviderEnum::JustBooks => justbooks::JustBooks {}.get_book_metadata_from_isbn(&isbn),
     }
 }
 

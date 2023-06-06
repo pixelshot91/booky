@@ -149,6 +149,7 @@ impl Wire2Api<ProviderEnum> for i32 {
             2 => ProviderEnum::BooksPrice,
             3 => ProviderEnum::AbeBooks,
             4 => ProviderEnum::LesLibraires,
+            5 => ProviderEnum::JustBooks,
             _ => unreachable!("Invalid variant for ProviderEnum: {}", self),
         }
     }
@@ -218,6 +219,7 @@ impl support::IntoDart for ProviderEnum {
             Self::BooksPrice => 2,
             Self::AbeBooks => 3,
             Self::LesLibraires => 4,
+            Self::JustBooks => 5,
         }
         .into_dart()
     }

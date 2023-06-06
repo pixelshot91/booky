@@ -1,17 +1,15 @@
-
-// #[macro_use]
-// extern crate thirtyfour;
+mod abebooks;
 mod api;
 mod babelio;
+mod booksprice;
 mod bridge_generated;
 mod cached_client;
 mod common;
 mod config;
 mod google_books;
 mod image_tools;
+mod justbooks;
 mod jwt_decoder;
 mod leboncoin;
-mod publisher;
-mod booksprice;
-mod abebooks;
 mod leslibraires;
+mod publisher;
