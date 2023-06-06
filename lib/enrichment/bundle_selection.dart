@@ -211,6 +211,7 @@ class _BundleSelectionState extends State<BundleSelection> {
         _compressIndicator(),
         Expanded(
           child: GridView.extent(
+            padding: const EdgeInsets.only(bottom: 2 * kFloatingActionButtonMargin + 48),
             maxCrossAxisExtent: 500,
             childAspectRatio: 2,
             children: bundles
