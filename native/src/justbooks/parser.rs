@@ -35,12 +35,7 @@ pub fn extract_metadata(html: &str) -> Option<BookMetaDataFromProvider> {
         .exactly_one()
         .expect("There should be exactly one element with itemprop=\"name\"")
         .first_child()
-        .unwrap()
-        .value()
-        .as_text()
-        .unwrap()
-        .trim()
-        .to_string();
+        .map(|c| c.value().as_text().unwrap().trim().to_string());
 
     let authors_select = html_select("[itemprop=\"author\"]");
     let authors = book_scope
@@ -63,7 +58,7 @@ pub fn extract_metadata(html: &str) -> Option<BookMetaDataFromProvider> {
         });
 
     Some(BookMetaDataFromProvider {
-        title: Some(title),
+        title,
         authors,
         blurb,
         ..Default::default()
