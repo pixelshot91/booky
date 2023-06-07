@@ -11,12 +11,14 @@ class LBCRadioButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return IgnorePointer(
-      child: RadioListTile<bool>(
-        value: true,
-        groupValue: true,
-        onChanged: (_) {},
-        title: Text(text),
-        activeColor: const Color(0xffff6e14),
+      child: Card(
+        child: RadioListTile<bool>(
+          value: true,
+          groupValue: true,
+          onChanged: (_) {},
+          title: Text(text),
+          activeColor: const Color(0xffff6e14),
+        ),
       ),
     );
   }
