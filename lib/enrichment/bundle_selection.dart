@@ -25,7 +25,8 @@ class BundleSelection extends StatefulWidget {
 
 class _BundleSelectionState extends State<BundleSelection> {
   int? bundleNb;
-  int compressedBundleNb = 0;
+  int? compressedBundleNb;
+  int? autoMdCollectedBundleNb;
 
   @override
   void initState() {
@@ -49,8 +50,21 @@ class _BundleSelectionState extends State<BundleSelection> {
             IconButton(
               icon: const Icon(Icons.cloud_download),
               onPressed: () async {
-                _listBundles()?.forEach((bundle) async {
+                final listBundles = _listBundles();
+                if (listBundles == null) {
+                  return;
+                }
+                setState(() {
+                  bundleNb = listBundles.length;
+                  autoMdCollectedBundleNb = 0;
+                });
+                listBundles.forEach((bundle) async {
                   if (await bundle.autoMetadataFile.exists()) {
+                    if (mounted) {
+                      setState(() {
+                        autoMdCollectedBundleNb = autoMdCollectedBundleNb! + 1;
+                      });
+                    }
                     return;
                   }
                   Set<String> isbns = bundle.metadata.isbns?.toSet() ?? {};
@@ -59,7 +73,9 @@ class _BundleSelectionState extends State<BundleSelection> {
                     path: bundle.autoMetadataFile.path,
                   );
                   if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Json wrote to file')));
+                    setState(() {
+                      autoMdCollectedBundleNb = autoMdCollectedBundleNb! + 1;
+                    });
                   }
                 });
               },
@@ -163,7 +179,7 @@ class _BundleSelectionState extends State<BundleSelection> {
       });
       await Future.wait(imagesFutures);
       if (mounted) {
-        setState(() => compressedBundleNb += 1);
+        setState(() => compressedBundleNb = compressedBundleNb! + 1);
       }
     });
     await Future.wait(bundleFutures);
@@ -190,26 +206,14 @@ class _BundleSelectionState extends State<BundleSelection> {
     return result;
   }
 
-  Widget _compressIndicator() {
-    if (compressedBundleNb == bundleNb || !Platform.isAndroid) return const SizedBox.shrink();
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: bundleNb.ifIs(
-          nul: () => const LinearProgressIndicator(),
-          notnull: (bundleNb) => Row(
-                children: [
-                  const Text('Compressing '),
-                  Expanded(child: LinearProgressIndicator(value: compressedBundleNb / bundleNb)),
-                  Text('$compressedBundleNb / $bundleNb')
-                ],
-              )),
-    );
-  }
-
   Widget _bundleListWidget(Iterable<Bundle> bundles) {
+    final compressedBundleNb = this.compressedBundleNb;
+    final autoMdCollectedBundleNb = this.autoMdCollectedBundleNb;
     return Column(
       children: [
-        _compressIndicator(),
+        if (compressedBundleNb != null) ProgressIndicator('Compressing', total: bundleNb, itemDone: compressedBundleNb),
+        if (autoMdCollectedBundleNb != null)
+          ProgressIndicator('Collecting autoMetadata', total: bundleNb, itemDone: autoMdCollectedBundleNb),
         Expanded(
           child: GridView.extent(
             padding: const EdgeInsets.only(bottom: 2 * kFloatingActionButtonMargin + 48),
@@ -230,6 +234,35 @@ class _BundleSelectionState extends State<BundleSelection> {
           ),
         ),
       ],
+    );
+  }
+}
+
+class ProgressIndicator extends StatelessWidget {
+  const ProgressIndicator(this.description, {required this.total, required this.itemDone});
+  final String description;
+  final int? total;
+  final int itemDone;
+
+  @override
+  Widget build(BuildContext context) {
+    if (itemDone == total) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: total.ifIs(
+          nul: () => const LinearProgressIndicator(),
+          notnull: (total) => Row(
+                children: [
+                  Text(description),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                      child: LinearProgressIndicator(value: itemDone / total),
+                    ),
+                  ),
+                  Text('$itemDone / $total')
+                ],
+              )),
     );
   }
 }
