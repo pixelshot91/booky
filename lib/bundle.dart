@@ -8,6 +8,7 @@ import 'package:flutter_rust_bridge_template/helpers.dart';
 import 'package:path/path.dart' as path;
 
 import 'bridge_definitions.dart';
+import 'common.dart' as common;
 
 class Bundle {
   Bundle(this.directory);
@@ -35,13 +36,18 @@ class Bundle {
       print(e);
       return false;
     }
-    final decoderProcess = await Process.run('gio', ['move', tmpFile.path, metadataFile.path]);
-    if (decoderProcess.exitCode != 0) {
-      print('stdout is ${decoderProcess.stdout}');
-      print('stderr is ${decoderProcess.stderr}');
-      return false;
+
+    return common.launchCommandLine('gio', ['move', tmpFile.path, metadataFile.path]);
+  }
+
+  Future<bool> removeAutoMetadata() async {
+    if (!await autoMetadataFile.exists()) {
+      print('Nothing to do');
+      return true;
     }
-    return true;
+    final destinationName = path.basename(autoMetadataFile.path) + '_backup_' + common.nowAsFileName();
+
+    return common.launchCommandLine('gio', ['rename', autoMetadataFile.path, destinationName]);
   }
 
   File get autoMetadataFile => File(path.join(directory.path, 'automatic_metadata.json'));
