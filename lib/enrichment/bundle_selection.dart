@@ -452,8 +452,8 @@ class MetadataIcons extends StatelessWidget {
   Widget build(BuildContext context) {
     if (metadata.size == 0) return const SizedBox.shrink();
 
-    final mergedMd = metadata.mapValues((p0) => p0.value.dart.mergeAllProvider()); //map((entry) => entry.)
-    final allBooksHaveTitle = mergedMd.all((key, value) => (value.title?.length ?? 0) > 5);
+    final mergedMd = metadata.mapValues((p0) => p0.value.dart.mergeAllProvider());
+    final allBooksHaveTitle = mergedMd.all((key, value) => (value.title?.length ?? 0) > 0);
     final allBooksHaveAuthor = mergedMd.all((key, value) => (value.authors.length) >= 1);
     final allBooksHaveBlurb = mergedMd.all((key, value) => (value.blurb?.length ?? 0) > 50);
     final allBooksHaveKeywords = mergedMd.all((key, value) => (value.keywords.length) > 5);
