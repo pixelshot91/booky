@@ -3,6 +3,7 @@ import 'dart:math';
 
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_rust_bridge_template/common.dart';
 import 'package:flutter_rust_bridge_template/personal_info.dart' as personal_info;
 import 'package:kt_dart/kt.dart';
 import 'package:path/path.dart' as path;
@@ -96,10 +97,27 @@ class _AdEditingWidgetState extends State<AdEditingWidget> {
     }
   }
 
+  Widget _nonCopyableField(IconData icon, Widget child) {
+    const iconColor = Color(0xff898989);
+    return NonCopyableTextField(
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            icon,
+            color: iconColor,
+          ),
+          const SizedBox(width: 16.0),
+          child,
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final metadata = widget.step.bundle.metadata;
-    const iconColor = Color(0xff898989);
+
     return Scaffold(
       appBar: AppBar(title: const Text('Ad editing')),
       body: Padding(
@@ -116,16 +134,7 @@ class _AdEditingWidgetState extends State<AdEditingWidget> {
                 ),
                 style: const TextStyle(fontSize: 30),
               )),
-              NonCopyableTextField(
-                child: TextFormField(
-                  initialValue: metadata.itemState?.loc,
-                  decoration: const InputDecoration(
-                    icon: Icon(Icons.diamond),
-                    labelText: 'State',
-                  ),
-                  style: const TextStyle(fontSize: 20),
-                ),
-              ),
+              _nonCopyableField(Icons.diamond, SizedBox(width: 300, child: _LBCStyledState(metadata.itemState!))),
               CopyableTextField(TextFormField(
                 controller: TextEditingController(text: ad.description),
                 maxLines: null,
@@ -143,24 +152,12 @@ class _AdEditingWidgetState extends State<AdEditingWidget> {
                 ),
                 style: const TextStyle(fontSize: 20),
               )),
-              NonCopyableTextField(
-                child: Row(
-                  children: [
-                    const Icon(
-                      Icons.scale,
-                      color: iconColor,
-                    ),
-                    Expanded(child: _LBCStyledWeight(ad.weightGrams)),
-                  ],
-                ),
+              _nonCopyableField(
+                Icons.scale,
+                SizedBox(width: 300, child: _LBCStyledWeight(ad.weightGrams)),
               ),
-              NonCopyableTextField(
-                child: Row(children: [
-                  const Icon(
-                    Icons.collections,
-                    color: iconColor,
-                  ),
-                  const SizedBox(width: 16),
+              _nonCopyableField(
+                  Icons.collections,
                   DraggableFilesWidget(
                     uris: ad.imgsPath.map((path) => Uri.file(path)),
                     child: Column(
@@ -172,9 +169,7 @@ class _AdEditingWidgetState extends State<AdEditingWidget> {
                         const Text('Drag and drop images')
                       ],
                     ),
-                  ),
-                ]),
-              ),
+                  )),
               Center(
                 child: ElevatedButton(
                     onPressed: () {
@@ -223,6 +218,27 @@ class _WeightCategory<T> {
   const _WeightCategory({required this.maxWeight, required this.description});
   final int maxWeight;
   final T description;
+}
+
+class _LBCStyledState extends StatelessWidget {
+  const _LBCStyledState(this.state);
+  final ItemState state;
+  @override
+  Widget build(BuildContext context) {
+    final text = () {
+      switch (state) {
+        case ItemState.brandNew:
+          return 'État neuf';
+        case ItemState.veryGood:
+          return 'Très bon état';
+        case ItemState.good:
+          return 'Bon état';
+        case ItemState.medium:
+          return 'État satisfaisant';
+      }
+    }();
+    return LBCRadioButton(text);
+  }
 }
 
 class _LBCStyledWeight extends StatelessWidget {
