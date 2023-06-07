@@ -112,7 +112,7 @@ class _ISBNDecodingWidgetState extends State<ISBNDecodingWidget> {
                                   setState(() => selectedIsbns.remove(isbn));
                                 },
                               ),
-                              Text(isbn),
+                              SelectableText(isbn),
                             ],
                           )),
                       const SizedBox(height: 20),

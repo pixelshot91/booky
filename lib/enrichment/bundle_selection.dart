@@ -70,23 +70,24 @@ class _BundleSelectionState extends State<BundleSelection> {
                   PopupMenuItem<void>(
                     child: const Text('Invalidate all metadata from provider'),
                     onTap: () async {
-                      await _listBundles()?.map((bundle) async {
-                        if (!await bundle.autoMetadataFile.exists()) {
-                          print('Nothing to do');
-                          return;
-                        }
-                        final destinationName =
-                            path.basename(bundle.autoMetadataFile.path) + '_backup_' + common.nowAsFileName();
-                        final res = await Process.run('gio', ['rename', bundle.autoMetadataFile.path, destinationName]);
-                        if (res.exitCode != 0) {
-                          print('stdout is ${res.stdout}');
-                          print('stderr is ${res.stderr}');
-                          throw Exception('rename status is ${res.exitCode}');
-                        }
-                      }).let((futures) async => await Future.wait(futures));
+                      final bundleList = _listBundles();
+                      if (bundleList == null) {
+                        ScaffoldMessenger.of(context)
+                            .showSnackBar(const SnackBar(content: Text('Error while listing bundles')));
+                        return;
+                      }
+
+                      final res = await bundleList
+                          .map((bundle) => bundle.removeAutoMetadata())
+                          .let((futures) => Future.wait(futures));
                       if (mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('All automatic metadata have been invalidated')));
+                        if (res.every((e) => e)) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('All automatic metadata have been invalidated')));
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Error while invalidating automatic metadata')));
+                        }
                       }
                     },
                   )
@@ -216,7 +217,7 @@ class _BundleSelectionState extends State<BundleSelection> {
             childAspectRatio: 2,
             children: bundles
                 .map((bundle) => GestureDetector(
-                      child: BundleWidget(bundle, onDelete: () => setState(() {})),
+                      child: BundleWidget(bundle, refreshParent: () => setState(() {})),
                       onTap: () {
                         Navigator.push(
                             context,
@@ -234,10 +235,10 @@ class _BundleSelectionState extends State<BundleSelection> {
 }
 
 class BundleWidget extends StatefulWidget {
-  const BundleWidget(this.bundle, {required this.onDelete});
+  const BundleWidget(this.bundle, {required this.refreshParent});
 
   final Bundle bundle;
-  final void Function() onDelete;
+  final void Function() refreshParent;
 
   @override
   State<BundleWidget> createState() => _BundleWidgetState();
@@ -348,6 +349,20 @@ class _BundleWidgetState extends State<BundleWidget> {
                         },
                       ),
                       IconButton(
+                        icon: const Icon(Icons.delete_sweep),
+                        onPressed: () async {
+                          final res = await widget.bundle.removeAutoMetadata();
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                              content:
+                                  Text(res ? 'Automatic Metadata deleted' : 'Error while deleting automatic metadata'),
+                            ));
+                          }
+
+                          widget.refreshParent();
+                        },
+                      ),
+                      IconButton(
                         icon: const Icon(Icons.delete),
                         onPressed: () {
                           final segments = path.split(widget.bundle.directory.path);
@@ -356,7 +371,7 @@ class _BundleWidgetState extends State<BundleWidget> {
                           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                             content: Text('Deleted'),
                           ));
-                          widget.onDelete();
+                          widget.refreshParent();
                         },
                       ),
                     ],
