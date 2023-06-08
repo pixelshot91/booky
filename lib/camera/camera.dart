@@ -592,7 +592,9 @@ class _MetadataWidgetState extends State<MetadataWidget> {
             onPressed: () async {
               final managePerm = await Permission.manageExternalStorage.request();
               print('managePerm = $managePerm');
-              metadata.isbns!.addAll(additionalISBNController.text.split(' '));
+              if (additionalISBNController.text.isNotEmpty) {
+                metadata.isbns!.addAll(additionalISBNController.text.split(' '));
+              }
               File(path.join(widget.directory.path, 'metadata.json')).writeAsStringSync(jsonEncode(metadata.toJson()));
               widget.onSubmit();
             })
