@@ -47,15 +47,7 @@ pub fn extract_metadata(html: &str) -> Option<BookMetaDataFromProvider> {
         .select(&html_select("[itemprop=\"description\"]"))
         .at_most_one()
         .unwrap()
-        .map(|d| {
-            d.first_child()
-                .unwrap()
-                .value()
-                .as_text()
-                .unwrap()
-                .trim()
-                .to_string()
-        });
+        .map(|d| parse_blurb(&d.inner_html()));
 
     Some(BookMetaDataFromProvider {
         title,
@@ -65,9 +57,17 @@ pub fn extract_metadata(html: &str) -> Option<BookMetaDataFromProvider> {
     })
 }
 
+fn parse_blurb(raw_blurb: &str) -> String {
+    let text = html2text::from_read(raw_blurb.as_bytes(), usize::MAX);
+    text.trim().to_string()
+}
+
 #[cfg(test)]
 mod tests {
+    use crate::common::Author;
+
     use super::*;
+    use pretty_assertions::assert_eq;
 
     #[test]
     fn extract_metadata_with_blurb() {
@@ -84,8 +84,8 @@ mod tests {
             market_price: vec![],
         }));
     }
-    #[test]
 
+    #[test]
     fn extract_metadata_without_blurb() {
         let html = std::fs::read_to_string("src/justbooks/test/9782298086294.html").unwrap();
         let md = extract_metadata(&html);
@@ -95,6 +95,26 @@ mod tests {
                 title: Some("1918 la terrible victoire".to_string()),
                 authors: vec![],
                 blurb: None,
+                keywords: vec![],
+                market_price: vec![],
+            })
+        );
+    }
+
+    #[test]
+    fn extract_metadata_with_html_blurb() {
+        let html = std::fs::read_to_string("src/justbooks/test/9782253051206.html").unwrap();
+        let md = extract_metadata(&html);
+        assert_eq!(
+            md,
+            Some(BookMetaDataFromProvider {
+                title: Some("Samarcande (French Edition)".to_string()),
+                authors: vec![Author{first_name:"Maalouf, Amin".to_owned(), last_name:"".to_owned()}],
+                blurb: Some(r#"Samarcande, c'est la Perse d'Omar Khayyam, poète du vin, libre penseur, astronome de génie, mais aussi celle de Hussan Sabbah, fondateur de l'ordre des Assassins, la secte la plus redoutable de l'histoire. Samarcande, c'est l'Orient du XIXè siècle et du début du XXe, le voyage dans un univers où les rêves de liberté ont toujours su défier les fanatismes. Samarcande, c'est l'aventure d'un manuscrit né au XIe siècle, égaré lors des invasions mongoles et retrouvé six siècles plus tard.
+
+Une fois encore, nous conduisant sur la route de la soie à travers les plus envoûtantes cités d'Asie, Amin Maalouf nous ravit par son extraordinaire talent de conteur. A la suite d'Edgar Allan Poe, il nous dit : "Et maintenant, promène ton regard sur Samarcande ! N'est-elle pas reine de la Terre ? Fière, au- dessus de toutes les villes, et dans ses mains leurs destinées ?"
+
+Amin Maalouf est l'auteur de Léon l'Africain, ouvrage traduit aujourd'hui dans le monde entier. Son premier livre, Les Croisades vues par les Arabes, est devenu lui aussi un classique."#.to_string()),
                 keywords: vec![],
                 market_price: vec![],
             })
