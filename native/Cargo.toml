@@ -26,7 +26,7 @@ tokio = { version = "1.20", features = ["fs", "macros", "rt-multi-thread", "io-u
 color-eyre = "0.6.2"
 hyper = { version = "0.14", features = ["server", "tcp"] }
 futures = "0.3.28"
-html2text = "0.5.1"
+html2text = "0.6.0"
 strum = { version = "0.24.1", features = ["strum_macros"] }
 strum_macros = "0.24.3"
 pretty_assertions = "1.3.0"
