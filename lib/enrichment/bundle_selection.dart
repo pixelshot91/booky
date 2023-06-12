@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
+import 'package:flutter_rust_bridge/flutter_rust_bridge.dart';
 import 'package:flutter_rust_bridge_template/camera/camera.dart';
 import 'package:flutter_rust_bridge_template/enrichment/isbn_decoding.dart';
 import 'package:kt_dart/kt.dart';
@@ -68,10 +69,17 @@ class _BundleSelectionState extends State<BundleSelection> {
                     return;
                   }
                   Set<String> isbns = bundle.metadata.isbns?.toSet() ?? {};
-                  await api.getMetadataFromIsbns(
-                    isbns: isbns.toList(),
-                    path: bundle.autoMetadataFile.path,
-                  );
+
+                  try {
+                    await api.getMetadataFromIsbns(
+                      isbns: isbns.toList(),
+                      path: bundle.autoMetadataFile.path,
+                    );
+                  } on FfiException catch (e) {
+                    print(
+                        'FfiException thrown during getMetadataFromIsbns with isbns=${isbns.toList()}, path=${bundle.autoMetadataFile.path}');
+                    print('exception is $e');
+                  }
                   if (mounted) {
                     setState(() {
                       autoMdCollectedBundleNb = autoMdCollectedBundleNb! + 1;
