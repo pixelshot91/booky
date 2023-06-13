@@ -9,6 +9,7 @@ import 'package:flutter_rust_bridge_template/camera/camera.dart';
 import 'package:flutter_rust_bridge_template/enrichment/isbn_decoding.dart';
 import 'package:kt_dart/kt.dart';
 import 'package:path/path.dart' as path;
+import 'package:stream_transform/stream_transform.dart';
 
 import '../bundle.dart';
 import '../common.dart' as common;
@@ -32,133 +33,136 @@ class _BundleSelectionState extends State<BundleSelection> {
   @override
   void initState() {
     super.initState();
-    _listBundles()?.let((bundles) => _compressedAllBundleImages(bundles));
+    Future(_compressImages);
+  }
+
+  Future<void> _compressImages() async {
+    (await _listBundles())?.let((bundles) => _compressedAllBundleImages(bundles));
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(
-          title: const Text('Bundle Section'),
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.refresh),
-              onPressed: () {
-                setState(() {});
-                _listBundles()?.let((bundles) => _compressedAllBundleImages(bundles));
-              },
-            ),
-            IconButton(
-              icon: const Icon(Icons.cloud_download),
-              onPressed: () async {
-                final listBundles = _listBundles();
-                if (listBundles == null) {
-                  return;
-                }
-                setState(() {
-                  bundleNb = listBundles.length;
-                  autoMdCollectedBundleNb = 0;
-                });
-                listBundles.forEach((bundle) async {
-                  if (await bundle.autoMetadataFile.exists()) {
-                    if (mounted) {
-                      setState(() {
-                        autoMdCollectedBundleNb = autoMdCollectedBundleNb! + 1;
-                      });
-                    }
-                    return;
-                  }
-                  Set<String> isbns = bundle.metadata.isbns?.toSet() ?? {};
-
-                  try {
-                    await api.getMetadataFromIsbns(
-                      isbns: isbns.toList(),
-                      path: bundle.autoMetadataFile.path,
-                    );
-                  } on FfiException catch (e) {
-                    print(
-                        'FfiException thrown during getMetadataFromIsbns with isbns=${isbns.toList()}, path=${bundle.autoMetadataFile.path}');
-                    print('exception is $e');
-                  }
+      appBar: AppBar(
+        title: const Text('Bundle Section'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: () {
+              setState(() {});
+              Future(_compressImages);
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.cloud_download),
+            onPressed: () async {
+              final listBundles = await _listBundles();
+              if (listBundles == null) {
+                return;
+              }
+              setState(() {
+                bundleNb = listBundles.length;
+                autoMdCollectedBundleNb = 0;
+              });
+              listBundles.forEach((bundle) async {
+                if (await bundle.autoMetadataFile.exists()) {
                   if (mounted) {
                     setState(() {
                       autoMdCollectedBundleNb = autoMdCollectedBundleNb! + 1;
                     });
                   }
-                });
-              },
-            ),
-            PopupMenuButton(
-              itemBuilder: (BuildContext context) {
-                return [
-                  PopupMenuItem<void>(
-                    child: const Text('Invalidate all metadata from provider'),
-                    onTap: () async {
-                      final bundleList = _listBundles();
-                      if (bundleList == null) {
+                  return;
+                }
+                Set<String> isbns = bundle.metadata.isbns?.toSet() ?? {};
+
+                try {
+                  await api.getMetadataFromIsbns(
+                    isbns: isbns.toList(),
+                    path: bundle.autoMetadataFile.path,
+                  );
+                } on FfiException catch (e) {
+                  print(
+                      'FfiException thrown during getMetadataFromIsbns with isbns=${isbns.toList()}, path=${bundle.autoMetadataFile.path}');
+                  print('exception is $e');
+                }
+                if (mounted) {
+                  setState(() {
+                    autoMdCollectedBundleNb = autoMdCollectedBundleNb! + 1;
+                  });
+                }
+              });
+            },
+          ),
+          PopupMenuButton(
+            itemBuilder: (BuildContext context) {
+              return [
+                PopupMenuItem<void>(
+                  child: const Text('Invalidate all metadata from provider'),
+                  onTap: () async {
+                    final bundleList = await _listBundles();
+                    if (bundleList == null) {
+                      if (mounted) {
                         ScaffoldMessenger.of(context)
                             .showSnackBar(const SnackBar(content: Text('Error while listing bundles')));
-                        return;
                       }
+                      return;
+                    }
 
-                      final res = await bundleList
-                          .map((bundle) => bundle.removeAutoMetadata())
-                          .let((futures) => Future.wait(futures));
-                      if (mounted) {
-                        if (res.every((e) => e)) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('All automatic metadata have been invalidated')));
-                        } else {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Error while invalidating automatic metadata')));
-                        }
+                    final res = await bundleList
+                        .map((bundle) => bundle.removeAutoMetadata())
+                        .let((futures) => Future.wait(futures));
+                    if (mounted) {
+                      if (res.every((e) => e)) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('All automatic metadata have been invalidated')));
+                      } else {
+                        ScaffoldMessenger.of(context)
+                            .showSnackBar(const SnackBar(content: Text('Error while invalidating automatic metadata')));
                       }
+                    }
+                  },
+                )
+              ];
+            },
+          ),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton(
+          child: const Icon(Icons.camera),
+          onPressed: () =>
+              Navigator.push(context, MaterialPageRoute<void>(builder: (context) => const CameraWidget()))),
+      body: FutureWidget(
+        future: _listBundles(),
+        builder: (bundles) {
+          if (bundles == null) {
+            return Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                    'Device not connected',
+                    style: TextStyle(fontSize: 30),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.refresh),
+                    onPressed: () {
+                      setState(() {});
                     },
-                  )
-                ];
-              },
-            ),
-          ],
-        ),
-        floatingActionButton: FloatingActionButton(
-            child: const Icon(Icons.camera),
-            onPressed: () =>
-                Navigator.push(context, MaterialPageRoute<void>(builder: (context) => const CameraWidget()))),
-        body: _getBody());
+                  ),
+                ],
+              ),
+            );
+          }
+          return _bundleListWidget(bundles);
+        },
+      ),
+    );
   }
 
-  Widget _getBody() {
-    final bundles = _listBundles();
-
-    if (bundles == null) {
-      return Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text(
-              'Device not connected',
-              style: TextStyle(fontSize: 30),
-            ),
-            IconButton(
-              icon: const Icon(Icons.refresh),
-              onPressed: () {
-                setState(() {});
-              },
-            ),
-          ],
-        ),
-      );
-    }
-    return _bundleListWidget(bundles);
-  }
-
-  static Iterable<Bundle>? _listBundles() {
+  static Future<Iterable<Bundle>?> _listBundles() async {
     try {
-      return common.bookyDir
-          .listSync()
-          .whereType<Directory>()
-          .sorted((d1, d2) => d1.path.compareTo(d2.path))
-          .map((d) => Bundle(d));
+      final dirs = await common.bookyDir.list().whereType<Directory>().toList();
+      return dirs.sorted((d1, d2) => d1.path.compareTo(d2.path)).map((d) => Bundle(d));
     } catch (e) {
       if (e is PathNotFoundException || e is FileSystemException) {
         return null;
