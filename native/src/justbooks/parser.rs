@@ -1,5 +1,6 @@
 use crate::common::{html_select, BookMetaDataFromProvider};
 use itertools::Itertools;
+use regex::Regex;
 
 fn extract_authors(author_scope: scraper::ElementRef) -> Vec<crate::common::Author> {
     let authors_span = author_scope
@@ -48,7 +49,9 @@ pub fn extract_metadata(html: &str) -> Option<BookMetaDataFromProvider> {
         .exactly_one()
         .expect("There should be exactly one element with itemprop=\"name\"")
         .first_child()
-        .map(|c| c.value().as_text().unwrap().trim().to_string());
+        .map(
+            |c| parse_title(c.value().as_text().unwrap()),
+        );
 
     let authors_select = html_select("[itemprop=\"author\"]");
     let authors = book_scope
@@ -69,6 +72,14 @@ pub fn extract_metadata(html: &str) -> Option<BookMetaDataFromProvider> {
         blurb,
         ..Default::default()
     })
+}
+
+// JustBooks often add some description to the title, wrap in parenthesis
+// For instance "(French Edition)"
+fn parse_title(raw_title: &str) -> String {
+    let re = Regex::new(r"\(.*?\)").unwrap();
+    let res = re.replace_all(raw_title, "");
+    res.trim().to_string()
 }
 
 fn parse_blurb(raw_blurb: &str) -> String {
@@ -127,7 +138,7 @@ mod tests {
         assert_eq!(
             md,
             Some(BookMetaDataFromProvider {
-                title: Some("Samarcande (French Edition)".to_string()),
+                title: Some("Samarcande".to_string()),
                 authors: vec![Author{first_name:"Amin".to_owned(), last_name:"Maalouf".to_owned()}],
                 blurb: Some(r#"Samarcande, c'est la Perse d'Omar Khayyam, poète du vin, libre penseur, astronome de génie, mais aussi celle de Hussan Sabbah, fondateur de l'ordre des Assassins, la secte la plus redoutable de l'histoire. Samarcande, c'est l'Orient du XIXè siècle et du début du XXe, le voyage dans un univers où les rêves de liberté ont toujours su défier les fanatismes. Samarcande, c'est l'aventure d'un manuscrit né au XIe siècle, égaré lors des invasions mongoles et retrouvé six siècles plus tard.
 
