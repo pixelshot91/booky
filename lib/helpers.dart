@@ -74,7 +74,7 @@ class AsyncSnapshotWidget<T> extends StatelessWidget {
   Widget build(BuildContext context) {
     switch (snap.connectionState) {
       case ConnectionState.waiting:
-        return const CircularProgressIndicator();
+        return const Center(child: CircularProgressIndicator());
       case ConnectionState.done:
         if (snap.hasError) {
           return Tooltip(
