@@ -47,7 +47,12 @@ class _ISBNDecodingWidgetState extends State<ISBNDecodingWidget> {
                             padding: const EdgeInsets.all(8.0),
                             child: Column(
                               children: [
-                                SizedBox(height: 600, child: ImageWidget(imgPath)),
+                                SizedBox(
+                                    height: 600,
+                                    child: InteractiveViewer(
+                                      maxScale: 10,
+                                      child: ImageWidget(imgPath),
+                                    )),
                                 FutureWidget(
                                     future: decodedIsbns[imgPath.path]!,
                                     builder: (results) {
