@@ -469,7 +469,7 @@ class MetadataIcons extends StatelessWidget {
     final allBooksHaveAuthor = mergedMd.all((key, value) => (value.authors.length) >= 1);
     final allBooksHaveBlurb = mergedMd.all((key, value) => (value.blurb?.length ?? 0) > 50);
     final allBooksHaveKeywords = mergedMd.all((key, value) => (value.keywords.length) > 5);
-    final allBooksHavePrice = mergedMd.all((key, value) => (value.marketPrice.length) > 1);
+    final allBooksHavePrice = mergedMd.all((key, value) => (value.marketPrice.length) >= 1);
 
     return Column(
       children: [
