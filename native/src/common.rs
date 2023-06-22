@@ -1,4 +1,4 @@
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 #[derive(Default, Debug, PartialEq, Deserialize, Serialize, Clone)]
 pub struct BookMetaDataFromProvider {

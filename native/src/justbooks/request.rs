@@ -1,7 +1,7 @@
 use crate::cached_client::Client;
 
 pub fn get_book_page(client: &dyn Client, isbn: &str) -> String {
-     client.make_request(
+    client.make_request_as_text(
         format!("justbooks/get_book_url_{}.html", isbn).as_str(),
         &|http_client| {
             http_client
@@ -10,9 +10,6 @@ pub fn get_book_page(client: &dyn Client, isbn: &str) -> String {
                     &isbn
                 ))
                 .send()
-                .unwrap()
-                .text()
-                .unwrap()
         },
     )
 }

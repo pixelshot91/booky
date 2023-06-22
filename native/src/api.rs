@@ -3,11 +3,11 @@ use std::fs::File;
 use std::io::{Read, Write};
 
 use crate::cached_client::CachedClient;
+use crate::common;
 use crate::common::Ad;
 use crate::common::{LbcCredential, Provider};
 use crate::publisher::Publisher;
-use crate::{abebooks, babelio, booksprice, google_books, leboncoin, leslibraires, justbooks};
-use crate::common;
+use crate::{abebooks, babelio, booksprice, google_books, justbooks, leboncoin, leslibraires};
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 use strum::IntoEnumIterator;
