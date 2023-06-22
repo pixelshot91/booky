@@ -7,13 +7,10 @@ pub fn isbn_search(client: &CachedClient, isbn: &str) -> String {
             http_client
                 .get(format!("https://www.leslibraires.fr/article/{}", &isbn))
                 .send()
-                .unwrap()
-                .url()
-                .path()
-                .to_owned()
         },
+        &|r| r.url().path().to_owned(),
     );
-    let result = client.make_request(
+    let result = client.make_request_as_text(
         format!(
             "leslibraires/get_book_url_{}.html",
             redirection.replace("/", "_slash_")
@@ -23,9 +20,6 @@ pub fn isbn_search(client: &CachedClient, isbn: &str) -> String {
             http_client
                 .get(format!("https://www.leslibraires.fr{}", &redirection))
                 .send()
-                .unwrap()
-                .text()
-                .unwrap()
         },
     );
     result
