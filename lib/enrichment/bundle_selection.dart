@@ -314,34 +314,10 @@ class _BundleWidgetState extends State<BundleWidget> {
 
   @override
   Widget build(BuildContext context) {
-    const maxImagesShown = 3;
+    const maxImagesShown = 5;
     final imagesShown = widget.bundle.compressedImages
         .take(maxImagesShown)
-        .mapIndexed((index, f) {
-          final thumbnail = ImageWidget(f);
-          if (index == maxImagesShown - 1) {
-            final nbImagesNotShown = widget.bundle.compressedImages.length - maxImagesShown;
-            if (nbImagesNotShown > 0) {
-              return LayoutBuilder(
-                builder: (BuildContext context, BoxConstraints constraints) {
-                  return Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      thumbnail,
-                      Positioned.fill(child: ColoredBox(color: Colors.black.withOpacity(0.3))),
-                      Text(
-                        '+$nbImagesNotShown',
-                        style: const TextStyle(color: Colors.white, fontSize: 30),
-                      ),
-                    ],
-                  );
-                },
-              );
-            }
-          }
-          return thumbnail;
-        })
-        .map((w) => Padding(padding: const EdgeInsets.all(8.0), child: w))
+        .map((f) => Padding(padding: const EdgeInsets.all(8.0), child: ImageWidget(f)))
         .toList();
     return Card(
       child: Padding(
@@ -374,8 +350,31 @@ class _BundleWidgetState extends State<BundleWidget> {
               child: Row(
                 children: [
                   FutureWidget(future: cachedAutoMetadata, builder: (md) => MetadataIcons(md)),
-                  ...imagesShown,
-                  const Expanded(child: SizedBox.expand()),
+                  Expanded(
+                      child: Stack(children: [
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(children: imagesShown),
+                    ),
+                    Positioned(
+                        right: 0,
+                        top: 0,
+                        bottom: 0,
+                        child: Row(
+                          children: [
+                            Container(
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.centerLeft,
+                                  end: Alignment.centerRight,
+                                  colors: [Colors.white.withOpacity(0), Colors.white],
+                                ),
+                              ),
+                              width: 40,
+                            ),
+                          ],
+                        ))
+                  ])),
                   Column(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
