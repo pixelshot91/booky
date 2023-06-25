@@ -143,6 +143,14 @@ class _BookMetadataCollectingWidgetState extends State<_BookMetadataCollectingWi
     }
   }
 
+  void _updateManualTitle(String newTitle) {
+    setState(() => widget.metadatas.bookControllerSet.titleTextFieldController.text = newTitle);
+  }
+
+  void _updateManualAuthors(String newAuthors) {
+    setState(() => widget.metadatas.bookControllerSet.authorsTextFieldController.text = newAuthors);
+  }
+
   void _updateManualBlurb(String newBlurb) {
     setState(() => widget.metadatas.bookControllerSet.blurbTextFieldController.text = newBlurb);
   }
@@ -178,7 +186,14 @@ class _BookMetadataCollectingWidgetState extends State<_BookMetadataCollectingWi
                       labelText: 'Book title',
                     ),
                   ),
-                  ...iter.map((data) => data == null ? _noneText : SelectableText(data.title ?? '')),
+                  ...iter.map((data) {
+                    final title = data?.title;
+                    if (title == null) return _noneText;
+                    return _SelectableTextAndUse(
+                      data!.title!,
+                      onUse: _updateManualTitle,
+                    );
+                  }),
                 ]),
                 TableRow(children: [
                   TextFormField(
@@ -194,7 +209,10 @@ class _BookMetadataCollectingWidgetState extends State<_BookMetadataCollectingWi
                     if (authors == null || authors.isEmpty) {
                       return _noneText;
                     }
-                    return SelectableText(_authorsToString(authors));
+                    return _SelectableTextAndUse(
+                      _authorsToString(authors),
+                      onUse: _updateManualAuthors,
+                    );
                   }),
                 ]),
                 TableRow(children: [
