@@ -13,15 +13,11 @@ import '../common.dart' as common;
 import 'barcode_detector_painter.dart';
 import 'draggable_widget.dart';
 
-/// Camera example home widget.
 class CameraWidget extends StatefulWidget {
-  /// Default Constructor
   const CameraWidget({Key? key}) : super(key: key);
 
   @override
-  State<CameraWidget> createState() {
-    return _CameraWidgetState();
-  }
+  State<CameraWidget> createState() => _CameraWidgetState();
 }
 
 void _logError(String code, String? message) {
@@ -275,6 +271,7 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
 
     try {
       await cameraController.initialize();
+      await cameraController.setFlashMode(FlashMode.off);
     } on CameraException catch (e) {
       switch (e.code) {
         case 'CameraAccessDenied':
