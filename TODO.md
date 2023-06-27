@@ -1,6 +1,11 @@
 # TODO
 
 * [ ] Camera: check that detected barcode is a valid ISBN
+* [ ] Camera: Play a sound when a picture is taken
+* [ ] Camera: Play another sound when an ISBN is detected
+* [ ] Camera: Handle taken images visual overflow
+* [ ] Camera: Fix flashlight turning on and never off again
+* [ ] MetadataCollecting: Show a visual indication that the title is too long (105 characters for LeBonCoin)
 * [ ] ISBNDecoding: Delete an image
 * [ ] BUG: BundleList fail to refresh after: autoMetadata download
 * [ ] BUG: BundleList show autoMetadata from other bundle when some bundle are deleted
