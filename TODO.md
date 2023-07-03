@@ -1,7 +1,5 @@
 # TODO
 
-* [ ] Camera: check that detected barcode is a valid ISBN
-* [ ] Camera: Play a sound when a picture is taken
 * [ ] Camera: Play another sound when an ISBN is detected
 * [ ] Camera: Add slider to change picture ratio
 * [ ] Camera: Add padding in name so that lexical sorting correspond to numerical sorting
@@ -20,6 +18,7 @@
 
 # DONE
 
+* [x] Camera: Play a sound when a picture is taken
 * [x] Camera: Handle taken images visual overflow
 * [x] ISBNDecoding: Pan and zoom on an image
 * [x] ISBNDecoding: Check the ISBN checksum

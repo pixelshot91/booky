@@ -36,6 +36,7 @@ dependencies:
   image: ^4.0.17
   vector_math: ^2.1.4
   stream_transform: ^2.1.0
+  audioplayers: ^4.1.0
 
 
 dev_dependencies:
@@ -48,6 +49,9 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+
+  assets:
+    - assets/sounds/
 
   # To add assets to your application, add an assets section, like this:
   # assets:
