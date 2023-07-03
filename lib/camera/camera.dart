@@ -157,23 +157,25 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
               ],
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.all(5.0),
-            child: BottomWidget(
-              bundle: getBundle,
-              onSubmit: () {
-                setState(() {
-                  _generateNewFolderPath();
-                  _registeredBarcodes.clear();
-                });
-                Navigator.pop(context);
-              },
-              onBarcodeDetectStart: () => controller!.startImageStream(_processCameraImage),
-              onBarcodeDetectStop: () async {
-                await controller!.stopImageStream();
-                setState(() => _customPaint = null);
-              },
-              isbns: _getValidRegisteredBarcodes(),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.all(5.0),
+              child: BottomWidget(
+                bundle: getBundle,
+                onSubmit: () {
+                  setState(() {
+                    _generateNewFolderPath();
+                    _registeredBarcodes.clear();
+                  });
+                  Navigator.pop(context);
+                },
+                onBarcodeDetectStart: () => controller!.startImageStream(_processCameraImage),
+                onBarcodeDetectStop: () async {
+                  await controller!.stopImageStream();
+                  setState(() => _customPaint = null);
+                },
+                isbns: _getValidRegisteredBarcodes(),
+              ),
             ),
           ),
         ],
@@ -390,6 +392,9 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
     });
   }
 
+  // TODO: padding so that lexical sorting correspond to numerical sorting
+  // TODO: Don't look for the first unused number because if a picture is deleted, then the next picture to be taken will take its space which is weird
+  // Instead store a increasing index or rename all the picture ofter the deleted one so that there is no gap in the numbering
   String _getFirstUnusedName(Directory dir) =>
       List.generate(20, (index) => path.join(dir.path, '$index.jpg')).firstWhere((path) => !File(path).existsSync());
 
@@ -467,11 +472,17 @@ class _BottomWidgetState extends State<BottomWidget> {
   @override
   Widget build(BuildContext context) {
     try {
-      return Row(
-        children: <Widget>[
-          _thumbnailWidget(widget.bundle.images),
-          _barcodeDetectionButton(),
-          _addMetadataButton(context: context, directory: widget.bundle.directory, onSubmit: widget.onSubmit),
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Expanded(child: _thumbnailWidget(widget.bundle.images)),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              _barcodeDetectionButton(),
+              _addMetadataButton(context: context, directory: widget.bundle.directory, onSubmit: widget.onSubmit),
+            ],
+          ),
         ],
       );
     } on PathNotFoundException {
@@ -487,43 +498,51 @@ class _BottomWidgetState extends State<BottomWidget> {
       onTapUp: (_) {
         widget.onBarcodeDetectStop();
       },
-      child: const Icon(Icons.select_all_rounded),
+      child: AbsorbPointer(
+        child: OutlinedButton.icon(
+          icon: const Icon(Icons.select_all_rounded),
+          onPressed: () {},
+          label: const Text('Live barcode detection'),
+        ),
+      ),
     );
   }
 
   /// Display the thumbnail of the captured image or video.
   Widget _thumbnailWidget(Iterable<FileSystemEntity> images) {
-    return Expanded(
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: images
-              .map((imgFile) => SizedBox(
-                    width: 64,
-                    height: 64,
-                    child: DraggableWidget(
-                        // Use a key otherwise if we delete an image, the image that will take its place will inherit the state of the deleted image
-                        key: ValueKey(imgFile.path),
-                        child: Image.file(File(imgFile.path)),
-                        onVerticalDrag: () => setState(() {
-                              imgFile.deleteSync();
-                            })),
-                  ))
-              .toList(),
-        ),
+    // FIXME: The drag from DraggableWidget and SingleChildScrollView might conflict with one another
+    return SingleChildScrollView(
+      scrollDirection: Axis.vertical,
+      child: Wrap(
+        spacing: 8.0,
+        runSpacing: 8.0,
+        children: images
+            .map((imgFile) => SizedBox(
+                  width: 64,
+                  height: 64,
+                  child: DraggableWidget(
+                      // Use a key otherwise if we delete an image, the image that will take its place will inherit the state of the deleted image
+                      key: ValueKey(imgFile.path),
+                      child: Image.file(File(imgFile.path)),
+                      onVerticalDrag: () => setState(() {
+                            imgFile.deleteSync();
+                          })),
+                ))
+            .toList(),
       ),
     );
   }
 
   Widget _addMetadataButton(
           {required BuildContext context, required Directory directory, required void Function() onSubmit}) =>
-      IconButton(
-          icon: const Icon(Icons.keyboard_arrow_right),
-          onPressed: () => showDialog<void>(
-              context: context,
-              builder: (BuildContext context) =>
-                  MetadataWidget(directory: directory, isbns: widget.isbns, onSubmit: onSubmit)));
+      ElevatedButton.icon(
+        label: const Text('Save'),
+        icon: const Icon(Icons.save),
+        onPressed: () => showDialog<void>(
+            context: context,
+            builder: (BuildContext context) =>
+                MetadataWidget(directory: directory, isbns: widget.isbns, onSubmit: onSubmit)),
+      );
 }
 
 class MetadataWidget extends StatefulWidget {
