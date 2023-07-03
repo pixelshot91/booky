@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:audioplayers/audioplayers.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -373,6 +374,9 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
       if (file == null) {
         return;
       }
+
+      AudioPlayer().play(AssetSource('sounds/take_picture.mp3'), mode: PlayerMode.lowLatency);
+
       if (mounted) {
         await getBundleDir.create();
         file.saveTo(_getFirstUnusedName(getBundleDir));
