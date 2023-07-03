@@ -3,18 +3,24 @@
 * [ ] Camera: check that detected barcode is a valid ISBN
 * [ ] Camera: Play a sound when a picture is taken
 * [ ] Camera: Play another sound when an ISBN is detected
-* [ ] Camera: Handle taken images visual overflow
+* [ ] Camera: Add slider to change picture ratio
+* [ ] Camera: Add padding in name so that lexical sorting correspond to numerical sorting
+* [ ] Camera: Don't take first unused number
+* [ ] Camera: Always show 'detect barcode' button. Show in disabled state the 'save' button if no picture has been taken
+* [ ] Camera: Fix 'detect barcode' overlay stays visible when turned off
 * [ ] Camera: Fix flashlight turning on and never off again
 * [ ] MetadataCollecting: Show a visual indication that the title is too long (105 characters for LeBonCoin)
+* [ ] BundleSelection: BundleList fail to refresh after autoMetadata download
+* [ ] BundleSelection: BUG: BundleList show autoMetadata from other bundle when some bundle are deleted
+* [ ] ISBNDecoding: Better layout for phone
 * [ ] ISBNDecoding: Delete an image
-* [ ] BUG: BundleList fail to refresh after: autoMetadata download
-* [ ] BUG: BundleList show autoMetadata from other bundle when some bundle are deleted
 * [ ] MetadataCollecting: Disable 'Validate Metadatas' button if price field is empty
 * [ ] AdEditing: Disable 'Mark as published' if the title is empty
 * [ ] Search with Selenium in headless mode
 
 # DONE
 
+* [x] Camera: Handle taken images visual overflow
 * [x] ISBNDecoding: Pan and zoom on an image
 * [x] ISBNDecoding: Check the ISBN checksum
 * [x] Add the ISBNs in the ad description for better indexing
