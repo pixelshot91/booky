@@ -181,7 +181,7 @@ class _BundleSelectionState extends State<BundleSelection> {
       });
     }
     final bundleFutures = bundles.map<Future<void>>((bundle) async {
-      final imagesFutures = bundle.images.map((image) async {
+      final imagesFutures = (await bundle.images).map((image) async {
         final segments = path.split(image.path);
         segments.insert(segments.length - 1, 'compressed');
         final targetPath = path.joinAll(segments);
@@ -313,121 +313,119 @@ class _BundleWidgetState extends State<BundleWidget> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    const maxImagesShown = 5;
-    final imagesShown = widget.bundle.compressedImages
-        .take(maxImagesShown)
-        .map((f) => Padding(padding: const EdgeInsets.all(8.0), child: ImageWidget(f)))
-        .toList();
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(4.0),
-        child: Column(
-          children: [
-            // Text(path.basename(widget.bundle.directory.path)),
-            FutureWidget(
-                future: cachedAutoMetadata,
-                builder: (autoMetadata) {
-                  final firstBook = autoMetadata.iter.firstOrNull;
-                  if (firstBook == null) return const Text('No book identified');
-                  final md = firstBook.value.dart.mergeAllProvider();
-                  final priceRange = md.marketPrice.toList();
-                  return Row(children: [
-                    if (autoMetadata.size > 1) _NumberOfBookBadge(autoMetadata.size),
+  Widget build(BuildContext context) => Card(
+        child: Padding(
+          padding: const EdgeInsets.all(4.0),
+          child: Column(
+            children: [
+              // Text(path.basename(widget.bundle.directory.path)),
+              FutureWidget(
+                  future: cachedAutoMetadata,
+                  builder: (autoMetadata) {
+                    final firstBook = autoMetadata.iter.firstOrNull;
+                    if (firstBook == null) return const Text('No book identified');
+                    final md = firstBook.value.dart.mergeAllProvider();
+                    final priceRange = md.marketPrice.toList();
+                    return Row(children: [
+                      if (autoMetadata.size > 1) _NumberOfBookBadge(autoMetadata.size),
+                      Expanded(
+                          child: md.title.ifIs(
+                              notnull: (t) => TextWithTooltip(t),
+                              nul: () => const Text(
+                                    'No title found',
+                                    style: TextStyle(fontStyle: FontStyle.italic),
+                                  ))),
+                      priceRange.isEmpty
+                          ? const Text('?')
+                          : Text('${priceRange.first.toInt()} - ${priceRange.last.toInt()} €'),
+                    ]);
+                  }),
+              Expanded(
+                child: Row(
+                  children: [
+                    FutureWidget(future: cachedAutoMetadata, builder: (md) => MetadataIcons(md)),
                     Expanded(
-                        child: md.title.ifIs(
-                            notnull: (t) => TextWithTooltip(t),
-                            nul: () => const Text(
-                                  'No title found',
-                                  style: TextStyle(fontStyle: FontStyle.italic),
-                                ))),
-                    priceRange.isEmpty
-                        ? const Text('?')
-                        : Text('${priceRange.first.toInt()} - ${priceRange.last.toInt()} €'),
-                  ]);
-                }),
-            Expanded(
-              child: Row(
-                children: [
-                  FutureWidget(future: cachedAutoMetadata, builder: (md) => MetadataIcons(md)),
-                  Expanded(
-                      child: Stack(children: [
-                    SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: Row(children: imagesShown),
-                    ),
-                    Positioned(
-                        right: 0,
-                        top: 0,
-                        bottom: 0,
-                        child: Row(
-                          children: [
-                            Container(
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  begin: Alignment.centerLeft,
-                                  end: Alignment.centerRight,
-                                  colors: [Colors.white.withOpacity(0), Colors.white],
+                        child: Stack(children: [
+                      SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: FutureWidget(
+                            future: widget.bundle.compressedImages,
+                            builder: (images) => Row(
+                                children: images
+                                    .map((f) => Padding(padding: const EdgeInsets.all(8.0), child: ImageWidget(f)))
+                                    .toList())),
+                      ),
+                      Positioned(
+                          right: 0,
+                          top: 0,
+                          bottom: 0,
+                          child: Row(
+                            children: [
+                              Container(
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    begin: Alignment.centerLeft,
+                                    end: Alignment.centerRight,
+                                    colors: [Colors.white.withOpacity(0), Colors.white],
+                                  ),
                                 ),
+                                width: 40,
                               ),
-                              width: 40,
-                            ),
-                          ],
-                        ))
-                  ])),
-                  Column(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      if (Platform.isLinux)
+                            ],
+                          ))
+                    ])),
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        if (Platform.isLinux)
+                          IconButton(
+                              onPressed: () => Process.run('pcmanfm', [widget.bundle.directory.path]),
+                              icon: const Icon(Icons.open_in_new)),
                         IconButton(
-                            onPressed: () => Process.run('pcmanfm', [widget.bundle.directory.path]),
-                            icon: const Icon(Icons.open_in_new)),
-                      IconButton(
-                        icon: const Icon(Icons.image_search),
-                        onPressed: () {
-                          Navigator.push(
-                              context,
-                              MaterialPageRoute<void>(
-                                  builder: (context) =>
-                                      ISBNDecodingWidget(step: ISBNDecodingStep(bundle: widget.bundle))));
-                        },
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.delete_sweep),
-                        onPressed: () async {
-                          final res = await widget.bundle.removeAutoMetadata();
-                          if (mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                              content:
-                                  Text(res ? 'Automatic Metadata deleted' : 'Error while deleting automatic metadata'),
-                            ));
-                          }
+                          icon: const Icon(Icons.image_search),
+                          onPressed: () {
+                            Navigator.push(
+                                context,
+                                MaterialPageRoute<void>(
+                                    builder: (context) =>
+                                        ISBNDecodingWidget(step: ISBNDecodingStep(bundle: widget.bundle))));
+                          },
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.delete_sweep),
+                          onPressed: () async {
+                            final res = await widget.bundle.removeAutoMetadata();
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                                content: Text(
+                                    res ? 'Automatic Metadata deleted' : 'Error while deleting automatic metadata'),
+                              ));
+                            }
 
-                          widget.refreshParent();
-                        },
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.delete),
-                        onPressed: () {
-                          final segments = path.split(widget.bundle.directory.path);
-                          segments[segments.length - 2] = 'booky_deleted';
-                          widget.bundle.directory.renameSync(path.joinAll(segments));
-                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                            content: Text('Deleted'),
-                          ));
-                          widget.refreshParent();
-                        },
-                      ),
-                    ],
-                  ),
-                ],
+                            widget.refreshParent();
+                          },
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.delete),
+                          onPressed: () {
+                            final segments = path.split(widget.bundle.directory.path);
+                            segments[segments.length - 2] = 'booky_deleted';
+                            widget.bundle.directory.renameSync(path.joinAll(segments));
+                            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                              content: Text('Deleted'),
+                            ));
+                            widget.refreshParent();
+                          },
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
-      ),
-    );
-  }
+      );
 }
 
 class _NumberOfBookBadge extends StatelessWidget {
