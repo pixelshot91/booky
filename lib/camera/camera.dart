@@ -12,6 +12,7 @@ import 'package:permission_handler/permission_handler.dart';
 
 import '../bundle.dart';
 import '../common.dart' as common;
+import 'barcode_detection.dart';
 import 'barcode_detector_painter.dart';
 import 'draggable_widget.dart';
 
@@ -35,7 +36,7 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
   bool _isBusy = false;
   bool _canProcessBarcode = true;
   CustomPaint? _customPaint;
-  final Map<String, int> _registeredBarcodes = {};
+  final Map<String, BarcodeDetection> _registeredBarcodes = {};
 
   // Used to signal when the imageProcessing pipeline finish processing the current frame
   Completer<void>? imageProcessingCompleter;
@@ -72,7 +73,6 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
     super.dispose();
   }
 
-  // #docregion AppLifecycle
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     final CameraController? cameraController = controller;
@@ -88,15 +88,7 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
       _onNewCameraSelected(cameraController.description);
     }
   }
-  // #enddocregion AppLifecycle
 
-  /// The minimum number of time the barcode stream decoder must see a barcode to consider it valid.
-  /// Use the prevent false barcode decoding to show up (due to glare, poor image quality)
-  static const minBarcodeOccurrence = 20;
-
-  /// All ISBN (EAN-13) should start with 978
-  /// Use to prevent false barcode decoding
-  static const isbnPrefix = '978';
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -134,20 +126,16 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
                   child: Padding(
                     padding: const EdgeInsets.all(8.0),
                     child: Column(
-                      children: _getValidRegisteredBarcodes().map((barcode) {
-                        return Row(
-                          children: [
-                            Expanded(child: Text(barcode, style: const TextStyle(fontWeight: FontWeight.bold))),
-                            IconButton(
-                                onPressed: () {
-                                  setState(() {
-                                    _registeredBarcodes.remove(barcode);
-                                  });
-                                },
-                                icon: const Icon(Icons.delete))
-                          ],
-                        );
-                      }).toList(),
+                      children: _getValidRegisteredBarcodes()
+                          .map((barcode) => Row(
+                                children: [
+                                  Expanded(child: Text(barcode, style: const TextStyle(fontWeight: FontWeight.bold))),
+                                  IconButton(
+                                      onPressed: () => setState(() => _registeredBarcodes.remove(barcode)),
+                                      icon: const Icon(Icons.delete))
+                                ],
+                              ))
+                          .toList(),
                     ),
                   ),
                 ),
@@ -379,13 +367,13 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
       final barcodes = await _barcodeScanner.processImage(inputImage);
       if (inputImage.inputImageData?.size != null && inputImage.inputImageData?.imageRotation != null) {
         final painter =
-        BarcodeDetectorPainter(barcodes, inputImage.inputImageData!.size, inputImage.inputImageData!.imageRotation);
+            BarcodeDetectorPainter(barcodes, inputImage.inputImageData!.size, inputImage.inputImageData!.imageRotation);
         _customPaint = CustomPaint(painter: painter);
 
-        final barcodesString = barcodes.map((barcode) => barcode.displayValue).whereType<String>();
-        for (final barcodeString in barcodesString) {
-          _registeredBarcodes.update(barcodeString, (oldCount) => oldCount + 1, ifAbsent: () => 1);
-        }
+        _filterBarcode(barcodes).forEach((barcodeString) {
+          _registeredBarcodes.update(barcodeString, (oldDetection) => oldDetection.increaseCounter(),
+              ifAbsent: () => UnsureDetection());
+        });
       }
     }
     if (mounted) {
@@ -395,6 +383,11 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
 
     _isBusy = false;
   }
+
+  Iterable<String> _filterBarcode(Iterable<Barcode> barcodes) => barcodes
+      .where((barcode) => barcode.type == BarcodeType.isbn)
+      .map((barcode) => barcode.displayValue)
+      .whereType<String>();
 
   void _onTakePictureButtonPressed() {
     takePicture().then((XFile? file) async {
@@ -412,11 +405,11 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
       final inputImage = InputImage.fromFilePath(file.path);
       final barcodes = await _barcodeScanner.processImage(inputImage);
 
-      final barcodesString = barcodes.map((barcode) => barcode.displayValue).whereType<String>();
-      for (final barcodeString in barcodesString) {
-        _registeredBarcodes.update(barcodeString, (oldCount) => oldCount + minBarcodeOccurrence,
-            ifAbsent: () => minBarcodeOccurrence);
-      }
+      _filterBarcode(barcodes).forEach((barcodeString) {
+        _registeredBarcodes.update(barcodeString, (oldDetection) => oldDetection.makeSure(),
+            ifAbsent: () => SureDetection());
+      });
+
       if (mounted) {
         setState(() {});
       }
@@ -473,12 +466,10 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
     showInSnackBar('Error: ${e.code}\n${e.description}');
   }
 
-  List<String> _getValidRegisteredBarcodes() {
-    return _registeredBarcodes.entries
-        .where((entry) => entry.key.startsWith(isbnPrefix) && entry.value >= minBarcodeOccurrence)
-        .map((e) => e.key)
-        .toList();
-  }
+  List<String> _getValidRegisteredBarcodes() => _registeredBarcodes.entries
+      .where((entry) => entry.key.startsWith(common.isbnPrefix) && entry.value is SureDetection)
+      .map((e) => e.key)
+      .toList();
 }
 
 class BottomWidget extends StatefulWidget {

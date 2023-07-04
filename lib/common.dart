@@ -4,6 +4,10 @@ import 'package:json_annotation/json_annotation.dart';
 
 part 'common.g.dart';
 
+/// All ISBN (EAN-13) should start with 978
+/// Use to prevent false barcode decoding
+const isbnPrefix = '978';
+
 extension IterableFutureMapEntryExt<K, V> on Iterable<Future<MapEntry<K, V>>> {
   Future<Map<K, V>> toMap() async => Map.fromEntries(await Future.wait(this));
 }

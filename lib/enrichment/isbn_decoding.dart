@@ -9,6 +9,7 @@ import 'package:image/image.dart' as image;
 import 'package:kt_dart/collection.dart';
 import 'package:vector_math/vector_math_64.dart';
 
+import '../common.dart' as common;
 import '../helpers.dart';
 import 'enrichment.dart';
 
@@ -111,7 +112,7 @@ class _ISBNDecodingWidgetState extends State<ISBNDecodingWidget> {
                                                     child: Text(
                                                       isbn,
                                                       style: TextStyle(
-                                                          decoration: isbn.startsWith('978')
+                                                          decoration: isbn.startsWith(common.isbnPrefix)
                                                               ? null
                                                               : TextDecoration.lineThrough),
                                                     )),
