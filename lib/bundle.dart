@@ -6,6 +6,7 @@ import 'package:collection/collection.dart';
 import 'package:flutter_rust_bridge_template/common.dart';
 import 'package:flutter_rust_bridge_template/helpers.dart';
 import 'package:path/path.dart' as path;
+import 'package:stream_transform/stream_transform.dart';
 
 import 'bridge_definitions.dart';
 import 'common.dart' as common;
@@ -15,11 +16,11 @@ class Bundle {
 
   final Directory directory;
 
-  Iterable<File> get images => directory.listImages();
+  Future<List<File>> get images => directory.listImages();
 
   Directory get compressedImagesDir => Directory(path.join(directory.path, 'compressed'));
 
-  Iterable<File> get compressedImages => compressedImagesDir.listImages();
+  Future<Iterable<File>> get compressedImages => compressedImagesDir.listImages();
 
   File get metadataFile => File(path.join(directory.path, 'metadata.json'));
 
@@ -67,10 +68,11 @@ extension MapProviderEnumBookMetaDataFromProviderExt on Map<ProviderEnum, BookMe
 }
 
 extension _DirExt on Directory {
-  Iterable<File> listImages() =>
-      listSync().whereType<File>().where((file) => path.extension(file.path) == '.jpg').sortByName();
+  Future<List<File>> listImages() =>
+      list().whereType<File>().where((file) => path.extension(file.path) == '.jpg').sortByName();
 }
 
-extension _ListFileExt on Iterable<File> {
-  List<File> sortByName() => sorted((f1, f2) => path.basename(f1.path).compareTo(path.basename(f2.path)));
+extension _ListFileExt on Stream<File> {
+  Future<List<File>> sortByName() async =>
+      (await toList()).sorted((f1, f2) => path.basename(f1.path).compareTo(path.basename(f2.path)));
 }

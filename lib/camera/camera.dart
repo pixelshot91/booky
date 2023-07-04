@@ -12,6 +12,7 @@ import 'package:permission_handler/permission_handler.dart';
 
 import '../bundle.dart';
 import '../common.dart' as common;
+import '../helpers.dart';
 import 'barcode_detection.dart';
 import 'barcode_detector_painter.dart';
 import 'draggable_widget.dart';
@@ -493,23 +494,31 @@ class BottomWidget extends StatefulWidget {
 class _BottomWidgetState extends State<BottomWidget> {
   @override
   Widget build(BuildContext context) {
-    try {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Expanded(child: _thumbnailWidget(widget.bundle.images)),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: <Widget>[
-              _barcodeDetectionButton(),
-              _addMetadataButton(context: context, directory: widget.bundle.directory, onSubmit: widget.onSubmit),
-            ],
-          ),
-        ],
-      );
-    } on PathNotFoundException {
-      return const Text('Tap the screen to take a picture');
-    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Expanded(
+            child: FutureWidget(future: () async {
+          try {
+            return await widget.bundle.images;
+          } on PathNotFoundException {
+            return null;
+          }
+        }(), builder: (images) {
+          if (images == null) {
+            return const Center(child: Text('Tap the camera preview to take a picture'));
+          }
+          return _thumbnailWidget(images);
+        })),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: <Widget>[
+            _barcodeDetectionButton(),
+            _addMetadataButton(context: context, directory: widget.bundle.directory, onSubmit: widget.onSubmit),
+          ],
+        ),
+      ],
+    );
   }
 
   Widget _barcodeDetectionButton() {

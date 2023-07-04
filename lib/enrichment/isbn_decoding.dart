@@ -28,9 +28,13 @@ class _ISBNDecodingWidgetState extends State<ISBNDecodingWidget> {
   @override
   void initState() {
     super.initState();
-    widget.step.bundle.images.forEach((image) {
-      decodedIsbns[image.path] = api.detectBarcodeInImage(imgPath: image.path);
+    Future(() async {
+      final images = await widget.step.bundle.images;
+      images.forEach((image) {
+        decodedIsbns[image.path] = api.detectBarcodeInImage(imgPath: image.path);
+      });
     });
+
     selectedIsbns = (widget.step.bundle.metadata.isbns ?? []).toSet().kt;
   }
 
@@ -79,8 +83,10 @@ class _ISBNDecodingWidgetState extends State<ISBNDecodingWidget> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Expanded(
-              child: Wrap(
-                children: widget.step.bundle.images
+                child: FutureWidget(
+              future: widget.step.bundle.images,
+              builder: (images) => Wrap(
+                children: images
                     .map((imgPath) => Card(
                           child: Padding(
                             padding: const EdgeInsets.all(8.0),
@@ -130,7 +136,7 @@ class _ISBNDecodingWidgetState extends State<ISBNDecodingWidget> {
                         ))
                     .toList(),
               ),
-            ),
+            )),
             // const Spacer(),
             SizedBox(
               width: 300,

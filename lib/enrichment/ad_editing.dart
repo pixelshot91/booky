@@ -42,41 +42,44 @@ class _AdEditingWidgetState extends State<AdEditingWidget> {
   @override
   void initState() {
     super.initState();
-    final metadataFromIsbn = widget.step.metadata;
 
-    var title = '';
-    if (metadataFromIsbn.length == 1) {
-      final onlyMetadata = metadataFromIsbn.single;
-      title = _bookFormat(onlyMetadata);
-    }
+    Future(() async {
+      final metadataFromIsbn = widget.step.metadata;
 
-    var description = '';
+      var title = '';
+      if (metadataFromIsbn.length == 1) {
+        final onlyMetadata = metadataFromIsbn.single;
+        title = _bookFormat(onlyMetadata);
+      }
 
-    final bookTitles = metadataFromIsbn.map((md) => _bookFormat(md, withISBN: true)).join('\n');
-    description += bookTitles + '\n\n';
+      var description = '';
 
-    _getDescription(metadataFromIsbn)?.let((d) => description += d + '\n\n');
+      final bookTitles = metadataFromIsbn.map((md) => _bookFormat(md, withISBN: true)).join('\n');
+      description += bookTitles + '\n\n';
 
-    description += personal_info.customMessage;
+      _getDescription(metadataFromIsbn)?.let((d) => description += d + '\n\n');
 
-    final keywords = metadataFromIsbn.map((entry) => entry.keywords).expand((kw) => kw).toSet().join(', ');
-    if (keywords.isNotEmpty) {
-      description += '\n\nMots-clés:\n' + keywords;
-    }
+      description += personal_info.customMessage;
 
-    final totalPriceIncludingShipping = metadataFromIsbn.map((e) => e.priceCent ?? 0).sum;
-    final weightGramsWithWrapping = (widget.step.bundle.metadata.weightGrams! * 1.2).toInt();
-    var totalPriceExcludingShipping =
-        totalPriceIncludingShipping - _estimatedShippingCost(grams: weightGramsWithWrapping);
+      final keywords = metadataFromIsbn.map((entry) => entry.keywords).expand((kw) => kw).toSet().join(', ');
+      if (keywords.isNotEmpty) {
+        description += '\n\nMots-clés:\n' + keywords;
+      }
 
-    const minimumSellingPrice = 100;
-    totalPriceExcludingShipping = max(totalPriceExcludingShipping, minimumSellingPrice);
-    ad = Ad(
-        title: title,
-        description: description,
-        priceCent: totalPriceExcludingShipping,
-        weightGrams: weightGramsWithWrapping,
-        imgsPath: widget.step.bundle.compressedImages.map((e) => e.path).toList());
+      final totalPriceIncludingShipping = metadataFromIsbn.map((e) => e.priceCent ?? 0).sum;
+      final weightGramsWithWrapping = (widget.step.bundle.metadata.weightGrams! * 1.2).toInt();
+      var totalPriceExcludingShipping =
+          totalPriceIncludingShipping - _estimatedShippingCost(grams: weightGramsWithWrapping);
+
+      const minimumSellingPrice = 100;
+      totalPriceExcludingShipping = max(totalPriceExcludingShipping, minimumSellingPrice);
+      ad = Ad(
+          title: title,
+          description: description,
+          priceCent: totalPriceExcludingShipping,
+          weightGrams: weightGramsWithWrapping,
+          imgsPath: (await widget.step.bundle.compressedImages).map((e) => e.path).toList());
+    });
   }
 
   String? _getDescription(Iterable<BookMetaDataManual> metadataFromIsbn) {
