@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -35,6 +36,9 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
   bool _canProcessBarcode = true;
   CustomPaint? _customPaint;
   final Map<String, int> _registeredBarcodes = {};
+
+  // Used to signal when the imageProcessing pipeline finish processing the current frame
+  Completer<void>? imageProcessingCompleter;
 
   Directory get getBundleDir => Directory(path.join(common.bookyDir.path, bundleName));
   Bundle get getBundle => Bundle(getBundleDir);
@@ -172,8 +176,8 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
                 },
                 onBarcodeDetectStart: () => controller!.startImageStream(_processCameraImage),
                 onBarcodeDetectStop: () async {
+                  controller!.addListener(_listener);
                   await controller!.stopImageStream();
-                  setState(() => _customPaint = null);
                 },
                 isbns: _getValidRegisteredBarcodes(),
               ),
@@ -182,6 +186,26 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
         ],
       ),
     );
+  }
+
+  // Even if we await the stopImageStream, there might still be an instance f _processCameraImage processing a frame
+  // So _listener is called until the streaming stops, and the last frame has been processed
+  // Only then should we remove the _customPaint
+  void _listener() async {
+    // No new frame are added into the pipeline
+    if (controller!.value.isStreamingImages == false) {
+      controller!.removeListener(_listener);
+
+      if (_isBusy) {
+        imageProcessingCompleter = Completer();
+        // The current frame is finished processing
+        await imageProcessingCompleter!.future;
+        imageProcessingCompleter = null;
+      }
+      setState(() {
+        _customPaint = null;
+      });
+    }
   }
 
   /// Display the preview from the camera (or a message if the preview is not available).
@@ -349,24 +373,27 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
   }
 
   Future<void> _extractBarcodeFromImage(InputImage inputImage) async {
-    if (!_canProcessBarcode) return;
     if (_isBusy) return;
     _isBusy = true;
-    final barcodes = await _barcodeScanner.processImage(inputImage);
-    if (inputImage.inputImageData?.size != null && inputImage.inputImageData?.imageRotation != null) {
-      final painter =
-          BarcodeDetectorPainter(barcodes, inputImage.inputImageData!.size, inputImage.inputImageData!.imageRotation);
-      _customPaint = CustomPaint(painter: painter);
+    if (_canProcessBarcode) {
+      final barcodes = await _barcodeScanner.processImage(inputImage);
+      if (inputImage.inputImageData?.size != null && inputImage.inputImageData?.imageRotation != null) {
+        final painter =
+        BarcodeDetectorPainter(barcodes, inputImage.inputImageData!.size, inputImage.inputImageData!.imageRotation);
+        _customPaint = CustomPaint(painter: painter);
 
-      final barcodesString = barcodes.map((barcode) => barcode.displayValue).whereType<String>();
-      for (final barcodeString in barcodesString) {
-        _registeredBarcodes.update(barcodeString, (oldCount) => oldCount + 1, ifAbsent: () => 1);
+        final barcodesString = barcodes.map((barcode) => barcode.displayValue).whereType<String>();
+        for (final barcodeString in barcodesString) {
+          _registeredBarcodes.update(barcodeString, (oldCount) => oldCount + 1, ifAbsent: () => 1);
+        }
       }
     }
-    _isBusy = false;
     if (mounted) {
       setState(() {});
     }
+    imageProcessingCompleter?.complete();
+
+    _isBusy = false;
   }
 
   void _onTakePictureButtonPressed() {
@@ -499,9 +526,7 @@ class _BottomWidgetState extends State<BottomWidget> {
       onTapDown: (_) {
         widget.onBarcodeDetectStart();
       },
-      onTapUp: (_) {
-        widget.onBarcodeDetectStop();
-      },
+      onTapUp: (_) => widget.onBarcodeDetectStop(),
       child: AbsorbPointer(
         child: OutlinedButton.icon(
           icon: const Icon(Icons.select_all_rounded),
