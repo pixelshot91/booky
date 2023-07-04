@@ -5,7 +5,6 @@
 * [ ] Camera: Add padding in name so that lexical sorting correspond to numerical sorting
 * [ ] Camera: Don't take first unused number
 * [ ] Camera: Always show 'detect barcode' button. Show in disabled state the 'save' button if no picture has been taken
-* [ ] Camera: Fix 'detect barcode' overlay stays visible when turned off
 * [ ] Camera: Fix flashlight turning on and never off again
 * [ ] MetadataCollecting: Show a visual indication that the title is too long (105 characters for LeBonCoin)
 * [ ] BundleSelection: BundleList fail to refresh after autoMetadata download
@@ -18,6 +17,7 @@
 
 # DONE
 
+* [x] Camera: Fix 'detect barcode' overlay stays visible when turned off
 * [x] Camera: Play a sound when a picture is taken
 * [x] Camera: Handle taken images visual overflow
 * [x] ISBNDecoding: Pan and zoom on an image
