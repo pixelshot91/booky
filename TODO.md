@@ -1,6 +1,5 @@
 # TODO
 
-* [ ] Camera: Play another sound when an ISBN is detected
 * [ ] Camera: Add slider to change picture ratio
 * [ ] Camera: Add padding in name so that lexical sorting correspond to numerical sorting
 * [ ] Camera: Don't take first unused number
@@ -17,6 +16,7 @@
 
 # DONE
 
+* [x] Camera: Play another sound when an ISBN is detected
 * [x] Camera: Fix 'detect barcode' overlay stays visible when turned off
 * [x] Camera: Play a sound when a picture is taken
 * [x] Camera: Handle taken images visual overflow
