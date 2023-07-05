@@ -1,20 +1,22 @@
 # TODO
 
 * [ ] Camera: Add slider to change picture ratio
-* [ ] Camera: Add padding in name so that lexical sorting correspond to numerical sorting
 * [ ] Camera: Don't take first unused number
+* [ ] Camera: Fix pictures flickering or being shortly replaced by a spinner each time a picture is taken
 * [ ] Camera: Fix flashlight turning on and never off again
-* [ ] MetadataCollecting: Show a visual indication that the title is too long (105 characters for LeBonCoin)
 * [ ] BundleSelection: BundleList fail to refresh after autoMetadata download
 * [ ] BundleSelection: BUG: BundleList show autoMetadata from other bundle when some bundle are deleted
+* [ ] BundleSelection: Keep scroll position when deleting a bundle
 * [ ] ISBNDecoding: Better layout for phone
 * [ ] ISBNDecoding: Delete an image
 * [ ] MetadataCollecting: Disable 'Validate Metadatas' button if price field is empty
+* [ ] MetadataCollecting: Show a visual indication that the title is too long (105 characters for LeBonCoin)
 * [ ] AdEditing: Disable 'Mark as published' if the title is empty
 * [ ] Search with Selenium in headless mode
 
 # DONE
 
+* [x] Camera: Add padding in name so that lexical sorting correspond to numerical sorting
 * [x] Camera: Always show bottom buttons
 * [x] Camera: Play another sound when an ISBN is detected
 * [x] Camera: Fix 'detect barcode' overlay stays visible when turned off
