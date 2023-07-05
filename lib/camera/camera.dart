@@ -417,11 +417,13 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
     });
   }
 
-  // TODO: padding so that lexical sorting correspond to numerical sorting
   // TODO: Don't look for the first unused number because if a picture is deleted, then the next picture to be taken will take its space which is weird
   // Instead store a increasing index or rename all the picture ofter the deleted one so that there is no gap in the numbering
-  String _getFirstUnusedName(Directory dir) =>
-      List.generate(20, (index) => path.join(dir.path, '$index.jpg')).firstWhere((path) => !File(path).existsSync());
+  String _getFirstUnusedName(Directory dir) => List.generate(20, (index) {
+        // Add padding so that numerical and lexical sorting have the same output
+        final paddedNumber = index.toString().padLeft(5, '0');
+        return path.join(dir.path, '$paddedNumber.jpg');
+      }).firstWhere((path) => !File(path).existsSync());
 
   Future<void> onCaptureOrientationLockButtonPressed() async {
     try {
