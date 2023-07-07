@@ -6,6 +6,7 @@
 * [ ] BundleSelection: BundleList fail to refresh after autoMetadata download
 * [ ] BundleSelection: BUG: BundleList show autoMetadata from other bundle when some bundle are deleted
 * [ ] BundleSelection: Keep scroll position when deleting a bundle
+* [ ] BundleSelection: Add an Undo button in the Snackbar when deleting a bundle
 * [ ] ISBNDecoding: Better layout for phone
 * [ ] ISBNDecoding: Delete an image
 * [ ] MetadataCollecting: Disable 'Validate Metadatas' button if price field is empty
