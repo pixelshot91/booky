@@ -43,6 +43,7 @@ class _BundleSelectionState extends State<BundleSelection> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: const PageStorageKey('Scaffold'),
       appBar: AppBar(
         title: const Text('Bundle Section'),
         actions: [
@@ -233,7 +234,11 @@ class _BundleSelectionState extends State<BundleSelection> {
             childAspectRatio: 2,
             children: bundles
                 .map((bundle) => GestureDetector(
-                      child: BundleWidget(bundle, refreshParent: () => setState(() {})),
+                      child: BundleWidget(
+                        key: const PageStorageKey('BundleWidget'),
+                        bundle,
+                        refreshParent: () => setState(() {}),
+                      ),
                       onTap: () {
                         Navigator.push(
                             context,
@@ -280,7 +285,7 @@ class ProgressIndicator extends StatelessWidget {
 }
 
 class BundleWidget extends StatefulWidget {
-  const BundleWidget(this.bundle, {required this.refreshParent});
+  const BundleWidget(this.bundle, {required this.refreshParent, super.key});
 
   final Bundle bundle;
   final void Function() refreshParent;

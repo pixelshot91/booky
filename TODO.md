@@ -5,7 +5,6 @@
 * [ ] Camera: Fix flashlight turning on and never off again
 * [ ] BundleSelection: BundleList fail to refresh after autoMetadata download
 * [ ] BundleSelection: BUG: BundleList show autoMetadata from other bundle when some bundle are deleted
-* [ ] BundleSelection: Keep scroll position when deleting a bundle
 * [ ] BundleSelection: Add an Undo button in the Snackbar when deleting a bundle
 * [ ] ISBNDecoding: Better layout for phone
 * [ ] ISBNDecoding: Delete an image
@@ -16,6 +15,7 @@
 
 # DONE
 
+* [x] BundleSelection: Keep scroll position when deleting a bundle
 * [x] Camera: Fix bug where new image does not take the last place. Rename all the picture ofter the deleted one so that there is no gap in the numbering
 * [x] Camera: Add padding in name so that lexical sorting correspond to numerical sorting
 * [x] Camera: Always show bottom buttons
