@@ -400,7 +400,7 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
 
       if (mounted) {
         await getBundleDir.create();
-        file.saveTo(_getFirstUnusedName(getBundleDir));
+        file.saveTo(await _getFirstUnusedName(getBundleDir));
       }
 
       final inputImage = InputImage.fromFilePath(file.path);
@@ -417,13 +417,10 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
     });
   }
 
-  // TODO: Don't look for the first unused number because if a picture is deleted, then the next picture to be taken will take its space which is weird
-  // Instead store a increasing index or rename all the picture ofter the deleted one so that there is no gap in the numbering
-  String _getFirstUnusedName(Directory dir) => List.generate(20, (index) {
-        // Add padding so that numerical and lexical sorting have the same output
-        final paddedNumber = index.toString().padLeft(5, '0');
-        return path.join(dir.path, '$paddedNumber.jpg');
-      }).firstWhere((path) => !File(path).existsSync());
+  Future<String> _getFirstUnusedName(Directory dir) async {
+    final numberOfImages = (await getBundle.images).length;
+    return _numberToImgPath(getBundleDir, numberOfImages);
+  }
 
   Future<void> onCaptureOrientationLockButtonPressed() async {
     try {
@@ -473,6 +470,12 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
       .where((entry) => entry.key.startsWith(common.isbnPrefix) && entry.value is SureDetection)
       .map((e) => e.key)
       .toList();
+}
+
+String _numberToImgPath(Directory bundlePath, int index) {
+  // Add padding so that numerical and lexical sorting have the same output
+  final paddedNumber = index.toString().padLeft(5, '0');
+  return path.join(bundlePath.path, '$paddedNumber.jpg');
 }
 
 class BottomWidget extends StatefulWidget {
@@ -555,13 +558,30 @@ class _BottomWidgetState extends State<BottomWidget> {
                       // Use a key otherwise if we delete an image, the image that will take its place will inherit the state of the deleted image
                       key: ValueKey(imgFile.path),
                       child: Image.file(File(imgFile.path)),
-                      onVerticalDrag: () => setState(() {
-                            imgFile.deleteSync();
-                          })),
+                      onVerticalDrag: () async {
+                        final deletedImageNumber = _pathToNumber(imgFile.path);
+                        await imgFile.delete();
+                        final images = await widget.bundle.images;
+                        for (final img in images) {
+                          final imgNumber = _pathToNumber(img.path);
+                          if (imgNumber > deletedImageNumber) {
+                            final newPath = _numberToImgPath(Directory(path.dirname(img.path)), imgNumber - 1);
+                            final renamedImage = await img.safeRename(newPath);
+                            // Clear the cache of the source and destination images
+                            FileImage(img).evict();
+                            FileImage(renamedImage).evict();
+                          }
+                        }
+                        setState(() {});
+                      }),
                 ))
             .toList(),
       ),
     );
+  }
+
+  int _pathToNumber(String fullPath) {
+    return int.parse(path.basenameWithoutExtension(fullPath));
   }
 
   Widget _addMetadataButton(

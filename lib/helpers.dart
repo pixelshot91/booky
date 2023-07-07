@@ -92,6 +92,16 @@ class AsyncSnapshotWidget<T> extends StatelessWidget {
   }
 }
 
+extension FileExt on File {
+  // Same as File.rename but check that the destination file does not exist to prevent overwriting it
+  Future<File> safeRename(String newPath) async {
+    if (await File(newPath).exists()) {
+      throw FileSystemException("File '$newPath' already exist. Cannot rename source file '$path'");
+    }
+    return await rename(newPath);
+  }
+}
+
 extension AuthorExt on Author {
   String toText() => [firstName, lastName].where((s) => s.isNotEmpty).join(' ');
 }

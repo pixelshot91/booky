@@ -1,7 +1,6 @@
 # TODO
 
 * [ ] Camera: Add slider to change picture ratio
-* [ ] Camera: Don't take first unused number
 * [ ] Camera: Fix pictures flickering or being shortly replaced by a spinner each time a picture is taken
 * [ ] Camera: Fix flashlight turning on and never off again
 * [ ] BundleSelection: BundleList fail to refresh after autoMetadata download
@@ -16,6 +15,7 @@
 
 # DONE
 
+* [x] Camera: Fix bug where new image does not take the last place. Rename all the picture ofter the deleted one so that there is no gap in the numbering
 * [x] Camera: Add padding in name so that lexical sorting correspond to numerical sorting
 * [x] Camera: Always show bottom buttons
 * [x] Camera: Play another sound when an ISBN is detected
