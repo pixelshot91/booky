@@ -412,14 +412,24 @@ class _BundleWidgetState extends State<BundleWidget> {
                         ),
                         IconButton(
                           icon: const Icon(Icons.delete),
-                          onPressed: () {
-                            final segments = path.split(widget.bundle.directory.path);
+                          onPressed: () async {
+                            final initialDirectoryLocation = widget.bundle.directory;
+                            final segments = path.split(initialDirectoryLocation.path);
                             segments[segments.length - 2] = 'booky_deleted';
-                            widget.bundle.directory.renameSync(path.joinAll(segments));
-                            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                              content: Text('Deleted'),
-                            ));
-                            widget.refreshParent();
+                            final finalDirectoryLocation =
+                                await initialDirectoryLocation.rename(path.joinAll(segments));
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                                content: const Text('Deleted'),
+                                action: SnackBarAction(
+                                    label: 'Undo',
+                                    onPressed: () async {
+                                      await finalDirectoryLocation.rename(initialDirectoryLocation.path);
+                                      widget.refreshParent();
+                                    }),
+                              ));
+                              widget.refreshParent();
+                            }
                           },
                         ),
                       ],
