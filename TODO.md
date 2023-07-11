@@ -1,6 +1,6 @@
 # TODO
 
-* [ ] Camera: Add slider to change picture ratio
+* [ ] Camera: LiveDetection: show confirmed barcode and pending barcodes in different color. Show a progressBar for the pending barcode
 * [ ] Camera: Fix pictures flickering or being shortly replaced by a spinner each time a picture is taken
 * [ ] Camera: Fix flashlight turning on and never off again
 * [ ] BundleSelection: BundleList fail to refresh after autoMetadata download
@@ -14,6 +14,7 @@
 
 # DONE
 
+* [x] Camera: Add slider to change picture ratio
 * [x] BundleSelection: Add an Undo button in the Snackbar when deleting a bundle
 * [x] BundleSelection: Keep scroll position when deleting a bundle
 * [x] Camera: Fix bug where new image does not take the last place. Rename all the picture ofter the deleted one so that there is no gap in the numbering

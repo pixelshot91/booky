@@ -6,7 +6,9 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_rust_bridge_template/image_helper.dart';
 import 'package:google_mlkit_barcode_scanning/google_mlkit_barcode_scanning.dart';
+import 'package:image/image.dart' as img;
 import 'package:path/path.dart' as path;
 import 'package:permission_handler/permission_handler.dart';
 
@@ -41,6 +43,13 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
 
   // Used to signal when the imageProcessing pipeline finish processing the current frame
   Completer<void>? imageProcessingCompleter;
+
+  // 0 means no crop
+  // toward 1 the image become thinner in width
+  // toward -1 the image become shorter in height
+  double _cropValue = 0;
+  // Prevent from cropping more than 80% of the image
+  static const double maxCropRatio = 0.8;
 
   Directory get getBundleDir => Directory(path.join(common.bookyDir.path, bundleName));
   Bundle get getBundle => Bundle(getBundleDir);
@@ -212,26 +221,93 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
       );
     } else {
       return Center(
-        child: CameraPreview(
-          controller!,
-          child: LayoutBuilder(
-            builder: (context, boxConstraints) => GestureDetector(
-              onTapDown: (TapDownDetails details) async {
-                _onViewFinderTap(details, boxConstraints);
-                // The auto focus is not instantaneous. We must wait a little while before taking the picture
-                // In release mode, if we
-                // wait 100 ms : blurry
-                // wait 300 ms : sharp
-                // The optimum delay shall lie between the bounds
-                await Future<void>.delayed(const Duration(milliseconds: 300));
-                _onTakePictureButtonPressed();
-              },
-              child: _customPaint,
+        child: Column(
+          children: [
+            Expanded(
+              child: CameraPreview(
+                cameraController,
+                child: LayoutBuilder(
+                  builder: (context, boxConstraints) => GestureDetector(
+                    onTapDown: (TapDownDetails details) async {
+                      print('TapDownDetails');
+                      _onViewFinderTap(details, boxConstraints);
+                      // The auto focus is not instantaneous. We must wait a little while before taking the picture
+                      // In release mode, if we
+                      // wait 100 ms : blurry
+                      // wait 300 ms : sharp
+                      // The optimum delay shall lie between the bounds
+                      await Future<void>.delayed(const Duration(milliseconds: 300));
+                      _onTakePictureButtonPressed();
+                    },
+                    child: AbsorbPointer(
+                      child: Stack(
+                        fit: StackFit.passthrough,
+                        children: [
+                          _viewFinderCropIndicator(),
+                          if (_customPaint != null) _customPaint!,
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
             ),
-          ),
+            Row(
+              children: [
+                Expanded(
+                  child: SliderTheme(
+                    data: SliderThemeData(
+                        trackShape: const CenteredTrackShape(),
+                        thumbColor: _cropValue == 0 ? Colors.blue.shade200 : Colors.blue),
+                    child: Slider(
+                        min: -maxCropRatio,
+                        max: maxCropRatio,
+                        value: _cropValue,
+                        onChanged: (newValue) => setState(() => _cropValue = newValue)),
+                  ),
+                ),
+                IconButton(
+                    tooltip: 'Use full frame',
+                    onPressed: _cropValue == 0 ? null : () => setState(() => _cropValue = 0),
+                    icon: const Icon(Icons.undo)),
+              ],
+            ),
+          ],
         ),
       );
     }
+  }
+
+  // <-- croppedFraction / 2 --> | <-- AOI (Area of Interest) --> | <-- croppedFraction / 2 -->
+  Widget _viewFinderCropIndicator() {
+    // flex factor is an int, so multiply all flex value by this amount to emulate double
+    const intToDouble = 1000;
+
+    final disabledColor = Colors.grey.withOpacity(0.6);
+    final croppedFraction = _cropValue.abs();
+    // ignore: non_constant_identifier_names
+    final AOIFraction = (1 - croppedFraction);
+
+    final croppedFlex = croppedFraction * intToDouble;
+    // ignore: non_constant_identifier_names
+    final AOIFlex = (AOIFraction * intToDouble).toInt();
+    return Flex(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      direction: _cropValue > 0 ? Axis.horizontal : Axis.vertical,
+      children: [
+        Expanded(
+            flex: croppedFlex ~/ 2,
+            child: ColoredBox(
+              color: disabledColor,
+            )),
+        Expanded(flex: AOIFlex, child: const SizedBox.shrink()),
+        Expanded(
+            flex: croppedFlex ~/ 2,
+            child: ColoredBox(
+              color: disabledColor,
+            )),
+      ],
+    );
   }
 
   void showInSnackBar(String message) {
@@ -264,7 +340,6 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
       controller = null;
       await oldController.dispose();
     }
-
     final CameraController cameraController = CameraController(
       cameraDescription,
       ResolutionPreset.max,
@@ -398,9 +473,17 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
 
       AudioPlayer().play(AssetSource('sounds/take_picture.mp3'), mode: PlayerMode.lowLatency);
 
-      if (mounted) {
-        await getBundleDir.create();
-        file.saveTo(await _getFirstUnusedName(getBundleDir));
+      await getBundleDir.create();
+      final firstUnusedImagePath = await _getFirstUnusedName(getBundleDir);
+
+      if (_cropValue != 0) {
+        final croppedImage = await crop(file, _cropValue);
+        final res = await img.encodeJpgFile(firstUnusedImagePath, croppedImage);
+        if (!res) {
+          print('error while saving cropped image');
+        }
+      } else {
+        file.saveTo(firstUnusedImagePath);
       }
 
       final inputImage = InputImage.fromFilePath(file.path);
@@ -470,6 +553,72 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
       .where((entry) => entry.key.startsWith(common.isbnPrefix) && entry.value is SureDetection)
       .map((e) => e.key)
       .toList();
+}
+
+class CenteredTrackShape extends RoundedRectSliderTrackShape {
+  const CenteredTrackShape();
+
+  @override
+  void paint(
+    PaintingContext context,
+    Offset offset, {
+    required RenderBox parentBox,
+    required SliderThemeData sliderTheme,
+    required Animation<double> enableAnimation,
+    required TextDirection textDirection,
+    required Offset thumbCenter,
+    Offset? secondaryOffset,
+    bool isDiscrete = false,
+    bool isEnabled = false,
+    double additionalActiveTrackHeight = 2,
+  }) {
+    assert(sliderTheme.disabledActiveTrackColor != null);
+    assert(sliderTheme.disabledInactiveTrackColor != null);
+    assert(sliderTheme.activeTrackColor != null);
+    assert(sliderTheme.inactiveTrackColor != null);
+    assert(sliderTheme.thumbShape != null);
+    // If the slider [SliderThemeData.trackHeight] is less than or equal to 0,
+    // then it makes no difference whether the track is painted or not,
+    // therefore the painting can be a no-op.
+    if (sliderTheme.trackHeight == null || sliderTheme.trackHeight! <= 0) {
+      return;
+    }
+
+    // Assign the track segment paints, which are leading: active and
+    // trailing: inactive.
+    final ColorTween activeTrackColorTween =
+        ColorTween(begin: sliderTheme.disabledActiveTrackColor, end: sliderTheme.activeTrackColor);
+    final ColorTween inactiveTrackColorTween =
+        ColorTween(begin: sliderTheme.disabledInactiveTrackColor, end: sliderTheme.inactiveTrackColor);
+    final Paint activePaint = Paint()..color = activeTrackColorTween.evaluate(enableAnimation)!;
+    final Paint inactivePaint = Paint()..color = inactiveTrackColorTween.evaluate(enableAnimation)!;
+
+    final Rect trackRect = getPreferredRect(
+      parentBox: parentBox,
+      offset: offset,
+      sliderTheme: sliderTheme,
+      isEnabled: isEnabled,
+      isDiscrete: isDiscrete,
+    );
+    final Radius trackRadius = Radius.circular(trackRect.height / 2);
+    final Radius activeTrackRadius = Radius.circular((trackRect.height + additionalActiveTrackHeight) / 2);
+
+    context.canvas.drawRRect(
+      RRect.fromRectAndRadius(trackRect, activeTrackRadius),
+      inactivePaint,
+    );
+    context.canvas.drawRRect(
+      RRect.fromLTRBAndCorners(
+        trackRect.center.dx,
+        trackRect.top,
+        thumbCenter.dx,
+        trackRect.bottom,
+        topRight: trackRadius,
+        bottomRight: trackRadius,
+      ),
+      activePaint,
+    );
+  }
 }
 
 String _numberToImgPath(Directory bundlePath, int index) {

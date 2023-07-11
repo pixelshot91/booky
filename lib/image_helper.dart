@@ -1,7 +1,31 @@
 /// From https://github.com/brendan-duncan/image/blob/main/doc/flutter.md
 import 'dart:ui' as ui;
 
+import 'package:camera/camera.dart';
 import 'package:image/image.dart' as img;
+
+Future<img.Image> crop(XFile sourceImage, double cropValue) async {
+  final img.Image image = (await img.decodeJpgFile(sourceImage.path))!;
+
+  final croppedFraction = cropValue.abs();
+
+  // ignore: non_constant_identifier_names
+  final AOIFraction = (1 - croppedFraction);
+
+  if (cropValue > 0) {
+    return img.copyCrop(image,
+        x: (croppedFraction / 2 * image.width).toInt(),
+        y: 0,
+        width: (AOIFraction * image.width).toInt(),
+        height: image.height);
+  } else {
+    return img.copyCrop(image,
+        x: 0,
+        y: (croppedFraction / 2 * image.height).toInt(),
+        width: image.width,
+        height: (AOIFraction * image.height).toInt());
+  }
+}
 
 Future<ui.Image> convertImageToFlutterUi(img.Image image) async {
   if (image.format != img.Format.uint8 || image.numChannels != 4) {
