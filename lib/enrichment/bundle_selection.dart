@@ -7,6 +7,8 @@ import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge.dart';
 import 'package:flutter_rust_bridge_template/camera/camera.dart';
 import 'package:flutter_rust_bridge_template/enrichment/isbn_decoding.dart';
+import 'package:flutter_scroll_shadow/flutter_scroll_shadow.dart';
+import 'package:intersperse/intersperse.dart';
 import 'package:kt_dart/kt.dart';
 import 'package:path/path.dart' as path;
 import 'package:stream_transform/stream_transform.dart';
@@ -228,26 +230,29 @@ class _BundleSelectionState extends State<BundleSelection> {
         if (autoMdCollectedBundleNb != null)
           ProgressIndicator('Collecting autoMetadata', total: bundleNb, itemDone: autoMdCollectedBundleNb),
         Expanded(
-          child: GridView.extent(
-            padding: const EdgeInsets.only(bottom: 2 * kFloatingActionButtonMargin + 48),
-            maxCrossAxisExtent: 500,
-            childAspectRatio: 2,
-            children: bundles
-                .map((bundle) => GestureDetector(
-                      child: BundleWidget(
-                        key: const PageStorageKey('BundleWidget'),
-                        bundle,
-                        refreshParent: () => setState(() {}),
-                      ),
-                      onTap: () {
-                        Navigator.push(
-                            context,
-                            MaterialPageRoute<void>(
-                                builder: (context) =>
-                                    BooksMetadataCollectingWidget(step: MetadataCollectingStep(bundle: bundle))));
-                      },
-                    ))
-                .toList(),
+          child: ScrollShadow(
+            color: defaultScrollShadowColor,
+            child: GridView.extent(
+              padding: const EdgeInsets.only(bottom: 2 * kFloatingActionButtonMargin + 48),
+              maxCrossAxisExtent: 500,
+              childAspectRatio: 2,
+              children: bundles
+                  .map((bundle) => GestureDetector(
+                        child: BundleWidget(
+                          key: const PageStorageKey('BundleWidget'),
+                          bundle,
+                          refreshParent: () => setState(() {}),
+                        ),
+                        onTap: () {
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute<void>(
+                                  builder: (context) =>
+                                      BooksMetadataCollectingWidget(step: MetadataCollectingStep(bundle: bundle))));
+                        },
+                      ))
+                  .toList(),
+            ),
           ),
         ),
       ],
@@ -296,6 +301,7 @@ class BundleWidget extends StatefulWidget {
 
 class _BundleWidgetState extends State<BundleWidget> {
   late Future<KtMutableMap<String, KtMutableMap<ProviderEnum, BookMetaDataFromProvider?>>> cachedAutoMetadata;
+  final imageScrollController = ScrollController();
   @override
   void initState() {
     super.initState();
@@ -350,35 +356,31 @@ class _BundleWidgetState extends State<BundleWidget> {
                   children: [
                     FutureWidget(future: cachedAutoMetadata, builder: (md) => MetadataIcons(md)),
                     Expanded(
-                        child: Stack(children: [
-                      SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: FutureWidget(
-                            future: widget.bundle.compressedImages,
-                            builder: (images) => Row(
-                                children: images
-                                    .map((f) => Padding(padding: const EdgeInsets.all(8.0), child: ImageWidget(f)))
-                                    .toList())),
+                        child: ScrollShadow(
+                      scrollDirection: Axis.horizontal,
+                      controller: imageScrollController,
+                      color: defaultScrollShadowColor,
+                      child: ScrollbarTheme(
+                        data: ScrollbarThemeData(
+                          thumbColor: MaterialStatePropertyAll(Theme.of(context).primaryColor),
+                        ),
+                        child: Scrollbar(
+                          controller: imageScrollController,
+                          thumbVisibility: true,
+                          child: SingleChildScrollView(
+                            scrollDirection: Axis.horizontal,
+                            controller: imageScrollController,
+                            child: FutureWidget(
+                                future: widget.bundle.compressedImages,
+                                builder: (images) => Row(
+                                    children: images
+                                        .map<Widget>((f) => ImageWidget(f))
+                                        .intersperse(const SizedBox(width: 8.0))
+                                        .toList())),
+                          ),
+                        ),
                       ),
-                      Positioned(
-                          right: 0,
-                          top: 0,
-                          bottom: 0,
-                          child: Row(
-                            children: [
-                              Container(
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    begin: Alignment.centerLeft,
-                                    end: Alignment.centerRight,
-                                    colors: [Colors.white.withOpacity(0), Colors.white],
-                                  ),
-                                ),
-                                width: 40,
-                              ),
-                            ],
-                          ))
-                    ])),
+                    )),
                     Column(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [

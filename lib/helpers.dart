@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 
 import 'bridge_definitions.dart';
 
+final defaultScrollShadowColor = Colors.black.withOpacity(0.3);
+
 class LBCRadioButton extends StatelessWidget {
   const LBCRadioButton(this.text);
   final String text;

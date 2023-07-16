@@ -1,5 +1,6 @@
 # TODO
 
+* [ ] Fix ScrollShadow only showing after first scrolling
 * [ ] Camera: LiveDetection: show confirmed barcode and pending barcodes in different color. Show a progressBar for the pending barcode
 * [ ] Camera: Fix pictures flickering or being shortly replaced by a spinner each time a picture is taken
 * [ ] Camera: Fix flashlight turning on and never off again
@@ -14,6 +15,7 @@
 
 # DONE
 
+* [x] Use a scroll indicator to show that more content is available by scrolling
 * [x] Camera: Add slider to change picture ratio
 * [x] BundleSelection: Add an Undo button in the Snackbar when deleting a bundle
 * [x] BundleSelection: Keep scroll position when deleting a bundle
