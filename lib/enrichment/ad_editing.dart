@@ -37,13 +37,13 @@ String _bookFormat(BookMetaDataManual book, {bool withISBN = false}) {
 }
 
 class _AdEditingWidgetState extends State<AdEditingWidget> {
-  late Ad ad;
+  late Future<Ad> ad;
 
   @override
   void initState() {
     super.initState();
 
-    Future(() async {
+    ad = Future(() async {
       final metadataFromIsbn = widget.step.metadata;
 
       var title = '';
@@ -73,7 +73,7 @@ class _AdEditingWidgetState extends State<AdEditingWidget> {
 
       const minimumSellingPrice = 100;
       totalPriceExcludingShipping = max(totalPriceExcludingShipping, minimumSellingPrice);
-      ad = Ad(
+      return Ad(
           title: title,
           description: description,
           priceCent: totalPriceExcludingShipping,
@@ -123,76 +123,79 @@ class _AdEditingWidgetState extends State<AdEditingWidget> {
 
     return Scaffold(
       appBar: AppBar(title: const Text('Ad editing')),
-      body: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              CopyableTextField(TextFormField(
-                controller: TextEditingController(text: ad.title),
-                decoration: const InputDecoration(
-                  icon: Icon(Icons.title),
-                  labelText: 'Ad title',
+      body: FutureWidget(
+        future: ad,
+        builder: (ad) => Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                CopyableTextField(TextFormField(
+                  controller: TextEditingController(text: ad.title),
+                  decoration: const InputDecoration(
+                    icon: Icon(Icons.title),
+                    labelText: 'Ad title',
+                  ),
+                  style: const TextStyle(fontSize: 30),
+                )),
+                _nonCopyableField(Icons.diamond, SizedBox(width: 300, child: _LBCStyledState(metadata.itemState!))),
+                CopyableTextField(TextFormField(
+                  controller: TextEditingController(text: ad.description),
+                  maxLines: null,
+                  scrollPhysics: const NeverScrollableScrollPhysics(),
+                  decoration: const InputDecoration(
+                    icon: Icon(Icons.text_snippet),
+                    labelText: 'Ad description',
+                  ),
+                )),
+                CopyableTextField(TextFormField(
+                  controller: TextEditingController(text: ad.priceCent.divide(100).toString()),
+                  decoration: const InputDecoration(
+                    icon: Icon(Icons.euro),
+                    labelText: 'Price (without shipping cost)',
+                  ),
+                  style: const TextStyle(fontSize: 20),
+                )),
+                _nonCopyableField(
+                  Icons.scale,
+                  SizedBox(width: 300, child: _LBCStyledWeight(ad.weightGrams)),
                 ),
-                style: const TextStyle(fontSize: 30),
-              )),
-              _nonCopyableField(Icons.diamond, SizedBox(width: 300, child: _LBCStyledState(metadata.itemState!))),
-              CopyableTextField(TextFormField(
-                controller: TextEditingController(text: ad.description),
-                maxLines: null,
-                scrollPhysics: const NeverScrollableScrollPhysics(),
-                decoration: const InputDecoration(
-                  icon: Icon(Icons.text_snippet),
-                  labelText: 'Ad description',
-                ),
-              )),
-              CopyableTextField(TextFormField(
-                controller: TextEditingController(text: ad.priceCent.divide(100).toString()),
-                decoration: const InputDecoration(
-                  icon: Icon(Icons.euro),
-                  labelText: 'Price (without shipping cost)',
-                ),
-                style: const TextStyle(fontSize: 20),
-              )),
-              _nonCopyableField(
-                Icons.scale,
-                SizedBox(width: 300, child: _LBCStyledWeight(ad.weightGrams)),
-              ),
-              _nonCopyableField(
-                  Icons.collections,
-                  DraggableFilesWidget(
-                    uris: ad.imgsPath.map((path) => Uri.file(path)),
-                    child: Column(
-                      children: [
-                        Row(
-                          children:
-                              ad.imgsPath.map((img) => SizedBox(height: 200, child: ImageWidget(File(img)))).toList(),
-                        ),
-                        const Text('Drag and drop images')
-                      ],
-                    ),
-                  )),
-              Center(
-                child: ElevatedButton(
-                    onPressed: () {
-                      final d = widget.step.bundle.directory;
-                      final segments = path.split(d.path);
-                      segments[segments.length - 2] = 'booky_done';
-                      d.renameSync(path.joinAll(segments));
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                        content: Text('Moved'),
-                      ));
-                      Navigator.push(context, MaterialPageRoute<void>(builder: (context) => const BundleSelection()));
-                    },
-                    child: const Text('Mark as published')),
-              )
-            ]
-                .map((e) => Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 4.0),
-                      child: e,
-                    ))
-                .toList(),
+                _nonCopyableField(
+                    Icons.collections,
+                    DraggableFilesWidget(
+                      uris: ad.imgsPath.map((path) => Uri.file(path)),
+                      child: Column(
+                        children: [
+                          Row(
+                            children:
+                                ad.imgsPath.map((img) => SizedBox(height: 200, child: ImageWidget(File(img)))).toList(),
+                          ),
+                          const Text('Drag and drop images')
+                        ],
+                      ),
+                    )),
+                Center(
+                  child: ElevatedButton(
+                      onPressed: () {
+                        final d = widget.step.bundle.directory;
+                        final segments = path.split(d.path);
+                        segments[segments.length - 2] = 'booky_done';
+                        d.renameSync(path.joinAll(segments));
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                          content: Text('Moved'),
+                        ));
+                        Navigator.push(context, MaterialPageRoute<void>(builder: (context) => const BundleSelection()));
+                      },
+                      child: const Text('Mark as published')),
+                )
+              ]
+                  .map((e) => Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 4.0),
+                        child: e,
+                      ))
+                  .toList(),
+            ),
           ),
         ),
       ),
