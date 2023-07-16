@@ -100,3 +100,6 @@ Follow the instruction of flutter_rust_bridge_template. Here is an extract
 
 #### super_native_extension
 Follow this tutorial: https://pub.dev/packages/super_clipboard
+
+# License
+[Icon by Freepik](https://www.freepik.com/icon/books_562132)
