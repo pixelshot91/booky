@@ -1,5 +1,5 @@
+import 'package:booky/enrichment/bundle_selection.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_rust_bridge_template/enrichment/bundle_selection.dart';
 
 void main() {
   runApp(const BookyApp());

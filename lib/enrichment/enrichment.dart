@@ -1,4 +1,4 @@
-import 'package:flutter_rust_bridge_template/helpers.dart';
+import 'package:booky/helpers.dart';
 
 import '../bundle.dart';
 

@@ -1,5 +1,5 @@
-name: flutter_rust_bridge_template
-description: A new Flutter project.
+name: booky
+description: Booky is an application to help publish second-hand book
 
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 

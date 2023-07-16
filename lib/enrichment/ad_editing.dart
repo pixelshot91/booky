@@ -1,10 +1,10 @@
 import 'dart:io';
 import 'dart:math';
 
+import 'package:booky/common.dart';
+import 'package:booky/personal_info.dart' as personal_info;
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_rust_bridge_template/common.dart';
-import 'package:flutter_rust_bridge_template/personal_info.dart' as personal_info;
 import 'package:kt_dart/kt.dart';
 import 'package:path/path.dart' as path;
 

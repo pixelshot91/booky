@@ -1,9 +1,9 @@
+import 'package:booky/bundle.dart';
+import 'package:booky/enrichment/ad_editing.dart';
+import 'package:booky/helpers.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_rust_bridge_template/bundle.dart';
-import 'package:flutter_rust_bridge_template/enrichment/ad_editing.dart';
-import 'package:flutter_rust_bridge_template/helpers.dart';
 import 'package:kt_dart/kt.dart';
 
 import '../ffi.dart' if (dart.library.html) 'ffi_web.dart';
