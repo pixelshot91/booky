@@ -1,6 +1,7 @@
 import 'package:booky/bundle.dart';
 import 'package:booky/enrichment/ad_editing.dart';
 import 'package:booky/helpers.dart';
+import 'package:booky/widgets/scrollable_bundle_images.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -54,46 +55,58 @@ class _BooksMetadataCollectingWidgetState extends State<BooksMetadataCollectingW
         ),
         body: controllers.ifIs(
             nul: () => const CircularProgressIndicator(),
-            notnull: (controllers) => SingleChildScrollView(
-                  child: Column(
-                    children: [
-                      ...controllers.entries
-                          .map((entry) => _BookMetadataCollectingWidget(
-                                isbn: entry.key,
-                                metadatas: entry.value,
-                              ))
-                          .toList(),
-                      Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: ElevatedButton(
-                            onPressed: () {
-                              Navigator.push(
-                                  context,
-                                  MaterialPageRoute<void>(
-                                      builder: (context) => AdEditingWidget(
-                                          step: AdEditingStep(
-                                              bundle: widget.step.bundle,
-                                              metadata: controllers.entries.map((entry) {
-                                                final bookControllerSet = entry.value.bookControllerSet;
-                                                return BookMetaDataManual(
-                                                  isbn: entry.key,
-                                                  title: bookControllerSet.titleTextFieldController.text,
-                                                  authors: _stringToAuthors(
-                                                      bookControllerSet.authorsTextFieldController.text),
-                                                  blurb: bookControllerSet.blurbTextFieldController.text,
-                                                  keywords: _stringToKeywords(
-                                                      bookControllerSet.keywordsTextFieldController.text),
-                                                  priceCent:
-                                                      double.parse(bookControllerSet.priceTextFieldController.text)
-                                                          .multiply(100)
-                                                          .round(),
-                                                );
-                                              })))));
-                            },
-                            child: const Text('Validate Metadatas')),
-                      )
-                    ],
-                  ),
+            notnull: (controllers) => Row(
+                  children: [
+                    Card(
+                      child: SizedBox(
+                        width: 100,
+                        child: ScrollableBundleImages(widget.step.bundle, Axis.vertical),
+                      ),
+                    ),
+                    Expanded(
+                      child: SingleChildScrollView(
+                        child: Column(
+                          children: [
+                            ...controllers.entries
+                                .map((entry) => _BookMetadataCollectingWidget(
+                                      isbn: entry.key,
+                                      metadatas: entry.value,
+                                    ))
+                                .toList(),
+                            Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: ElevatedButton(
+                                  onPressed: () {
+                                    Navigator.push(
+                                        context,
+                                        MaterialPageRoute<void>(
+                                            builder: (context) => AdEditingWidget(
+                                                step: AdEditingStep(
+                                                    bundle: widget.step.bundle,
+                                                    metadata: controllers.entries.map((entry) {
+                                                      final bookControllerSet = entry.value.bookControllerSet;
+                                                      return BookMetaDataManual(
+                                                        isbn: entry.key,
+                                                        title: bookControllerSet.titleTextFieldController.text,
+                                                        authors: _stringToAuthors(
+                                                            bookControllerSet.authorsTextFieldController.text),
+                                                        blurb: bookControllerSet.blurbTextFieldController.text,
+                                                        keywords: _stringToKeywords(
+                                                            bookControllerSet.keywordsTextFieldController.text),
+                                                        priceCent: double.parse(
+                                                                bookControllerSet.priceTextFieldController.text)
+                                                            .multiply(100)
+                                                            .round(),
+                                                      );
+                                                    })))));
+                                  },
+                                  child: const Text('Validate Metadatas')),
+                            )
+                          ],
+                        ),
+                      ),
+                    )
+                  ],
                 )));
   }
 }

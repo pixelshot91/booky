@@ -1,9 +1,11 @@
 # TODO
 
 * [ ] Fix ScrollShadow only showing after first scrolling
+* [ ] Better handle nonexistent or incorrect metadata file instead of throwing an exception
 * [ ] Camera: LiveDetection: show confirmed barcode and pending barcodes in different color. Show a progressBar for the pending barcode
 * [ ] Camera: Fix pictures flickering or being shortly replaced by a spinner each time a picture is taken
 * [ ] Camera: Fix flashlight turning on and never off again
+* [ ] BundleSelection: Add ability to go back into Camera mode to add/delete picture/ISBN, change the weight/state
 * [ ] BundleSelection: BundleList fail to refresh after autoMetadata download
 * [ ] BundleSelection: BUG: BundleList show autoMetadata from other bundle when some bundle are deleted
 * [ ] ISBNDecoding: Better layout for phone
@@ -15,6 +17,7 @@
 
 # DONE
 
+* [x] MetadataCollecting: Show images on the side with zoom on click
 * [x] Use a scroll indicator to show that more content is available by scrolling
 * [x] Camera: Add slider to change picture ratio
 * [x] BundleSelection: Add an Undo button in the Snackbar when deleting a bundle

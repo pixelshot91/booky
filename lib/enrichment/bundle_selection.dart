@@ -8,7 +8,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge.dart';
 import 'package:flutter_scroll_shadow/flutter_scroll_shadow.dart';
-import 'package:intersperse/intersperse.dart';
 import 'package:kt_dart/kt.dart';
 import 'package:path/path.dart' as path;
 import 'package:stream_transform/stream_transform.dart';
@@ -17,6 +16,7 @@ import '../bundle.dart';
 import '../common.dart' as common;
 import '../ffi.dart';
 import '../helpers.dart';
+import '../widgets/scrollable_bundle_images.dart';
 import 'enrichment.dart';
 import 'metadata_collecting.dart';
 
@@ -301,7 +301,6 @@ class BundleWidget extends StatefulWidget {
 
 class _BundleWidgetState extends State<BundleWidget> {
   late Future<KtMutableMap<String, KtMutableMap<ProviderEnum, BookMetaDataFromProvider?>>> cachedAutoMetadata;
-  final imageScrollController = ScrollController();
   @override
   void initState() {
     super.initState();
@@ -355,32 +354,7 @@ class _BundleWidgetState extends State<BundleWidget> {
                 child: Row(
                   children: [
                     FutureWidget(future: cachedAutoMetadata, builder: (md) => MetadataIcons(md)),
-                    Expanded(
-                        child: ScrollShadow(
-                      scrollDirection: Axis.horizontal,
-                      controller: imageScrollController,
-                      color: defaultScrollShadowColor,
-                      child: ScrollbarTheme(
-                        data: ScrollbarThemeData(
-                          thumbColor: MaterialStatePropertyAll(Theme.of(context).primaryColor),
-                        ),
-                        child: Scrollbar(
-                          controller: imageScrollController,
-                          thumbVisibility: true,
-                          child: SingleChildScrollView(
-                            scrollDirection: Axis.horizontal,
-                            controller: imageScrollController,
-                            child: FutureWidget(
-                                future: widget.bundle.compressedImages,
-                                builder: (images) => Row(
-                                    children: images
-                                        .map<Widget>((f) => ImageWidget(f))
-                                        .intersperse(const SizedBox(width: 8.0))
-                                        .toList())),
-                          ),
-                        ),
-                      ),
-                    )),
+                    Expanded(child: ScrollableBundleImages(widget.bundle, Axis.horizontal)),
                     Column(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
