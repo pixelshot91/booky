@@ -20,6 +20,18 @@ import '../widgets/scrollable_bundle_images.dart';
 import 'enrichment.dart';
 import 'metadata_collecting.dart';
 
+PopupMenuItem<void> _popUpMenuIconText(
+        {required IconData icon, required String label, required void Function() onPressed}) =>
+    PopupMenuItem<void>(
+        onTap: onPressed,
+        child: Row(
+          children: [
+            Icon(icon),
+            const SizedBox(width: 20),
+            Text(label),
+          ],
+        ));
+
 class BundleSelection extends StatefulWidget {
   const BundleSelection();
 
@@ -355,61 +367,7 @@ class _BundleWidgetState extends State<BundleWidget> {
                   children: [
                     FutureWidget(future: cachedAutoMetadata, builder: (md) => MetadataIcons(md)),
                     Expanded(child: ScrollableBundleImages(widget.bundle, Axis.horizontal)),
-                    Column(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        if (Platform.isLinux)
-                          IconButton(
-                              onPressed: () => Process.run('pcmanfm', [widget.bundle.directory.path]),
-                              icon: const Icon(Icons.open_in_new)),
-                        IconButton(
-                          icon: const Icon(Icons.image_search),
-                          onPressed: () {
-                            Navigator.push(
-                                context,
-                                MaterialPageRoute<void>(
-                                    builder: (context) =>
-                                        ISBNDecodingWidget(step: ISBNDecodingStep(bundle: widget.bundle))));
-                          },
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.delete_sweep),
-                          onPressed: () async {
-                            final res = await widget.bundle.removeAutoMetadata();
-                            if (mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                                content: Text(
-                                    res ? 'Automatic Metadata deleted' : 'Error while deleting automatic metadata'),
-                              ));
-                            }
-
-                            widget.refreshParent();
-                          },
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.delete),
-                          onPressed: () async {
-                            final initialDirectoryLocation = widget.bundle.directory;
-                            final segments = path.split(initialDirectoryLocation.path);
-                            segments[segments.length - 2] = 'booky_deleted';
-                            final finalDirectoryLocation =
-                                await initialDirectoryLocation.rename(path.joinAll(segments));
-                            if (mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                                content: const Text('Deleted'),
-                                action: SnackBarAction(
-                                    label: 'Undo',
-                                    onPressed: () async {
-                                      await finalDirectoryLocation.rename(initialDirectoryLocation.path);
-                                      widget.refreshParent();
-                                    }),
-                              ));
-                              widget.refreshParent();
-                            }
-                          },
-                        ),
-                      ],
-                    ),
+                    _ActionButtons(bundle: widget.bundle, refreshParent: widget.refreshParent),
                   ],
                 ),
               ),
@@ -417,6 +375,89 @@ class _BundleWidgetState extends State<BundleWidget> {
           ),
         ),
       );
+}
+
+class _ActionButtons extends StatelessWidget {
+  const _ActionButtons({required this.bundle, required this.refreshParent});
+
+  final Bundle bundle;
+  final void Function() refreshParent;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        PopupMenuButton<void>(
+          onSelected: (_) {
+            print('onSelected');
+          },
+          itemBuilder: (context) => [
+            if (Platform.isLinux)
+              _popUpMenuIconText(
+                icon: Icons.open_in_new,
+                label: 'Open in file explorer',
+                onPressed: () => Process.run('pcmanfm', [bundle.directory.path]),
+              ),
+            _popUpMenuIconText(
+              icon: Icons.image_search,
+              label: 'ISBN decoding',
+              onPressed: () {
+                // Pushing a new route here synchronously does nothing as the PopUpMenuButton called a Navigator.pop immediately after to close the PopUpMenu
+                Future(() => Navigator.push(
+                    context,
+                    MaterialPageRoute<void>(
+                        builder: (context) => ISBNDecodingWidget(step: ISBNDecodingStep(bundle: bundle)))));
+              },
+            ),
+            _popUpMenuIconText(
+              icon: Icons.delete_sweep,
+              label: 'Delete metadata from provider',
+              onPressed: () async {
+                final res = await bundle.removeAutoMetadata();
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: Text(res ? 'Automatic Metadata deleted' : 'Error while deleting automatic metadata'),
+                  ));
+                }
+                refreshParent();
+              },
+            ),
+            _popUpMenuIconText(
+              icon: Icons.delete,
+              label: 'Delete this bundle',
+              onPressed: () async {
+                final initialDirectoryLocation = bundle.directory;
+                final segments = path.split(initialDirectoryLocation.path);
+                segments[segments.length - 2] = 'booky_deleted';
+                final finalDirectoryLocation = await initialDirectoryLocation.rename(path.joinAll(segments));
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: const Text('Deleted'),
+                    action: SnackBarAction(
+                        label: 'Undo',
+                        onPressed: () async {
+                          await finalDirectoryLocation.rename(initialDirectoryLocation.path);
+                          refreshParent();
+                        }),
+                  ));
+                  refreshParent();
+                }
+              },
+            ),
+          ],
+        ),
+        IconButton(
+          onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute<void>(
+                  builder: (context) => BooksMetadataCollectingWidget(step: MetadataCollectingStep(bundle: bundle)))),
+          icon: const Icon(Icons.send),
+          iconSize: 30,
+        ),
+      ],
+    );
+  }
 }
 
 class _NumberOfBookBadge extends StatelessWidget {
