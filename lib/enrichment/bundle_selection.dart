@@ -28,7 +28,7 @@ PopupMenuItem<void> _popUpMenuIconText(
           children: [
             Icon(icon),
             const SizedBox(width: 20),
-            Text(label),
+            Expanded(child: Text(label)),
           ],
         ));
 
