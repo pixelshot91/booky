@@ -44,6 +44,7 @@ class _BundleSelectionState extends State<BundleSelection> {
   int? compressedBundleNb;
   int? autoMdCollectedBundleNb;
 
+  final gridViewController = ScrollController();
   @override
   void initState() {
     super.initState();
@@ -243,8 +244,12 @@ class _BundleSelectionState extends State<BundleSelection> {
           ProgressIndicator('Collecting autoMetadata', total: bundleNb, itemDone: autoMdCollectedBundleNb),
         Expanded(
           child: ScrollShadow(
+            // Controller are theoretically optional on vertically scrolling content, but on Linux without a controller, nothing is shown
+            controller: gridViewController,
             color: defaultScrollShadowColor,
+            size: 30,
             child: GridView.extent(
+              controller: gridViewController,
               padding: const EdgeInsets.only(bottom: 2 * kFloatingActionButtonMargin + 48),
               maxCrossAxisExtent: 500,
               childAspectRatio: 2,
