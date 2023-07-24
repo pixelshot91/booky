@@ -90,7 +90,7 @@ mod tests {
     fn get_book_metadata_from_isbn_9782266162777() {
         let g = GoogleBooks {
             client: Box::new(MockClient {
-                dir: "mock/google_books",
+                dir: "mock/",
             }),
         };
         let md = g.get_book_metadata_from_isbn("9782266162777");
