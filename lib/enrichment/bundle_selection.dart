@@ -76,37 +76,7 @@ class _BundleSelectionState extends State<BundleSelection> {
               if (listBundles == null) {
                 return;
               }
-              setState(() {
-                bundleNb = listBundles.length;
-                autoMdCollectedBundleNb = 0;
-              });
-              listBundles.forEach((bundle) async {
-                if (await bundle.autoMetadataFile.exists()) {
-                  if (mounted) {
-                    setState(() {
-                      autoMdCollectedBundleNb = autoMdCollectedBundleNb! + 1;
-                    });
-                  }
-                  return;
-                }
-                Set<String> isbns = bundle.metadata.isbns?.toSet() ?? {};
-
-                try {
-                  await api.getMetadataFromIsbns(
-                    isbns: isbns.toList(),
-                    path: bundle.autoMetadataFile.path,
-                  );
-                } on FfiException catch (e) {
-                  print(
-                      'FfiException thrown during getMetadataFromIsbns with isbns=${isbns.toList()}, path=${bundle.autoMetadataFile.path}');
-                  print('exception is $e');
-                }
-                if (mounted) {
-                  setState(() {
-                    autoMdCollectedBundleNb = autoMdCollectedBundleNb! + 1;
-                  });
-                }
-              });
+              _downloadMetadataForBundles(listBundles);
             },
           ),
           PopupMenuButton(
@@ -173,6 +143,40 @@ class _BundleSelectionState extends State<BundleSelection> {
         },
       ),
     );
+  }
+
+  void _downloadMetadataForBundles(Iterable<Bundle> bundles) {
+    setState(() {
+      bundleNb = bundles.length;
+      autoMdCollectedBundleNb = 0;
+    });
+    bundles.forEach((bundle) async {
+      if (await bundle.autoMetadataFile.exists()) {
+        if (mounted) {
+          setState(() {
+            autoMdCollectedBundleNb = autoMdCollectedBundleNb! + 1;
+          });
+        }
+        return;
+      }
+      Set<String> isbns = bundle.metadata.isbns?.toSet() ?? {};
+
+      try {
+        await api.getMetadataFromIsbns(
+          isbns: isbns.toList(),
+          path: bundle.autoMetadataFile.path,
+        );
+      } on FfiException catch (e) {
+        print(
+            'FfiException thrown during getMetadataFromIsbns with isbns=${isbns.toList()}, path=${bundle.autoMetadataFile.path}');
+        print('exception is $e');
+      }
+      if (mounted) {
+        setState(() {
+          autoMdCollectedBundleNb = autoMdCollectedBundleNb! + 1;
+        });
+      }
+    });
   }
 
   static Future<Iterable<Bundle>?> _listBundles() async {
@@ -259,6 +263,7 @@ class _BundleSelectionState extends State<BundleSelection> {
                           key: const PageStorageKey('BundleWidget'),
                           bundle,
                           refreshParent: () => setState(() {}),
+                          downloadMetadataForBundles: _downloadMetadataForBundles,
                         ),
                         onTap: () {
                           Navigator.push(
@@ -307,10 +312,11 @@ class ProgressIndicator extends StatelessWidget {
 }
 
 class BundleWidget extends StatefulWidget {
-  const BundleWidget(this.bundle, {required this.refreshParent, super.key});
+  const BundleWidget(this.bundle, {required this.refreshParent, super.key, required this.downloadMetadataForBundles});
 
   final Bundle bundle;
   final void Function() refreshParent;
+  final void Function(Iterable<Bundle> bundles) downloadMetadataForBundles;
 
   @override
   State<BundleWidget> createState() => _BundleWidgetState();
@@ -372,7 +378,10 @@ class _BundleWidgetState extends State<BundleWidget> {
                   children: [
                     FutureWidget(future: cachedAutoMetadata, builder: (md) => MetadataIcons(md)),
                     Expanded(child: ScrollableBundleImages(widget.bundle, Axis.horizontal)),
-                    _ActionButtons(bundle: widget.bundle, refreshParent: widget.refreshParent),
+                    _ActionButtons(
+                        bundle: widget.bundle,
+                        refreshParent: widget.refreshParent,
+                        downloadMetadataForBundles: widget.downloadMetadataForBundles),
                   ],
                 ),
               ),
@@ -383,10 +392,11 @@ class _BundleWidgetState extends State<BundleWidget> {
 }
 
 class _ActionButtons extends StatelessWidget {
-  const _ActionButtons({required this.bundle, required this.refreshParent});
+  const _ActionButtons({required this.bundle, required this.refreshParent, required this.downloadMetadataForBundles});
 
   final Bundle bundle;
   final void Function() refreshParent;
+  final void Function(Iterable<Bundle> bundles) downloadMetadataForBundles;
 
   @override
   Widget build(BuildContext context) {
@@ -413,6 +423,13 @@ class _ActionButtons extends StatelessWidget {
                     context,
                     MaterialPageRoute<void>(
                         builder: (context) => ISBNDecodingWidget(step: ISBNDecodingStep(bundle: bundle)))));
+              },
+            ),
+            _popUpMenuIconText(
+              icon: Icons.cloud_download,
+              label: 'Download auto-metadata',
+              onPressed: () {
+                downloadMetadataForBundles([bundle]);
               },
             ),
             _popUpMenuIconText(
