@@ -23,7 +23,7 @@ pub fn extract_metadata_from_isbn_response(html: &str) -> common::BookMetaDataFr
             .volume_info
             .description
             .clone()
-            .map(|d| d.to_string());
+            .map(|d| html2text::from_read(d.as_bytes(), usize::MAX).trim().to_owned());
         BookMetaDataFromProvider {
             authors,
             blurb,
@@ -49,7 +49,10 @@ pub fn extract_metadata_from_self_link_response(html: &str) -> common::BookMetaD
             })
             .collect_vec(),
 
-        blurb: first_book.description.clone(),
+        blurb: first_book
+            .description
+            .clone()
+            .map(|d| html2text::from_read(d.as_bytes(), usize::MAX).trim().to_owned()),
         ..Default::default()
     }
 }
@@ -59,6 +62,8 @@ mod tests {
     use crate::common::BookMetaDataFromProvider;
 
     use super::*;
+
+    use pretty_assertions::assert_eq;
 
     #[test]
     fn extract_self_link_from_file() {

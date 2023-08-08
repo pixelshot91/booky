@@ -86,6 +86,8 @@ mod tests {
 
     use super::*;
 
+    use pretty_assertions::assert_eq;
+
     #[test]
     fn get_book_metadata_from_isbn_9782266162777() {
         let g = GoogleBooks {
