@@ -3,7 +3,7 @@ mod api;
 mod babelio;
 mod booksprice;
 mod bridge_generated;
-mod cached_client;
+mod client;
 mod common;
 mod config;
 mod google_books;

@@ -2,10 +2,10 @@ use std::collections::HashMap;
 use std::fs::File;
 use std::io::{Read, Write};
 
-use crate::cached_client::CachedClient;
+use crate::client::Client;
 use crate::common;
 use crate::common::Ad;
-use crate::common::{LbcCredential, Provider};
+use crate::common::LbcCredential;
 use crate::publisher::Publisher;
 use crate::{abebooks, babelio, booksprice, google_books, justbooks, leboncoin, leslibraires};
 use itertools::Itertools;
@@ -108,7 +108,7 @@ pub fn get_metadata_from_isbns(isbns: Vec<String>, path: String) -> Result<(), a
             .as_bytes(),
     )?;
     // Writing to the phone does not work
-    // Instead a temporary file is created and immediatly move with 'gio move'
+    // Instead a temporary file is created and immediately move with 'gio move'
     std::process::Command::new("gio")
         .args(["move", tmp_path, &path])
         .output()?;
@@ -164,25 +164,38 @@ pub fn get_auto_metadata_from_bundle(path: String) -> Result<Vec<ISBNMetadataPai
     Ok(vec_of_vec)
 }
 
+fn gen_client(cache_dir: &str) -> Box<dyn Client> {
+    Box::new(crate::client::cached_http_client::CachedHttpClient {
+        http_client: reqwest::blocking::Client::builder().build().unwrap(),
+        cache_dir: cache_dir.to_owned(),
+    })
+}
+fn gen_provider(provider: ProviderEnum) -> Box<dyn common::Provider> {
+    match provider {
+        ProviderEnum::Babelio => Box::new(babelio::Babelio {
+            client: gen_client("babelio"),
+        }),
+        ProviderEnum::AbeBooks => Box::new(abebooks::AbeBooks {
+            client: gen_client("abebooks"),
+        }),
+        ProviderEnum::GoogleBooks => Box::new(google_books::GoogleBooks {
+            client: gen_client("google_books"),
+        }),
+        ProviderEnum::BooksPrice => Box::new(booksprice::BooksPrice {}),
+        ProviderEnum::LesLibraires => Box::new(leslibraires::LesLibraires {
+            client: gen_client("leslibraires"),
+        }),
+        ProviderEnum::JustBooks => Box::new(justbooks::JustBooks {
+            client: gen_client("justbooks"),
+        }),
+    }
+}
+
 pub fn get_metadata_from_provider(
     provider: ProviderEnum,
     isbn: String,
 ) -> Option<common::BookMetaDataFromProvider> {
-    match provider {
-        ProviderEnum::Babelio => babelio::Babelio {}.get_book_metadata_from_isbn(&isbn),
-        ProviderEnum::GoogleBooks => google_books::GoogleBooks {
-            client: Box::new(CachedClient {
-                http_client: reqwest::blocking::Client::builder().build().unwrap(),
-            }),
-        }
-        .get_book_metadata_from_isbn(&isbn),
-        ProviderEnum::BooksPrice => booksprice::BooksPrice {}.get_book_metadata_from_isbn(&isbn),
-        ProviderEnum::AbeBooks => abebooks::AbeBooks {}.get_book_metadata_from_isbn(&isbn),
-        ProviderEnum::LesLibraires => {
-            leslibraires::LesLibraires {}.get_book_metadata_from_isbn(&isbn)
-        }
-        ProviderEnum::JustBooks => justbooks::JustBooks {}.get_book_metadata_from_isbn(&isbn),
-    }
+    gen_provider(provider).get_book_metadata_from_isbn(&isbn)
 }
 
 pub fn publish_ad(ad: Ad, credential: LbcCredential) -> bool {

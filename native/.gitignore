@@ -1,3 +1,4 @@
 personal_info.rs
 config.rs
 detect_barcode
+cache/

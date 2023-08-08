@@ -1,24 +1,22 @@
-use crate::{cached_client::CachedClient, common};
+use crate::{client::Client, common};
 mod parser;
 mod request;
 
-pub struct Babelio;
+pub struct Babelio {
+    pub client: Box<dyn Client>,
+}
 
 impl common::Provider for Babelio {
     fn get_book_metadata_from_isbn(&self, isbn: &str) -> Option<common::BookMetaDataFromProvider> {
-        let client = reqwest::blocking::Client::builder().build().unwrap();
-        let cached_client = CachedClient {
-            http_client: client,
-        };
-        let book_url = request::get_book_url(&cached_client, isbn)?;
-        let book_page = request::get_book_page(&cached_client, book_url);
+        let book_url = request::get_book_url(&*self.client, isbn)?;
+        let book_page = request::get_book_page(&*self.client, book_url);
         let mut res = parser::extract_title_author_keywords(&book_page)?;
 
         if let Some(blurb_res) = parser::extract_blurb(&book_page) {
             let raw_blurb = match blurb_res {
                 parser::BlurbRes::SmallBlurb(blurb) => blurb,
                 parser::BlurbRes::BigBlurb(id_obj) => {
-                    request::get_book_blurb_see_more(&cached_client, &id_obj)
+                    request::get_book_blurb_see_more(&*self.client, &id_obj)
                 }
             };
             res.blurb = Some(parser::parse_blurb(&raw_blurb));
@@ -30,14 +28,23 @@ impl common::Provider for Babelio {
 
 #[cfg(test)]
 mod tests {
-    use crate::common::{Author, BookMetaDataFromProvider, Provider};
+    use crate::{
+        client::mock_client::MockClient,
+        common::{Author, BookMetaDataFromProvider, Provider},
+    };
+    use pretty_assertions::assert_eq;
 
     use super::*;
 
     #[test]
     fn get_metadata_from_normal_book() {
         let isbn = "9782266071529";
-        let md = Babelio {}.get_book_metadata_from_isbn(isbn);
+        let md = Babelio {
+            client: Box::new(MockClient {
+                dir: "mock/babelio/normal_book",
+            }),
+        }
+        .get_book_metadata_from_isbn(isbn);
         assert_eq!(md, Some(BookMetaDataFromProvider {
             title: Some("Le nom de la bête".to_string()),
             authors: vec![Author{first_name:"Daniel".to_string(), last_name: "Easterman".to_string()}],
@@ -74,10 +81,16 @@ mod tests {
     #[test]
     fn get_metadata_from_book_with_see_more_bug() {
         let isbn = "9782070541898";
-        let md = Babelio {}.get_book_metadata_from_isbn(isbn);
+        let md = Babelio {
+            client: Box::new(MockClient {
+                dir: "mock/babelio/see_more_bug",
+            }),
+        }
+        .get_book_metadata_from_isbn(isbn);
         assert_eq!(md, Some(BookMetaDataFromProvider {
             title: Some("À la croisée des mondes, tome 2 : La tour des anges".to_string()),
             authors: vec![Author{first_name:"Philip".to_string(), last_name: "Pullman".to_string()}],
+            // spell-checker: disable
             blurb: Some(r#"Le jeune Will, à la recherche de son père disparu depuis de longues années, est persuadé d’avoir tué un homme. Dans sa fuite, il franchit une brèche presque invisible qui lui permet de passer dans un monde parallèle.
 Là, à Cittàgazze, la ville au-delà de l’Aurore, il rencontre Lyra, l’héroïne des "Royaumes du Nord". Elle aussi cherche à rejoindre son père, elle aussi est investie d’une mission dont elle ne connaît pas encore toute l’importance.
 Ensemble, les deux enfants devront lutter contre les forces obscures du mal et, pour accomplir leur quête, pénétrer dans la mystérieuse tour des Anges…"#.to_string()),

@@ -1,7 +1,7 @@
 use crate::common;
 mod parser;
 mod request;
-use crate::cached_client::Client;
+use crate::client::Client;
 use itertools::Itertools;
 
 pub struct GoogleBooks {
@@ -47,7 +47,7 @@ fn merge_bmd(
     common::BookMetaDataFromProvider {
         title: longest_string_merger(bmd1.title, bmd2.title),
         // Some authors are not display the same way in the first and second request. Sometimes GoogleBooks display the middle name, sometimes not
-        // So a basic merge would result in diplicate authors
+        // So a basic merge would result in duplicate authors
         // authors: merge_vec(bmd1.authors, bmd2.authors),
         authors: bmd1.authors,
         blurb: longest_string_merger(bmd1.blurb, bmd2.blurb),
@@ -80,7 +80,7 @@ impl common::Provider for GoogleBooks {
 
 #[cfg(test)]
 mod tests {
-    use crate::cached_client::MockClient;
+    use crate::client::mock_client::MockClient;
     use crate::common::BookMetaDataFromProvider;
     use crate::common::Provider;
 
@@ -90,7 +90,7 @@ mod tests {
     fn get_book_metadata_from_isbn_9782266162777() {
         let g = GoogleBooks {
             client: Box::new(MockClient {
-                dir: "mock/",
+                dir: "mock/google_books/normal_book",
             }),
         };
         let md = g.get_book_metadata_from_isbn("9782266162777");

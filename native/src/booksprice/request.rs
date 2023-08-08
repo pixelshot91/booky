@@ -41,11 +41,14 @@ async fn extract_price_from_url(
         .wait(Duration::from_secs(10), Duration::from_secs(1))
         .exists()
         .await?;
-    assert!(chart_element_exists);
+    if chart_element_exists == false {
+        return Ok(vec![]);
+    }
 
     let source_file = c.source().await.unwrap();
 
     if let Some(cache_file_path) = cache_file_path {
+        std::fs::create_dir_all(std::path::Path::new(&cache_file_path).parent().unwrap()).unwrap();
         let write_res = std::fs::write(&cache_file_path, &source_file);
         write_res.expect(format!("Can't write to file {}", cache_file_path).as_str());
     }
@@ -107,16 +110,9 @@ mod tests {
     }
 
     #[test]
+    // Need to launch `chromedriver`
+    #[ignore]
     fn test_selenium() {
         local_tester!(parse_booksprices_from_9782884747974, "chrome");
     }
-
-    /* #[test]
-
-    fn test_selenium_real_test() -> Result<(), WebDriverError> {
-        let prices = extract_price_from_isbn("9782884747974").unwrap();
-
-        assert_eq!(prices, vec![16.55, 21.85, 23.75, 27.17, 28.15, 43.20]);
-        Ok(())
-    } */
 }
