@@ -29,6 +29,12 @@ pub async fn extract_price_from_isbn(
     }
 }
 
+// It would be nice if the WebDriver would call `quit` on himself when it is drop
+// But `quit` is async and Rust does not support async destructor
+// Because there is many exit point in this function (`return` and `?` operator), it would be inconvenient to call quit at each exit point
+// I would like to create a function that take this function as a lambda, and then call `webdriver.quit` whatever the result is
+// But I cannot create a function that compile because of borrow checker error:
+// `webdriver does not live long enough`
 async fn extract_price_from_url(
     c: WebDriver,
     url: &str,
@@ -42,6 +48,7 @@ async fn extract_price_from_url(
         .exists()
         .await?;
     if chart_element_exists == false {
+        c.quit().await.unwrap();
         return Ok(vec![]);
     }
 
