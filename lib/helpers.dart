@@ -1,10 +1,42 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:recase/recase.dart';
 
 import 'bridge_definitions.dart';
 
 final defaultScrollShadowColor = Colors.black.withOpacity(0.8);
+
+/// Add buttons to the context menu to quickly change the text case
+Widget recaseContextMenuBuilder(
+  BuildContext context,
+  EditableTextState editableTextState,
+) {
+  final items = editableTextState.contextMenuButtonItems;
+
+  items.addAll([
+    ContextMenuButtonItem(
+        label: 'Sentence case',
+        onPressed: () => editableTextState.userUpdateTextEditingValue(
+            TextEditingValue(text: editableTextState.textEditingValue.text.sentenceCase),
+            SelectionChangedCause.toolbar)),
+    ContextMenuButtonItem(
+        label: 'lower case',
+        onPressed: () => editableTextState.userUpdateTextEditingValue(
+            TextEditingValue(text: editableTextState.textEditingValue.text.toLowerCase()),
+            SelectionChangedCause.toolbar)),
+    ContextMenuButtonItem(
+        label: 'UPPER CASE',
+        onPressed: () => editableTextState.userUpdateTextEditingValue(
+            TextEditingValue(text: editableTextState.textEditingValue.text.toUpperCase()),
+            SelectionChangedCause.toolbar)),
+  ]);
+
+  return AdaptiveTextSelectionToolbar.buttonItems(
+    buttonItems: items,
+    anchors: editableTextState.contextMenuAnchors,
+  );
+}
 
 class LBCRadioButton extends StatelessWidget {
   const LBCRadioButton(this.text);

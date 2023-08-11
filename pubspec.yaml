@@ -39,6 +39,7 @@ dependencies:
   audioplayers: ^4.1.0
   flutter_scroll_shadow: ^1.2.0
   intersperse: ^2.0.0
+  recase: ^4.1.0
 
 
 dev_dependencies:

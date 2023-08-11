@@ -194,6 +194,7 @@ class _BookMetadataCollectingWidgetState extends State<_BookMetadataCollectingWi
                 TableRow(children: [
                   TextFormField(
                     controller: widget.metadatas.bookControllerSet.titleTextFieldController,
+                    contextMenuBuilder: recaseContextMenuBuilder,
                     decoration: const InputDecoration(
                       icon: Icon(Icons.title),
                       labelText: 'Book title',
