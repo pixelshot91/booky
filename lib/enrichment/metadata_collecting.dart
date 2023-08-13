@@ -34,14 +34,17 @@ class _BooksMetadataCollectingWidgetState extends State<BooksMetadataCollectingW
 
     Future(() async {
       final autoMd = await api.getAutoMetadataFromBundle(path: widget.step.bundle.autoMetadataFile.path);
+      final map = Map.fromEntries(autoMd.map((entry) => MapEntry(
+          entry.isbn,
+          _Metadata(
+              providerMetadatas:
+                  entry.metadatas.map((md) => MapEntry(md.provider, md.metadata)).let((e) => Map.fromEntries(e)),
+              bookControllerSet: _BookControllerSet()))));
       if (mounted) {
         setState(() {
-          controllers = Map.fromEntries(autoMd.map((entry) => MapEntry(
-              entry.isbn,
-              _Metadata(
-                  providerMetadatas:
-                      entry.metadatas.map((md) => MapEntry(md.provider, md.metadata)).let((e) => Map.fromEntries(e)),
-                  bookControllerSet: _BookControllerSet()))));
+          // Use the order from metadata.json, and not the one coming from autoMd
+          // (which is out of order because the json is a map so the Rust parser may not respect the order)
+          controllers = Map.fromEntries(widget.step.bundle.metadata.isbns!.map((e) => MapEntry(e, map[e]!)));
         });
       }
     });
