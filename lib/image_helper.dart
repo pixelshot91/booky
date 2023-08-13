@@ -38,15 +38,15 @@ Future<ui.Image> convertImageToFlutterUi(img.Image image) async {
     }
   }
 
-  ui.ImmutableBuffer buffer = await ui.ImmutableBuffer.fromUint8List(image.toUint8List());
+  final ui.ImmutableBuffer buffer = await ui.ImmutableBuffer.fromUint8List(image.toUint8List());
 
-  ui.ImageDescriptor id =
+  final ui.ImageDescriptor id =
       ui.ImageDescriptor.raw(buffer, height: image.height, width: image.width, pixelFormat: ui.PixelFormat.rgba8888);
 
-  ui.Codec codec = await id.instantiateCodec(targetHeight: image.height, targetWidth: image.width);
+  final ui.Codec codec = await id.instantiateCodec(targetHeight: image.height, targetWidth: image.width);
 
-  ui.FrameInfo fi = await codec.getNextFrame();
-  ui.Image uiImage = fi.image;
+  final ui.FrameInfo fi = await codec.getNextFrame();
+  final ui.Image uiImage = fi.image;
 
   return uiImage;
 }

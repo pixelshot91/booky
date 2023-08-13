@@ -159,7 +159,7 @@ class _BundleSelectionState extends State<BundleSelection> {
         }
         return;
       }
-      Set<String> isbns = bundle.metadata.isbns?.toSet() ?? {};
+      final Set<String> isbns = bundle.metadata.isbns?.toSet() ?? {};
 
       try {
         await api.getMetadataFromIsbns(
@@ -224,18 +224,13 @@ class _BundleSelectionState extends State<BundleSelection> {
 
   Future<File?> _testCompressAndGetFile(File file, String targetPath) async {
     await Directory(path.dirname(targetPath)).create();
-    var result = await FlutterImageCompress.compressAndGetFile(
+    return await FlutterImageCompress.compressAndGetFile(
       file.absolute.path,
       targetPath,
       minHeight: 800,
       minWidth: 800,
       quality: 70,
     );
-
-    print(file.lengthSync());
-    print(result?.lengthSync());
-
-    return result;
   }
 
   Widget _bundleListWidget(Iterable<Bundle> bundles) {
