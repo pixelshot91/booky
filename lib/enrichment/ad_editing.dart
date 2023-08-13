@@ -178,12 +178,18 @@ class _AdEditingWidgetState extends State<AdEditingWidget> {
                 Center(
                   child: ElevatedButton(
                       onPressed: () {
-                        final d = widget.step.bundle.directory;
-                        final segments = path.split(d.path);
+                        final initialDirectory = widget.step.bundle.directory;
+                        final segments = path.split(initialDirectory.path);
                         segments[segments.length - 2] = 'booky_done';
-                        d.renameSync(path.joinAll(segments));
-                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                          content: Text('Moved'),
+                        final finalDirectory = Directory(path.joinAll(segments));
+                        initialDirectory.renameSync(finalDirectory.path);
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                          content: const Text('Moved'),
+                          action: SnackBarAction(
+                              label: 'Undo',
+                              onPressed: () async {
+                                await finalDirectory.rename(initialDirectory.path);
+                              }),
                         ));
                         Navigator.push(context, MaterialPageRoute<void>(builder: (context) => const BundleSelection()));
                       },
