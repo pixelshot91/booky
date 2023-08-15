@@ -677,10 +677,9 @@ class _BottomWidgetState extends State<BottomWidget> {
 
   Widget _barcodeDetectionButton() {
     return GestureDetector(
-      onTapDown: (_) {
-        widget.onBarcodeDetectStart();
-      },
+      onTapDown: (_) => widget.onBarcodeDetectStart(),
       onTapUp: (_) => widget.onBarcodeDetectStop(),
+      onTapCancel: () => widget.onBarcodeDetectStop(),
       child: AbsorbPointer(
         child: OutlinedButton.icon(
           icon: const Icon(Icons.select_all_rounded),
