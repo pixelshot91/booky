@@ -13,17 +13,19 @@ pub fn extract_metadata_from_isbn_response(html: &str) -> common::BookMetaDataFr
 
         let authors = first_book
             .authors
+            .as_ref()
+            .unwrap_or(&vec![])
             .iter()
             .map(|s| common::Author {
                 first_name: "".to_string(),
                 last_name: s.to_string(),
             })
             .collect_vec();
-        let blurb = items[0]
-            .volume_info
-            .description
-            .clone()
-            .map(|d| html2text::from_read(d.as_bytes(), usize::MAX).trim().to_owned());
+        let blurb = items[0].volume_info.description.clone().map(|d| {
+            html2text::from_read(d.as_bytes(), usize::MAX)
+                .trim()
+                .to_owned()
+        });
         BookMetaDataFromProvider {
             authors,
             blurb,
@@ -42,6 +44,8 @@ pub fn extract_metadata_from_self_link_response(html: &str) -> common::BookMetaD
         title: Some(first_book.title.to_string()),
         authors: first_book
             .authors
+            .as_ref()
+            .unwrap_or(&vec![])
             .iter()
             .map(|s| common::Author {
                 first_name: "".to_string(),
@@ -49,10 +53,11 @@ pub fn extract_metadata_from_self_link_response(html: &str) -> common::BookMetaD
             })
             .collect_vec(),
 
-        blurb: first_book
-            .description
-            .clone()
-            .map(|d| html2text::from_read(d.as_bytes(), usize::MAX).trim().to_owned()),
+        blurb: first_book.description.clone().map(|d| {
+            html2text::from_read(d.as_bytes(), usize::MAX)
+                .trim()
+                .to_owned()
+        }),
         ..Default::default()
     }
 }
@@ -152,7 +157,7 @@ mod structs {
     pub struct VolumeInfo<'a> {
         pub title: &'a str,
         pub subtitle: Option<&'a str>,
-        pub authors: Vec<&'a str>,
+        pub authors: Option<Vec<&'a str>>,
         // pub publisher: Option<&'a str>,
         // pub published_date: &'a str,
         // Should be an owned String in case the description contain escape characters like (\")
