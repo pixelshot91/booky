@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::{Read, Write};
+use std::path::Path;
 
 use crate::client::Client;
 use crate::common;
@@ -100,7 +101,8 @@ pub fn get_metadata_from_isbns(isbns: Vec<String>, path: String) -> Result<(), a
     let hashmap: HashMap<&String, HashMap<ProviderEnum, Option<common::BookMetaDataFromProvider>>> =
         HashMap::from_iter(res);
 
-    let tmp_path = "tmp.txt";
+    //  Make sure the filename is unique so the function is thread-safe
+    let tmp_path = Path::new(&path).file_name().unwrap();
     let mut file = File::create(tmp_path)?;
     file.write_all(
         serde_json::to_string(&hashmap)
@@ -110,7 +112,7 @@ pub fn get_metadata_from_isbns(isbns: Vec<String>, path: String) -> Result<(), a
     // Writing to the phone does not work
     // Instead a temporary file is created and immediately move with 'gio move'
     std::process::Command::new("gio")
-        .args(["move", tmp_path, &path])
+        .args(["move", tmp_path.to_str().unwrap(), &path])
         .output()?;
     Ok(())
 }
