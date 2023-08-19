@@ -55,7 +55,11 @@ impl Client for CachedHttpClient {
                     url,
                 };
                 // Do not store the result if the server is unavailable
-                if !status.is_server_error() {
+                if status.is_server_error() {
+                    println!("CachedHttpClient: Cerver error. StatusCode = {status}");
+                } else if status == 429 {
+                    println!("CachedHttpClient: Client error. Too many requests. StatusCode = {status}");
+                } else {
                     let dir = Path::new(&response_cache_path).parent().unwrap();
                     std::fs::create_dir_all(dir).unwrap();
                     std::fs::write(&html_cache_path, &r.body).unwrap();
