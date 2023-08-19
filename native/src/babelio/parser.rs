@@ -131,21 +131,24 @@ pub fn extract_title_author_keywords(html: &str) -> Option<BookMetaDataFromProvi
 
     let keywords_scope = book_scope
         .select(&html_select("[class=\"tags\"]"))
-        .exactly_one()
+        .at_most_one()
         .unwrap();
     let keywords = keywords_scope
-        .children()
-        .filter_map(|c| {
-            Some(
-                c.first_child()?
-                    .value()
-                    .as_text()
-                    .expect("c should be a text")
-                    .trim()
-                    .to_string(),
-            )
+        .map(|s| {
+            s.children()
+                .filter_map(|c| {
+                    Some(
+                        c.first_child()?
+                            .value()
+                            .as_text()
+                            .expect("c should be a text")
+                            .trim()
+                            .to_string(),
+                    )
+                })
+                .collect()
         })
-        .collect();
+        .unwrap_or_default();
     Some(BookMetaDataFromProvider {
         title: Some(title),
         authors,
