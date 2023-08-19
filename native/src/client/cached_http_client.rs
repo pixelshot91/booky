@@ -45,8 +45,6 @@ impl Client for CachedHttpClient {
             }
             Err(_) => {
                 println!("No file name {} in the cache", &response_cache_path);
-                let dir = Path::new(&response_cache_path).parent().unwrap();
-                std::fs::create_dir_all(dir).unwrap();
                 let resp = make_request(&self.http_client).unwrap();
 
                 let status = resp.status();
@@ -56,8 +54,15 @@ impl Client for CachedHttpClient {
                     status,
                     url,
                 };
-                std::fs::write(&html_cache_path, &r.body).unwrap();
-                std::fs::write(&response_cache_path, serde_json::to_string(&r).unwrap()).unwrap();
+                // Do not store the result if the server is unavailable
+                if !status.is_server_error() {
+                    let dir = Path::new(&response_cache_path).parent().unwrap();
+                    std::fs::create_dir_all(dir).unwrap();
+                    std::fs::write(&html_cache_path, &r.body).unwrap();
+                    std::fs::write(&response_cache_path, serde_json::to_string(&r).unwrap())
+                        .unwrap();
+                }
+
                 r
             }
         }
