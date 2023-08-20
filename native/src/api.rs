@@ -14,6 +14,8 @@ use serde::{Deserialize, Serialize};
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 
+use anyhow::Result;
+
 #[derive(EnumIter, PartialEq, Eq, Hash, Debug, Deserialize, Serialize, Copy, Clone)]
 pub enum ProviderEnum {
     Babelio,
@@ -40,7 +42,7 @@ pub struct BarcodeDetectResults {
     pub results: Vec<BarcodeDetectResult>,
 }
 
-pub fn detect_barcode_in_image(img_path: String) -> anyhow::Result<BarcodeDetectResults> {
+pub fn detect_barcode_in_image(img_path: String) -> Result<BarcodeDetectResults> {
     let output = std::process::Command::new(
         "/home/julien/Perso/LeBonCoin/chain_automatisation/booky/native/detect_barcode",
     )
@@ -87,7 +89,7 @@ mod tests {
     }
 }
 
-pub fn get_metadata_from_isbns(isbns: Vec<String>, path: String) -> Result<(), anyhow::Error> {
+pub fn get_metadata_from_isbns(isbns: Vec<String>, path: String) -> Result<()> {
     let res = isbns.iter().map(|isbn| {
         let mds: HashMap<ProviderEnum, Option<common::BookMetaDataFromProvider>> =
             ProviderEnum::iter()
@@ -131,7 +133,7 @@ pub struct ProviderMetadataPair {
     pub metadata: Option<common::BookMetaDataFromProvider>,
 }
 
-pub fn get_auto_metadata_from_bundle(path: String) -> Result<Vec<ISBNMetadataPair>, anyhow::Error> {
+pub fn get_auto_metadata_from_bundle(path: String) -> Result<Vec<ISBNMetadataPair>> {
     let mut file = File::open(path)?;
     let mut contents = String::new();
     file.read_to_string(&mut contents).unwrap();
