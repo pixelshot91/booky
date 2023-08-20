@@ -5,14 +5,22 @@
 * [ ] Camera: LiveDetection: show confirmed barcode and pending barcodes in different color. Show a progressBar for the pending barcode
 * [ ] Camera: Fix pictures flickering or being shortly replaced by a spinner each time a picture is taken
 * [ ] Camera: Fix flashlight turning on and never off again
+* [ ] Camera: Camera is still in use when going back to BundleSelection, and even when going to the home screen
+* [ ] BundleSelection: Show already published bundles
+* [ ] BundleSelection: Make image load faster (at least on Linux) (use even smaller thumbnail, cache images) 
+* [ ] BundleSelection: Add search by ISBN, title, author
+* [ ] BundleSelection: Add filter by auto_metadata downloaded or not
+* [ ] BundleSelection: Add sort by date picture taken, date published, price
 * [ ] BundleSelection: Add ability to go back into Camera mode to add/delete picture/ISBN, change the weight/state
 * [ ] BundleSelection: BundleList fail to refresh after autoMetadata download
 * [ ] BundleSelection: BUG: BundleList show autoMetadata from other bundle when some bundle are deleted
+* [ ] BundleSelection: Suggest bundle grouping by same author, title, keyword
 * [ ] ISBNDecoding: Better layout for phone
 * [ ] ISBNDecoding: Delete an image
 * [ ] MetadataCollecting: Disable 'Validate Metadatas' button if price field is empty
 * [ ] MetadataCollecting: Show a visual indication that the title is too long (105 characters for LeBonCoin)
 * [ ] AdEditing: Disable 'Mark as published' if the title is empty
+* [ ] AdEditing: Save the ad as it was published
 * [ ] Search with Selenium in headless mode
 
 # DONE
