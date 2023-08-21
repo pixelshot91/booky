@@ -1,4 +1,4 @@
-package com.example.booky
+package fr.pimoid.booky
 
 import io.flutter.embedding.android.FlutterActivity
 
