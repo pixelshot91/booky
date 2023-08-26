@@ -1,52 +1,48 @@
-import 'package:flutter/foundation.dart';
+import 'dart:io';
+
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:super_drag_and_drop/super_drag_and_drop.dart';
-import 'package:super_native_extensions/raw_drag_drop.dart' as raw;
-import 'package:super_native_extensions/widgets.dart';
 
-class DraggableFilesWidget extends StatelessWidget {
+import 'helpers.dart';
+
+class DraggableFilesWidget extends StatefulWidget {
   const DraggableFilesWidget({required this.uris, required this.child});
 
   final Iterable<Uri> uris;
   final Widget child;
+  @override
+  State<DraggableFilesWidget> createState() => _DraggableFilesWidgetState();
+}
+
+class _DraggableFilesWidgetState extends State<DraggableFilesWidget> {
+  late final List<GlobalKey<DragItemWidgetState>> dragItemKeys;
 
   @override
-  Widget build(BuildContext context) => FallbackSnapshotWidget(
-        child: Builder(
-            builder: (context) => BaseDraggableWidget(
-                  hitTestBehavior: HitTestBehavior.deferToChild,
-                  child: child,
-                  dragConfiguration: (location, session) async {
-                    Future<DragImage?> getSnapshot(Offset location) async {
-                      final snapshotter = Snapshotter.of(context)!;
-                      final dragSnapshot = await snapshotter.getSnapshot(location, SnapshotType.drag);
+  void initState() {
+    super.initState();
+    dragItemKeys = widget.uris.map((_) => GlobalKey<DragItemWidgetState>()).toList();
+  }
 
-                      raw.TargetedImage? liftSnapshot;
-                      if (defaultTargetPlatform == TargetPlatform.iOS) {
-                        liftSnapshot = await snapshotter.getSnapshot(location, SnapshotType.lift);
-                      }
-
-                      final snapshot = dragSnapshot ?? liftSnapshot ?? await snapshotter.getSnapshot(location, null);
-
-                      if (snapshot == null) {
-                        return null;
-                      }
-
-                      return DragImage(image: snapshot, liftImage: liftSnapshot);
-                    }
-
-                    final dragImage = (await getSnapshot(const Offset(0, 0)))!;
-                    // final r = dragImage!.image.rect;
-                    // print('r = $r');
-
-                    return DragConfiguration(
-                      items: uris
-                          .map((uri) => DragConfigurationItem(
-                              item: DragItem()..add(Formats.uri(NamedUri(uri))), image: dragImage))
-                          .toList(),
-                      allowedOperations: [DropOperation.copy],
-                    );
-                  },
-                )),
+  @override
+  Widget build(BuildContext context) => DraggableWidget(
+        dragItemsProvider: (context) => dragItemKeys.map((e) => e.currentState!).toList(),
+        child: Column(
+          children: [
+            Row(
+              children: widget.uris
+                  .mapIndexed((index, uri) => Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: DragItemWidget(
+                            key: dragItemKeys[index],
+                            dragItemProvider: (_) => DragItem()..add(Formats.uri(NamedUri(uri))),
+                            allowedOperations: () => const [DropOperation.copy],
+                            child: SizedBox(height: 200, child: ImageWidget(File.fromUri(uri)))),
+                      ))
+                  .toList(),
+            ),
+            const Text('Drag and drop images')
+          ],
+        ),
       );
 }
