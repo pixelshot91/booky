@@ -477,7 +477,7 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
 
       AudioPlayer().play(AssetSource('sounds/take_picture.mp3'), mode: PlayerMode.lowLatency);
 
-      await (await getBundleDir).create();
+      await (await getBundleDir).create(recursive: true);
       final firstUnusedImagePath = await _getFirstUnusedName(await getBundleDir);
 
       if (_cropValue != 0) {

@@ -186,6 +186,7 @@ class _BundleSelectionState extends State<BundleSelection> {
       return dirs.sorted((d1, d2) => d1.path.compareTo(d2.path)).map((d) => Bundle(d));
     } catch (e) {
       if (e is PathNotFoundException || e is FileSystemException) {
+        print('Exception in _listBundles. e = $e');
         return null;
       }
       print('Unhandled exception $e');

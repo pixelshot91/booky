@@ -10,6 +10,6 @@ class BookyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => const MaterialApp(
-    home: BundleSelection(),
-  );
+        home: BundleSelection(),
+      );
 }
