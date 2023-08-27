@@ -30,27 +30,6 @@ abstract class Native {
       {required ProviderEnum provider, required String isbn, dynamic hint});
 
   FlutterRustBridgeTaskConstMeta get kGetMetadataFromProviderConstMeta;
-
-  Future<bool> publishAd(
-      {required Ad ad, required LbcCredential credential, dynamic hint});
-
-  FlutterRustBridgeTaskConstMeta get kPublishAdConstMeta;
-}
-
-class Ad {
-  final String title;
-  final String description;
-  final int priceCent;
-  final int weightGrams;
-  final List<String> imgsPath;
-
-  const Ad({
-    required this.title,
-    required this.description,
-    required this.priceCent,
-    required this.weightGrams,
-    required this.imgsPath,
-  });
 }
 
 class Author {
@@ -104,16 +83,6 @@ class ISBNMetadataPair {
   const ISBNMetadataPair({
     required this.isbn,
     required this.metadatas,
-  });
-}
-
-class LbcCredential {
-  final String lbcToken;
-  final String datadomeCookie;
-
-  const LbcCredential({
-    required this.lbcToken,
-    required this.datadomeCookie,
   });
 }
 

@@ -98,25 +98,6 @@ class NativeImpl implements Native {
         argNames: ["provider", "isbn"],
       );
 
-  Future<bool> publishAd(
-      {required Ad ad, required LbcCredential credential, dynamic hint}) {
-    var arg0 = _platform.api2wire_box_autoadd_ad(ad);
-    var arg1 = _platform.api2wire_box_autoadd_lbc_credential(credential);
-    return _platform.executeNormal(FlutterRustBridgeTask(
-      callFfi: (port_) => _platform.inner.wire_publish_ad(port_, arg0, arg1),
-      parseSuccessData: _wire2api_bool,
-      constMeta: kPublishAdConstMeta,
-      argValues: [ad, credential],
-      hint: hint,
-    ));
-  }
-
-  FlutterRustBridgeTaskConstMeta get kPublishAdConstMeta =>
-      const FlutterRustBridgeTaskConstMeta(
-        debugName: "publish_ad",
-        argNames: ["ad", "credential"],
-      );
-
   void dispose() {
     _platform.dispose();
   }
@@ -170,10 +151,6 @@ class NativeImpl implements Native {
       keywords: _wire2api_StringList(arr[3]),
       marketPrice: _wire2api_float_32_list(arr[4]),
     );
-  }
-
-  bool _wire2api_bool(dynamic raw) {
-    return raw as bool;
   }
 
   BookMetaDataFromProvider _wire2api_box_autoadd_book_meta_data_from_provider(

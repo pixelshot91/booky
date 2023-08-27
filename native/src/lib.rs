@@ -10,6 +10,5 @@ mod google_books;
 mod image_tools;
 mod justbooks;
 mod jwt_decoder;
-mod leboncoin;
 mod leslibraires;
 mod publisher;

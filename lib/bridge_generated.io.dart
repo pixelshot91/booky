@@ -32,21 +32,6 @@ class NativePlatform extends FlutterRustBridgeBase<NativeWire> {
   }
 
   @protected
-  ffi.Pointer<wire_Ad> api2wire_box_autoadd_ad(Ad raw) {
-    final ptr = inner.new_box_autoadd_ad_0();
-    _api_fill_to_wire_ad(raw, ptr.ref);
-    return ptr;
-  }
-
-  @protected
-  ffi.Pointer<wire_LbcCredential> api2wire_box_autoadd_lbc_credential(
-      LbcCredential raw) {
-    final ptr = inner.new_box_autoadd_lbc_credential_0();
-    _api_fill_to_wire_lbc_credential(raw, ptr.ref);
-    return ptr;
-  }
-
-  @protected
   ffi.Pointer<wire_uint_8_list> api2wire_uint_8_list(Uint8List raw) {
     final ans = inner.new_uint_8_list_0(raw.length);
     ans.ref.ptr.asTypedList(raw.length).setAll(0, raw);
@@ -55,30 +40,6 @@ class NativePlatform extends FlutterRustBridgeBase<NativeWire> {
 // Section: finalizer
 
 // Section: api_fill_to_wire
-
-  void _api_fill_to_wire_ad(Ad apiObj, wire_Ad wireObj) {
-    wireObj.title = api2wire_String(apiObj.title);
-    wireObj.description = api2wire_String(apiObj.description);
-    wireObj.price_cent = api2wire_i32(apiObj.priceCent);
-    wireObj.weight_grams = api2wire_i32(apiObj.weightGrams);
-    wireObj.imgs_path = api2wire_StringList(apiObj.imgsPath);
-  }
-
-  void _api_fill_to_wire_box_autoadd_ad(
-      Ad apiObj, ffi.Pointer<wire_Ad> wireObj) {
-    _api_fill_to_wire_ad(apiObj, wireObj.ref);
-  }
-
-  void _api_fill_to_wire_box_autoadd_lbc_credential(
-      LbcCredential apiObj, ffi.Pointer<wire_LbcCredential> wireObj) {
-    _api_fill_to_wire_lbc_credential(apiObj, wireObj.ref);
-  }
-
-  void _api_fill_to_wire_lbc_credential(
-      LbcCredential apiObj, wire_LbcCredential wireObj) {
-    wireObj.lbc_token = api2wire_String(apiObj.lbcToken);
-    wireObj.datadome_cookie = api2wire_String(apiObj.datadomeCookie);
-  }
 }
 
 // ignore_for_file: camel_case_types, non_constant_identifier_names, avoid_positional_boolean_parameters, annotate_overrides, constant_identifier_names
@@ -254,26 +215,6 @@ class NativeWire implements FlutterRustBridgeWireBase {
       _wire_get_metadata_from_providerPtr
           .asFunction<void Function(int, int, ffi.Pointer<wire_uint_8_list>)>();
 
-  void wire_publish_ad(
-    int port_,
-    ffi.Pointer<wire_Ad> ad,
-    ffi.Pointer<wire_LbcCredential> credential,
-  ) {
-    return _wire_publish_ad(
-      port_,
-      ad,
-      credential,
-    );
-  }
-
-  late final _wire_publish_adPtr = _lookup<
-      ffi.NativeFunction<
-          ffi.Void Function(ffi.Int64, ffi.Pointer<wire_Ad>,
-              ffi.Pointer<wire_LbcCredential>)>>('wire_publish_ad');
-  late final _wire_publish_ad = _wire_publish_adPtr.asFunction<
-      void Function(
-          int, ffi.Pointer<wire_Ad>, ffi.Pointer<wire_LbcCredential>)>();
-
   ffi.Pointer<wire_StringList> new_StringList_0(
     int len,
   ) {
@@ -287,27 +228,6 @@ class NativeWire implements FlutterRustBridgeWireBase {
       'new_StringList_0');
   late final _new_StringList_0 = _new_StringList_0Ptr
       .asFunction<ffi.Pointer<wire_StringList> Function(int)>();
-
-  ffi.Pointer<wire_Ad> new_box_autoadd_ad_0() {
-    return _new_box_autoadd_ad_0();
-  }
-
-  late final _new_box_autoadd_ad_0Ptr =
-      _lookup<ffi.NativeFunction<ffi.Pointer<wire_Ad> Function()>>(
-          'new_box_autoadd_ad_0');
-  late final _new_box_autoadd_ad_0 =
-      _new_box_autoadd_ad_0Ptr.asFunction<ffi.Pointer<wire_Ad> Function()>();
-
-  ffi.Pointer<wire_LbcCredential> new_box_autoadd_lbc_credential_0() {
-    return _new_box_autoadd_lbc_credential_0();
-  }
-
-  late final _new_box_autoadd_lbc_credential_0Ptr =
-      _lookup<ffi.NativeFunction<ffi.Pointer<wire_LbcCredential> Function()>>(
-          'new_box_autoadd_lbc_credential_0');
-  late final _new_box_autoadd_lbc_credential_0 =
-      _new_box_autoadd_lbc_credential_0Ptr
-          .asFunction<ffi.Pointer<wire_LbcCredential> Function()>();
 
   ffi.Pointer<wire_uint_8_list> new_uint_8_list_0(
     int len,
@@ -353,26 +273,6 @@ final class wire_StringList extends ffi.Struct {
 
   @ffi.Int32()
   external int len;
-}
-
-final class wire_Ad extends ffi.Struct {
-  external ffi.Pointer<wire_uint_8_list> title;
-
-  external ffi.Pointer<wire_uint_8_list> description;
-
-  @ffi.Int32()
-  external int price_cent;
-
-  @ffi.Int32()
-  external int weight_grams;
-
-  external ffi.Pointer<wire_StringList> imgs_path;
-}
-
-final class wire_LbcCredential extends ffi.Struct {
-  external ffi.Pointer<wire_uint_8_list> lbc_token;
-
-  external ffi.Pointer<wire_uint_8_list> datadome_cookie;
 }
 
 typedef DartPostCObjectFnType = ffi.Pointer<

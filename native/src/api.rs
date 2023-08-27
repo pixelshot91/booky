@@ -5,10 +5,7 @@ use std::path::Path;
 
 use crate::client::Client;
 use crate::common;
-use crate::common::Ad;
-use crate::common::LbcCredential;
-use crate::publisher::Publisher;
-use crate::{abebooks, babelio, booksprice, google_books, justbooks, leboncoin, leslibraires};
+use crate::{abebooks, babelio, booksprice, google_books, justbooks, leslibraires};
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 use strum::IntoEnumIterator;
@@ -200,9 +197,4 @@ pub fn get_metadata_from_provider(
     isbn: String,
 ) -> Option<common::BookMetaDataFromProvider> {
     gen_provider(provider).get_book_metadata_from_isbn(&isbn)
-}
-
-pub fn publish_ad(ad: Ad, credential: LbcCredential) -> bool {
-    let lbc_publisher = leboncoin::Leboncoin {};
-    Publisher::publish(&lbc_publisher, ad, credential)
 }

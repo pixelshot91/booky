@@ -20,10 +20,8 @@ use std::sync::Arc;
 
 // Section: imports
 
-use crate::common::Ad;
 use crate::common::Author;
 use crate::common::BookMetaDataFromProvider;
-use crate::common::LbcCredential;
 
 // Section: wire functions
 
@@ -95,24 +93,6 @@ fn wire_get_metadata_from_provider_impl(
         },
     )
 }
-fn wire_publish_ad_impl(
-    port_: MessagePort,
-    ad: impl Wire2Api<Ad> + UnwindSafe,
-    credential: impl Wire2Api<LbcCredential> + UnwindSafe,
-) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap::<_, _, _, bool>(
-        WrapInfo {
-            debug_name: "publish_ad",
-            port: Some(port_),
-            mode: FfiCallMode::Normal,
-        },
-        move || {
-            let api_ad = ad.wire2api();
-            let api_credential = credential.wire2api();
-            move |task_callback| Ok(publish_ad(api_ad, api_credential))
-        },
-    )
-}
 // Section: wrapper structs
 
 // Section: static checks
@@ -141,7 +121,6 @@ impl Wire2Api<i32> for i32 {
         self
     }
 }
-
 impl Wire2Api<ProviderEnum> for i32 {
     fn wire2api(self) -> ProviderEnum {
         match self {

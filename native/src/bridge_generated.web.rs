@@ -21,11 +21,6 @@ pub fn wire_get_metadata_from_provider(port_: MessagePort, provider: i32, isbn: 
     wire_get_metadata_from_provider_impl(port_, provider, isbn)
 }
 
-#[wasm_bindgen]
-pub fn wire_publish_ad(port_: MessagePort, ad: JsValue, credential: JsValue) {
-    wire_publish_ad_impl(port_, ad, credential)
-}
-
 // Section: allocate functions
 
 // Section: related functions
@@ -44,40 +39,6 @@ impl Wire2Api<Vec<String>> for JsValue {
             .iter()
             .map(Wire2Api::wire2api)
             .collect()
-    }
-}
-impl Wire2Api<Ad> for JsValue {
-    fn wire2api(self) -> Ad {
-        let self_ = self.dyn_into::<JsArray>().unwrap();
-        assert_eq!(
-            self_.length(),
-            5,
-            "Expected 5 elements, got {}",
-            self_.length()
-        );
-        Ad {
-            title: self_.get(0).wire2api(),
-            description: self_.get(1).wire2api(),
-            price_cent: self_.get(2).wire2api(),
-            weight_grams: self_.get(3).wire2api(),
-            imgs_path: self_.get(4).wire2api(),
-        }
-    }
-}
-
-impl Wire2Api<LbcCredential> for JsValue {
-    fn wire2api(self) -> LbcCredential {
-        let self_ = self.dyn_into::<JsArray>().unwrap();
-        assert_eq!(
-            self_.length(),
-            2,
-            "Expected 2 elements, got {}",
-            self_.length()
-        );
-        LbcCredential {
-            lbc_token: self_.get(0).wire2api(),
-            datadome_cookie: self_.get(1).wire2api(),
-        }
     }
 }
 

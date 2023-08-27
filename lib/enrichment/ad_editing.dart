@@ -10,7 +10,6 @@ import 'package:path/path.dart' as path;
 
 import '../copiable_text_field.dart';
 import '../draggable_files_widget.dart';
-import '../ffi.dart' if (dart.library.html) 'ffi_web.dart';
 import '../helpers.dart';
 import 'bundle_selection.dart';
 import 'enrichment.dart';
@@ -34,6 +33,22 @@ String vecFmt(Iterable<String> it) {
 
 String _bookFormat(BookMetaDataManual book, {bool withISBN = false}) {
   return '"${book.title}" ${vecFmt(book.authors.map((a) => a.toText()))}' + (withISBN ? ' (ISBN: ${book.isbn})' : '');
+}
+
+class Ad {
+  final String title;
+  final String description;
+  final int priceCent;
+  final int weightGrams;
+  final List<String> imgsPath;
+
+  const Ad({
+    required this.title,
+    required this.description,
+    required this.priceCent,
+    required this.weightGrams,
+    required this.imgsPath,
+  });
 }
 
 class _AdEditingWidgetState extends State<AdEditingWidget> {

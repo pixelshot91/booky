@@ -31,32 +31,6 @@ class NativePlatform extends FlutterRustBridgeBase<NativeWire>
   }
 
   @protected
-  List<dynamic> api2wire_ad(Ad raw) {
-    return [
-      api2wire_String(raw.title),
-      api2wire_String(raw.description),
-      api2wire_i32(raw.priceCent),
-      api2wire_i32(raw.weightGrams),
-      api2wire_StringList(raw.imgsPath)
-    ];
-  }
-
-  @protected
-  List<dynamic> api2wire_box_autoadd_ad(Ad raw) {
-    return api2wire_ad(raw);
-  }
-
-  @protected
-  List<dynamic> api2wire_box_autoadd_lbc_credential(LbcCredential raw) {
-    return api2wire_lbc_credential(raw);
-  }
-
-  @protected
-  List<dynamic> api2wire_lbc_credential(LbcCredential raw) {
-    return [api2wire_String(raw.lbcToken), api2wire_String(raw.datadomeCookie)];
-  }
-
-  @protected
   Uint8List api2wire_uint_8_list(Uint8List raw) {
     return raw;
   }
@@ -84,9 +58,6 @@ class NativeWasmModule implements WasmModule {
 
   external dynamic /* void */ wire_get_metadata_from_provider(
       NativePortType port_, int provider, String isbn);
-
-  external dynamic /* void */ wire_publish_ad(
-      NativePortType port_, List<dynamic> ad, List<dynamic> credential);
 }
 
 // Section: WASM wire connector
@@ -108,8 +79,4 @@ class NativeWire extends FlutterRustBridgeWasmWireBase<NativeWasmModule> {
   void wire_get_metadata_from_provider(
           NativePortType port_, int provider, String isbn) =>
       wasmModule.wire_get_metadata_from_provider(port_, provider, isbn);
-
-  void wire_publish_ad(
-          NativePortType port_, List<dynamic> ad, List<dynamic> credential) =>
-      wasmModule.wire_publish_ad(port_, ad, credential);
 }
