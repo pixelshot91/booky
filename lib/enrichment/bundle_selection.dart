@@ -43,39 +43,55 @@ class CustomSearchHintDelegate extends SearchDelegate<String> {
         );
   final Future<Iterable<Bundle>?> bundles;
 
+  bool matchOnISBN = true, matchOnTitle = true, matchOnAuthor = true;
+
   // Return null to display default back button
   @override
   Widget? buildLeading(BuildContext context) => null;
 
   @override
-  PreferredSizeWidget buildBottom(BuildContext context) {
-    return PreferredSize(
-        preferredSize: const Size.fromHeight(56.0),
-        child: Row(
-          children: [
-            FilterChip(
-              selected: true,
-              label: const Text('ISBN'),
-              onSelected: (value) {},
-            ),
-            FilterChip(
-              label: const Text('Title'),
-              onSelected: (value) {},
-            ),
-            FilterChip(
-              label: const Text('Author'),
-              onSelected: (value) {},
-            ),
-          ],
-        ));
-  }
+  PreferredSizeWidget buildBottom(BuildContext context) => PreferredSize(
+      preferredSize: const Size.fromHeight(30.0),
+      child: StatefulBuilder(builder: (BuildContext context, StateSetter setState) {
+        return Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Row(
+            children: [
+              FilterChip(
+                selected: matchOnISBN,
+                label: const Text('ISBN'),
+                onSelected: (value) {
+                  setState(() => matchOnISBN = value);
+                  query = query; // Force suggestions rebuild
+                },
+              ),
+              FilterChip(
+                selected: matchOnTitle,
+                label: const Text('Title'),
+                onSelected: (value) {
+                  setState(() => matchOnTitle = value);
+                  query = query; // Force suggestions rebuild
+                },
+              ),
+              FilterChip(
+                selected: matchOnAuthor,
+                label: const Text('Author'),
+                onSelected: (value) {
+                  setState(() => matchOnAuthor = value);
+                  query = query; // Force suggestions rebuild
+                },
+              ),
+            ],
+          ),
+        );
+      }));
 
   @override
   Widget buildSuggestions(BuildContext context) {
     return FutureWidget(
       future: bundles,
       builder: (bundles) {
-        if (bundles == null) return Text('Loading bundles');
+        if (bundles == null) return const Text('Loading bundles');
 
         final bundlesWithMD = bundles.map((b) async {
           final md = b.metadata;
@@ -94,26 +110,30 @@ class CustomSearchHintDelegate extends SearchDelegate<String> {
           future: Future.wait(bundlesWithMD),
           builder: (bundlesWithMD) {
             final whereNotNull = bundlesWithMD.whereNotNull();
-            final bundlesMatchingISBN =
-                whereNotNull.where((b) => b.$1.metadata.isbns?.any((isbn) => isbn.contains(query)) ?? false);
-            final bundlesMatchingTitle = whereNotNull
-                .where((b) => b.$2.any((book) => book.title?.toLowerCase().contains(query.toLowerCase()) ?? false));
-            final bundleMatching = bundlesMatchingISBN.followedBy(bundlesMatchingTitle);
+            final bundlesMatchingISBN = matchOnISBN
+                ? whereNotNull.where((b) => b.$1.metadata.isbns?.any((isbn) => isbn.contains(query)) ?? false)
+                : const Iterable<(Bundle, Iterable<BookMetaDataFromProvider>)>.empty();
+            final bundlesMatchingTitle = matchOnTitle
+                ? whereNotNull.where((b) => b.$2.any((book) => book.title?.containsIgnoringCase(query) ?? false))
+                : const Iterable<(Bundle, Iterable<BookMetaDataFromProvider>)>.empty();
+            final bundlesMatchingAuthor = matchOnAuthor
+                ? whereNotNull.where((b) => b.$2.any((book) =>
+                    book.authors.any((author) => '${author.firstName} ${author.lastName}'.containsIgnoringCase(query))))
+                : const Iterable<(Bundle, Iterable<BookMetaDataFromProvider>)>.empty();
+            final bundleMatching =
+                bundlesMatchingISBN.followedBy(bundlesMatchingTitle).followedBy(bundlesMatchingAuthor);
             return ListView.builder(
               itemBuilder: (context, index) {
                 final b = bundleMatching.elementAt(index);
-                return Text(b.$2.firstOrNull?.title ?? 'None');
-/*
-                return FutureWidget(
-                  future: b.getAutoMetadata(),
-                  builder: (md) {
-                    return Text(b.directory.path);
-                    // return Text(md.entries.first.);
-                    final title = md.iter.first.value.iter.first.value?.title;
-                    return Text(title ?? 'unknown');
-                  },
+                return ColoredBox(
+                  color: Colors.white,
+                  child: Padding(
+                    padding: const EdgeInsets.all(6.0),
+                    child: Text(
+                      b.$2.firstOrNull?.title ?? 'None',
+                    ),
+                  ),
                 );
-*/
               },
               itemCount: bundleMatching.length,
             );
