@@ -76,24 +76,51 @@ class CustomSearchHintDelegate extends SearchDelegate<String> {
       future: bundles,
       builder: (bundles) {
         if (bundles == null) return Text('Loading bundles');
-        final filteredBundles = bundles.where((b) => b.metadata.isbns?.any((isbn) => isbn.contains(query)) ?? false);
-        return ListView.builder(
-          itemBuilder: (context, index) {
-            final b = filteredBundles.elementAt(index);
-            return FutureWidget(
-              future: b.getAutoMetadata(),
-              builder: (md) {
-                return Text(b.directory.path);
-                final title = md.iter.first.value.iter.first.value?.title;
-                return Text(title ?? 'unknown');
+
+        final bundlesWithMD = bundles.map((b) async {
+          final md = b.metadata;
+          final autoMD = await b.getAutoMetadata();
+          final autoMDPerISBN = md.isbns?.map((isbn) => autoMD.get(isbn));
+          // No ISBN list
+          if (autoMDPerISBN == null) return null;
+          final listOfAutoMd = autoMDPerISBN.whereNotNull().map((autMDPerISBN) {
+            final mergeMD = autMDPerISBN.dart.mergeAllProvider();
+            return mergeMD;
+          });
+
+          return (b, listOfAutoMd);
+        });
+        return FutureWidget(
+          future: Future.wait(bundlesWithMD),
+          builder: (bundlesWithMD) {
+            final whereNotNull = bundlesWithMD.whereNotNull();
+            final bundlesMatchingISBN =
+                whereNotNull.where((b) => b.$1.metadata.isbns?.any((isbn) => isbn.contains(query)) ?? false);
+            final bundlesMatchingTitle = whereNotNull
+                .where((b) => b.$2.any((book) => book.title?.toLowerCase().contains(query.toLowerCase()) ?? false));
+            final bundleMatching = bundlesMatchingISBN.followedBy(bundlesMatchingTitle);
+            return ListView.builder(
+              itemBuilder: (context, index) {
+                final b = bundleMatching.elementAt(index);
+                return Text(b.$2.firstOrNull?.title ?? 'None');
+/*
+                return FutureWidget(
+                  future: b.getAutoMetadata(),
+                  builder: (md) {
+                    return Text(b.directory.path);
+                    // return Text(md.entries.first.);
+                    final title = md.iter.first.value.iter.first.value?.title;
+                    return Text(title ?? 'unknown');
+                  },
+                );
+*/
               },
+              itemCount: bundleMatching.length,
             );
           },
-          itemCount: filteredBundles.length,
         );
       },
     );
-//    return const Text('suggestions');
   }
 
   @override

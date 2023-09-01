@@ -1,10 +1,10 @@
 import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:booky/common.dart';
 import 'package:booky/helpers.dart';
 import 'package:collection/collection.dart';
+import 'package:flutter_rust_bridge/flutter_rust_bridge.dart';
 import 'package:kt_dart/collection.dart';
 import 'package:path/path.dart' as path;
 import 'package:stream_transform/stream_transform.dart';
@@ -59,17 +59,30 @@ class Bundle {
   File get autoMetadataFile => File(path.join(directory.path, 'automatic_metadata.json'));
 
   Future<KtMutableMap<String, KtMutableMap<ProviderEnum, BookMetaDataFromProvider?>>> getAutoMetadata() async {
-    final value = await api.getAutoMetadataFromBundle(path: autoMetadataFile.path);
-    return Map.fromEntries(value.map((e) {
-      final providerMdMap = Map.fromEntries(e.metadatas.map((e) => MapEntry(e.provider, e.metadata))).kt;
-      return MapEntry(e.isbn, providerMdMap);
-    })).kt;
+    try {
+      final value = await api.getAutoMetadataFromBundle(path: autoMetadataFile.path);
+      return Map
+          .fromEntries(value.map((e) {
+        final providerMdMap = Map
+            .fromEntries(e.metadatas.map((e) => MapEntry(e.provider, e.metadata)))
+            .kt;
+        return MapEntry(e.isbn, providerMdMap);
+      }))
+          .kt;
+    } on FfiException {
+      return KtMutableMap.empty();
+    }
   }
+
+/*Metadata getMergedMetadata() {
+
+  }*/
 }
 
 extension MapProviderEnumBookMetaDataFromProviderExt on Map<ProviderEnum, BookMetaDataFromProvider?> {
   List<double> getPrices() =>
-      values.map((e) => e?.marketPrice.toList()).whereNotNull().expand((i) => i).toList()..sort();
+      values.map((e) => e?.marketPrice.toList()).whereNotNull().expand((i) => i).toList()
+        ..sort();
 
   BookMetaDataFromProvider mergeAllProvider() {
     return BookMetaDataFromProvider(
