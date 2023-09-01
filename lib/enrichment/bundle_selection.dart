@@ -32,6 +32,78 @@ PopupMenuItem<void> _popUpMenuIconText(
           ],
         ));
 
+class CustomSearchHintDelegate extends SearchDelegate<String> {
+  CustomSearchHintDelegate({
+    required String hintText,
+    required this.bundles,
+  }) : super(
+          searchFieldLabel: hintText,
+          keyboardType: TextInputType.text,
+          textInputAction: TextInputAction.search,
+        );
+  final Future<Iterable<Bundle>?> bundles;
+
+  // Return null to display default back button
+  @override
+  Widget? buildLeading(BuildContext context) => null;
+
+  @override
+  PreferredSizeWidget buildBottom(BuildContext context) {
+    return PreferredSize(
+        preferredSize: const Size.fromHeight(56.0),
+        child: Row(
+          children: [
+            FilterChip(
+              selected: true,
+              label: const Text('ISBN'),
+              onSelected: (value) {},
+            ),
+            FilterChip(
+              label: const Text('Title'),
+              onSelected: (value) {},
+            ),
+            FilterChip(
+              label: const Text('Author'),
+              onSelected: (value) {},
+            ),
+          ],
+        ));
+  }
+
+  @override
+  Widget buildSuggestions(BuildContext context) {
+    return FutureWidget(
+      future: bundles,
+      builder: (bundles) {
+        if (bundles == null) return Text('Loading bundles');
+        final filteredBundles = bundles.where((b) => b.metadata.isbns?.any((isbn) => isbn.contains(query)) ?? false);
+        return ListView.builder(
+          itemBuilder: (context, index) {
+            final b = filteredBundles.elementAt(index);
+            return FutureWidget(
+              future: b.getAutoMetadata(),
+              builder: (md) {
+                return Text(b.directory.path);
+                final title = md.iter.first.value.iter.first.value?.title;
+                return Text(title ?? 'unknown');
+              },
+            );
+          },
+          itemCount: filteredBundles.length,
+        );
+      },
+    );
+//    return const Text('suggestions');
+  }
+
+  @override
+  Widget buildResults(BuildContext context) => const Text('results');
+
+  @override
+  List<Widget> buildActions(BuildContext context) =>
+      <Widget>[IconButton(onPressed: () {}, icon: const Icon(Icons.clear))];
+}
+
 class BundleSelection extends StatefulWidget {
   const BundleSelection();
 
@@ -63,6 +135,14 @@ class _BundleSelectionState extends State<BundleSelection> {
       appBar: AppBar(
         title: const Text('Bundle Section'),
         actions: [
+          IconButton(
+              icon: const Icon(Icons.search),
+              onPressed: () {
+                showSearch(
+                    context: context,
+                    delegate: CustomSearchHintDelegate(hintText: 'Search all the bundles', bundles: _listBundles())
+                      ..showResults(context));
+              }),
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: () {
@@ -336,12 +416,13 @@ class _BundleWidgetState extends State<BundleWidget> {
   }
 
   void _loadAutoMetadata() {
-    cachedAutoMetadata = api.getAutoMetadataFromBundle(path: widget.bundle.autoMetadataFile.path).then((value) {
+    cachedAutoMetadata = widget.bundle.getAutoMetadata();
+/*    cachedAutoMetadata = api.getAutoMetadataFromBundle(path: widget.bundle.autoMetadataFile.path).then((value) {
       return Map.fromEntries(value.map((e) {
         final providerMdMap = Map.fromEntries(e.metadatas.map((e) => MapEntry(e.provider, e.metadata))).kt;
         return MapEntry(e.isbn, providerMdMap);
       })).kt;
-    });
+    });*/
   }
 
   @override

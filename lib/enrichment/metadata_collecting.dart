@@ -14,6 +14,7 @@ class BooksMetadataCollectingWidget extends StatefulWidget {
   const BooksMetadataCollectingWidget({required this.step});
 
   final MetadataCollectingStep step;
+
   @override
   State<BooksMetadataCollectingWidget> createState() => _BooksMetadataCollectingWidgetState();
 }
@@ -123,9 +124,11 @@ class _BookControllerSet {
 }
 
 String _keywordsToString(List<String> keywords) => keywords.join(', ');
+
 List<String> _stringToKeywords(String s) => s.split(', ').toList();
 
 String _authorsToString(List<Author> authors) => authors.map((a) => a.toText()).join('\n');
+
 List<Author> _stringToAuthors(String s) {
   if (s.isEmpty) return [];
   return s.split('\n').map((line) => Author(firstName: '', lastName: line)).toList();
@@ -307,6 +310,7 @@ const _noneText = Text('None', style: TextStyle(fontStyle: FontStyle.italic));
 
 class _SelectableTextAndUse extends StatelessWidget {
   const _SelectableTextAndUse(this.s, {required this.onUse});
+
   final String s;
   final void Function(String) onUse;
 
