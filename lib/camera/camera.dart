@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:ui' as ui;
 
 import 'package:audioplayers/audioplayers.dart';
 import 'package:booky/image_helper.dart';
@@ -409,7 +410,7 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
     }
     final bytes = allBytes.done().buffer.asUint8List();
 
-    final Size imageSize = Size(image.width.toDouble(), image.height.toDouble());
+    final ui.Size imageSize = ui.Size(image.width.toDouble(), image.height.toDouble());
 
     final camera = controller!.description;
     final imageRotation = InputImageRotationValue.fromRawValue(camera.sensorOrientation);
@@ -765,13 +766,16 @@ class MetadataWidget extends StatefulWidget {
 }
 
 class _MetadataWidgetState extends State<MetadataWidget> {
-  late common.Metadata metadata;
+  late common.BundleMetadata metadata;
   final additionalISBNController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    metadata = common.Metadata(isbns: widget.isbns);
+    metadata = common.BundleMetadata(
+        books: widget.isbns
+            .map((isbn) => BookMetaDataManual(isbn: isbn, authors: [], keywords: [], priceCent: null))
+            .toList());
   }
 
   @override
@@ -812,7 +816,9 @@ class _MetadataWidgetState extends State<MetadataWidget> {
             icon: const Icon(Icons.save),
             onPressed: () async {
               if (additionalISBNController.text.isNotEmpty) {
-                metadata.isbns!.addAll(additionalISBNController.text.split(' '));
+                metadata.books!.addAll(additionalISBNController.text
+                    .split(' ')
+                    .map((isbn) => BookMetaDataManual(isbn: isbn, authors: [], keywords: [], priceCent: null)));
               }
               await File(path.join(widget.directory.path, 'metadata.json'))
                   .writeAsString(jsonEncode(metadata.toJson()));

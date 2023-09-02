@@ -45,7 +45,7 @@ class _BooksMetadataCollectingWidgetState extends State<BooksMetadataCollectingW
         setState(() {
           // Use the order from metadata.json, and not the one coming from autoMd
           // (which is out of order because the json is a map so the Rust parser may not respect the order)
-          controllers = Map.fromEntries(widget.step.bundle.metadata.isbns!.map((e) => MapEntry(e, map[e]!)));
+          controllers = Map.fromEntries(widget.step.bundle.metadata.books!.map((b) => MapEntry(b.isbn, map[b]!)));
         });
       }
     });

@@ -4,6 +4,8 @@ import 'package:json_annotation/json_annotation.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart' as path_provider;
 
+import 'helpers.dart';
+
 part 'common.g.dart';
 
 /// All ISBN (EAN-13) should start with 978
@@ -79,14 +81,26 @@ enum ItemState {
 }
 
 @JsonSerializable()
-class Metadata {
-  Metadata({this.weightGrams, this.itemState, this.isbns});
+class BundleMetadata {
+  BundleMetadata({this.weightGrams, this.itemState, this.books});
 
   int? weightGrams;
   ItemState? itemState;
-  List<String>? isbns;
+  List<BookMetaDataManual>? books;
 
-  factory Metadata.fromJson(Map<String, dynamic> json) => _$MetadataFromJson(json);
+  factory BundleMetadata.fromJson(Map<String, dynamic> json) => _$MetadataFromJson(json);
 
   Map<String, dynamic> toJson() => _$MetadataToJson(this);
 }
+//
+// class BookMetadata {
+//   BookMetadata({required this.isbn, this.title, this.authors = const [], this.blurb, this.keywords = const []});
+//
+//   String isbn;
+//
+//   final String? title;
+//   final List<Author> authors;
+//   final String? blurb;
+//   final List<String> keywords;
+// // final Float32List marketPrice;
+// }

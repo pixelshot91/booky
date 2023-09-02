@@ -25,15 +25,15 @@ class Bundle {
 
   File get metadataFile => File(path.join(directory.path, 'metadata.json'));
 
-  Metadata get metadata {
+  BundleMetadata get metadata {
     try {
-      return Metadata.fromJson(jsonDecode(metadataFile.readAsStringSync()) as Map<String, dynamic>);
+      return BundleMetadata.fromJson(jsonDecode(metadataFile.readAsStringSync()) as Map<String, dynamic>);
     } on PathNotFoundException {
-      return Metadata();
+      return BundleMetadata();
     }
   }
 
-  Future<bool> overwriteMetadata(Metadata md) async {
+  Future<bool> overwriteMetadata(BundleMetadata md) async {
     final tmpFile = File('tmp.json');
 
     try {
@@ -61,28 +61,48 @@ class Bundle {
   Future<KtMutableMap<String, KtMutableMap<ProviderEnum, BookMetaDataFromProvider?>>> getAutoMetadata() async {
     try {
       final value = await api.getAutoMetadataFromBundle(path: autoMetadataFile.path);
-      return Map
-          .fromEntries(value.map((e) {
-        final providerMdMap = Map
-            .fromEntries(e.metadatas.map((e) => MapEntry(e.provider, e.metadata)))
-            .kt;
+      return Map.fromEntries(value.map((e) {
+        final providerMdMap = Map.fromEntries(e.metadatas.map((e) => MapEntry(e.provider, e.metadata))).kt;
         return MapEntry(e.isbn, providerMdMap);
-      }))
-          .kt;
+      })).kt;
     } on FfiException {
       return KtMutableMap.empty();
     }
   }
 
-/*Metadata getMergedMetadata() {
-
-  }*/
+  // Return the best information either manually submitted, manually verified, or automatically, for every book of the bundle
+  Future<BundleMetadata> getMergedMetadata() async {
+    final md = metadata;
+    final autoMD = await getAutoMetadata();
+    final autoBooksMD = md.books?.map((book) => autoMD.get(book.isbn));
+    // No ISBN list
+    if (autoBooksMD == null) return md;
+    final listOfAutoMd = autoBooksMD.whereNotNull().map((autoBookMD) {
+      final mergeMD = autoBookMD.dart.mergeAllProvider();
+      return mergeMD;
+      // return BookMetaDataManual(isbn: autoBookMD);
+    }).toList();
+    return BundleMetadata(
+      weightGrams: md.weightGrams,
+      itemState: md.itemState,
+      books: md.books!.mapIndexed((i, book) {
+        final autoMD = listOfAutoMd[i];
+        return BookMetaDataManual(
+          isbn: book.isbn,
+          title: autoMD.title,
+          authors: autoMD.authors,
+          keywords: autoMD.keywords,
+          priceCent: (autoMD.marketPrice.min * 100).toInt(),
+          blurb: autoMD.blurb,
+        );
+      }).toList(),
+    );
+  }
 }
 
 extension MapProviderEnumBookMetaDataFromProviderExt on Map<ProviderEnum, BookMetaDataFromProvider?> {
   List<double> getPrices() =>
-      values.map((e) => e?.marketPrice.toList()).whereNotNull().expand((i) => i).toList()
-        ..sort();
+      values.map((e) => e?.marketPrice.toList()).whereNotNull().expand((i) => i).toList()..sort();
 
   BookMetaDataFromProvider mergeAllProvider() {
     return BookMetaDataFromProvider(

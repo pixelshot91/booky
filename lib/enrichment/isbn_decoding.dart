@@ -15,6 +15,7 @@ import 'enrichment.dart';
 
 class ISBNDecodingWidget extends StatefulWidget {
   const ISBNDecodingWidget({required this.step});
+
   final ISBNDecodingStep step;
 
   @override
@@ -23,6 +24,8 @@ class ISBNDecodingWidget extends StatefulWidget {
 
 class _ISBNDecodingWidgetState extends State<ISBNDecodingWidget> {
   KtMutableMap<String, Future<BarcodeDetectResults>> decodedIsbns = KtMutableMap.empty();
+
+  // TODO: Should be a list to preserve order
   KtMutableSet<String> selectedIsbns = KtMutableSet.empty();
 
   @override
@@ -35,7 +38,7 @@ class _ISBNDecodingWidgetState extends State<ISBNDecodingWidget> {
       });
     });
 
-    selectedIsbns = (widget.step.bundle.metadata.isbns ?? []).toSet().kt;
+    selectedIsbns = (widget.step.bundle.metadata.books?.map((b) => b.isbn) ?? []).toSet().kt;
   }
 
   String? _isbn10Validator(String text) {
@@ -174,14 +177,18 @@ class _ISBNDecodingWidgetState extends State<ISBNDecodingWidget> {
                       const SizedBox(height: 20),
                       () {
                         final md = widget.step.bundle.metadata;
-                        final isbnsDidNotChanged = (md.isbns ?? []).toImmutableSet() == selectedIsbns;
+                        final isbnsDidNotChanged = (md.books ?? []).toImmutableSet() == selectedIsbns;
                         return ElevatedButton(
                             onPressed: isbnsDidNotChanged
                                 ? null
                                 : () async {
                                     final md = widget.step.bundle.metadata;
 
-                                    md.isbns = selectedIsbns.toList().asList();
+                                    md.books = selectedIsbns.toList().asList().map((selectedIsbn) {
+                                      final oldBook = md.books?.singleWhereOrNull((book) => book.isbn == selectedIsbn);
+                                      if (oldBook != null) return oldBook;
+                                      return BookMetaDataManual.fromIsbn(isbn: selectedIsbn);
+                                    }).toList();
                                     final res = await widget.step.bundle.overwriteMetadata(md);
                                     print('res = $res');
                                     if (res) {
@@ -215,6 +222,7 @@ extension _PointExt on Point {
 
 class ISBNPreview extends StatefulWidget {
   const ISBNPreview({required this.imgFile, required this.result});
+
   final File imgFile;
   final BarcodeDetectResult result;
 
@@ -225,6 +233,7 @@ class ISBNPreview extends StatefulWidget {
 class _ISBNPreviewState extends State<ISBNPreview> {
   late num barcodeWidth;
   late Vector3 translate;
+
   @override
   void initState() {
     super.initState();

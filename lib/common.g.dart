@@ -6,16 +6,15 @@ part of 'common.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-Metadata _$MetadataFromJson(Map<String, dynamic> json) => Metadata(
+BundleMetadata _$MetadataFromJson(Map<String, dynamic> json) => BundleMetadata(
       weightGrams: json['weightGrams'] as int?,
       itemState: $enumDecodeNullable(_$ItemStateEnumMap, json['itemState']),
-    )..isbns =
-        (json['isbns'] as List<dynamic>?)?.map((e) => e as String).toList();
+    )..books = (json['isbns'] as List<dynamic>?)?.map((e) => e as String).toList();
 
-Map<String, dynamic> _$MetadataToJson(Metadata instance) => <String, dynamic>{
+Map<String, dynamic> _$MetadataToJson(BundleMetadata instance) => <String, dynamic>{
       'weightGrams': instance.weightGrams,
       'itemState': _$ItemStateEnumMap[instance.itemState],
-      'isbns': instance.isbns,
+      'isbns': instance.books,
     };
 
 const _$ItemStateEnumMap = {

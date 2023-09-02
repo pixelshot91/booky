@@ -14,6 +14,7 @@ import 'package:stream_transform/stream_transform.dart';
 
 import '../bundle.dart';
 import '../common.dart' as common;
+import '../common.dart';
 import '../ffi.dart';
 import '../helpers.dart';
 import '../widgets/scrollable_bundle_images.dart';
@@ -94,32 +95,26 @@ class CustomSearchHintDelegate extends SearchDelegate<String> {
         if (bundles == null) return const Text('Loading bundles');
 
         final bundlesWithMD = bundles.map((b) async {
-          final md = b.metadata;
-          final autoMD = await b.getAutoMetadata();
-          final autoMDPerISBN = md.isbns?.map((isbn) => autoMD.get(isbn));
-          // No ISBN list
-          if (autoMDPerISBN == null) return null;
-          final listOfAutoMd = autoMDPerISBN.whereNotNull().map((autMDPerISBN) {
-            final mergeMD = autMDPerISBN.dart.mergeAllProvider();
-            return mergeMD;
-          });
-
-          return (b, listOfAutoMd);
+          return b.getMergedMetadata();
+          // return (b, listOfAutoMd);
         });
         return FutureWidget(
           future: Future.wait(bundlesWithMD),
           builder: (bundlesWithMD) {
             final whereNotNull = bundlesWithMD.whereNotNull();
             final bundlesMatchingISBN = matchOnISBN
-                ? whereNotNull.where((b) => b.$1.metadata.isbns?.any((isbn) => isbn.contains(query)) ?? false)
-                : const Iterable<(Bundle, Iterable<BookMetaDataFromProvider>)>.empty();
+                ? whereNotNull.where((b) => b.books?.any((book) => book.isbn.contains(query)) ?? false)
+                : const Iterable<BundleMetadata>.empty();
             final bundlesMatchingTitle = matchOnTitle
-                ? whereNotNull.where((b) => b.$2.any((book) => book.title?.containsIgnoringCase(query) ?? false))
-                : const Iterable<(Bundle, Iterable<BookMetaDataFromProvider>)>.empty();
+                ? whereNotNull
+                    .where((b) => b.books?.any((book) => book.title?.containsIgnoringCase(query) ?? false) ?? false)
+                : const Iterable<BundleMetadata>.empty();
             final bundlesMatchingAuthor = matchOnAuthor
-                ? whereNotNull.where((b) => b.$2.any((book) =>
-                    book.authors.any((author) => '${author.firstName} ${author.lastName}'.containsIgnoringCase(query))))
-                : const Iterable<(Bundle, Iterable<BookMetaDataFromProvider>)>.empty();
+                ? whereNotNull.where((b) =>
+                    b.books?.any((book) => book.authors
+                        .any((author) => '${author.firstName} ${author.lastName}'.containsIgnoringCase(query))) ??
+                    false)
+                : const Iterable<BundleMetadata>.empty();
             final bundleMatching =
                 bundlesMatchingISBN.followedBy(bundlesMatchingTitle).followedBy(bundlesMatchingAuthor);
             return ListView.builder(
@@ -130,7 +125,7 @@ class CustomSearchHintDelegate extends SearchDelegate<String> {
                   child: Padding(
                     padding: const EdgeInsets.all(6.0),
                     child: Text(
-                      b.$2.firstOrNull?.title ?? 'None',
+                      b.books?.firstOrNull?.title ?? 'None',
                     ),
                   ),
                 );
@@ -287,7 +282,7 @@ class _BundleSelectionState extends State<BundleSelection> {
         }
         return;
       }
-      final Set<String> isbns = bundle.metadata.isbns?.toSet() ?? {};
+      final Set<String> isbns = bundle.metadata.books?.map((book) => book.isbn).toSet() ?? {};
 
       try {
         await api.getMetadataFromIsbns(

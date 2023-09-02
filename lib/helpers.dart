@@ -196,6 +196,11 @@ class BookMetaDataManual {
     required this.keywords,
     required this.priceCent,
   });
+
+  BookMetaDataManual.fromIsbn({required this.isbn})
+      : title = null,
+        authors = [],
+        keywords = [];
 }
 
 /*
