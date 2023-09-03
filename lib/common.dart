@@ -4,7 +4,7 @@ import 'package:json_annotation/json_annotation.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart' as path_provider;
 
-import 'helpers.dart';
+import 'bridge_definitions.dart';
 
 part 'common.g.dart';
 
@@ -86,21 +86,39 @@ class BundleMetadata {
 
   int? weightGrams;
   ItemState? itemState;
+
   List<BookMetaDataManual>? books;
 
   factory BundleMetadata.fromJson(Map<String, dynamic> json) => _$MetadataFromJson(json);
 
   Map<String, dynamic> toJson() => _$MetadataToJson(this);
 }
-//
-// class BookMetadata {
-//   BookMetadata({required this.isbn, this.title, this.authors = const [], this.blurb, this.keywords = const []});
-//
-//   String isbn;
-//
-//   final String? title;
-//   final List<Author> authors;
-//   final String? blurb;
-//   final List<String> keywords;
-// // final Float32List marketPrice;
-// }
+
+@JsonSerializable()
+class BookMetaDataManual {
+  String isbn;
+  String? title;
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  List<Author> authors;
+  String? blurb;
+  List<String> keywords;
+  int? priceCent;
+
+  BookMetaDataManual({
+    required this.isbn,
+    this.title,
+    required this.authors,
+    this.blurb,
+    required this.keywords,
+    required this.priceCent,
+  });
+
+  BookMetaDataManual.fromIsbn({required this.isbn})
+      : title = null,
+        authors = [],
+        keywords = [];
+
+  factory BookMetaDataManual.fromJson(Map<String, dynamic> json) => _$BookMetaDataManualFromJson(json);
+
+  Map<String, dynamic> toJson() => _$BookMetaDataManualToJson(this);
+}

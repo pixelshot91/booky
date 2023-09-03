@@ -180,29 +180,6 @@ extension StringExt on String {
   bool containsIgnoringCase(String needle) => toLowerCase().contains(needle.toLowerCase());
 }
 
-class BookMetaDataManual {
-  String isbn;
-  String? title;
-  List<Author> authors;
-  String? blurb;
-  List<String> keywords;
-  int? priceCent;
-
-  BookMetaDataManual({
-    required this.isbn,
-    this.title,
-    required this.authors,
-    this.blurb,
-    required this.keywords,
-    required this.priceCent,
-  });
-
-  BookMetaDataManual.fromIsbn({required this.isbn})
-      : title = null,
-        authors = [],
-        keywords = [];
-}
-
 /*
 extension BookMetadataExt on BookMetaData {
   BookMetaData deepCopy() => BookMetaData(

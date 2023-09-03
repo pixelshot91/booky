@@ -1,4 +1,4 @@
-import 'package:booky/helpers.dart';
+import 'package:booky/common.dart';
 
 import '../bundle.dart';
 
@@ -8,11 +8,13 @@ class BundleSelectionStep implements BookyStep {}
 
 class ISBNDecodingStep implements BookyStep {
   Bundle bundle;
+
   ISBNDecodingStep({required this.bundle});
 }
 
 class MetadataCollectingStep implements BookyStep {
   Bundle bundle;
+
   MetadataCollectingStep({required this.bundle});
 }
 
