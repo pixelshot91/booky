@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
 import 'dart:ui' as ui;
 
@@ -13,6 +12,7 @@ import 'package:google_mlkit_barcode_scanning/google_mlkit_barcode_scanning.dart
 import 'package:image/image.dart' as img;
 import 'package:path/path.dart' as path;
 
+import '../bridge_definitions.dart';
 import '../bundle.dart';
 import '../common.dart' as common;
 import '../helpers.dart';
@@ -767,16 +767,15 @@ class MetadataWidget extends StatefulWidget {
 }
 
 class _MetadataWidgetState extends State<MetadataWidget> {
-  late common.BundleMetadata metadata;
+  late BundleMetaData metadata;
   final additionalISBNController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    metadata = common.BundleMetadata(
-        books: widget.isbns
-            .map((isbn) => BookMetaDataManual(isbn: isbn, authors: [], keywords: [], priceCent: null))
-            .toList());
+    metadata = BundleMetaData(
+        books:
+            widget.isbns.map((isbn) => BookMetaData(isbn: isbn, authors: [], keywords: [], priceCent: null)).toList());
   }
 
   @override
@@ -796,10 +795,10 @@ class _MetadataWidgetState extends State<MetadataWidget> {
           ),
           style: const TextStyle(fontSize: 20),
         ),
-        DropdownButton<common.ItemState>(
+        DropdownButton<ItemState>(
             hint: const Text('Book state'),
             value: metadata.itemState,
-            items: common.ItemState.values.map((s) => DropdownMenuItem(value: s, child: Text(s.loc))).toList(),
+            items: ItemState.values.map((s) => DropdownMenuItem(value: s, child: Text(s.loc))).toList(),
             onChanged: (state) => setState(() {
                   metadata.itemState = state;
                 })),
@@ -816,13 +815,15 @@ class _MetadataWidgetState extends State<MetadataWidget> {
         IconButton(
             icon: const Icon(Icons.save),
             onPressed: () async {
-              if (additionalISBNController.text.isNotEmpty) {
+              throw UnimplementedError('write in Rust');
+              /*if (additionalISBNController.text.isNotEmpty) {
                 metadata.books!.addAll(additionalISBNController.text
                     .split(' ')
                     .map((isbn) => BookMetaDataManual(isbn: isbn, authors: [], keywords: [], priceCent: null)));
               }
+
               await File(path.join(widget.directory.path, 'metadata.json'))
-                  .writeAsString(jsonEncode(metadata.toJson()));
+                  .writeAsString(jsonEncode(metadata.toJson()));*/
               widget.onSubmit();
             })
       ]

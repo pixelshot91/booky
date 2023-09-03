@@ -78,6 +78,44 @@ class NativeImpl implements Native {
         argNames: ["path"],
       );
 
+  Future<BundleMetaData> getManualMetadataForBundle(
+      {required String bundlePath, dynamic hint}) {
+    var arg0 = _platform.api2wire_String(bundlePath);
+    return _platform.executeNormal(FlutterRustBridgeTask(
+      callFfi: (port_) =>
+          _platform.inner.wire_get_manual_metadata_for_bundle(port_, arg0),
+      parseSuccessData: _wire2api_bundle_meta_data,
+      constMeta: kGetManualMetadataForBundleConstMeta,
+      argValues: [bundlePath],
+      hint: hint,
+    ));
+  }
+
+  FlutterRustBridgeTaskConstMeta get kGetManualMetadataForBundleConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "get_manual_metadata_for_bundle",
+        argNames: ["bundlePath"],
+      );
+
+  Future<BundleMetaData> getMergedMetadataForBundle(
+      {required String bundlePath, dynamic hint}) {
+    var arg0 = _platform.api2wire_String(bundlePath);
+    return _platform.executeNormal(FlutterRustBridgeTask(
+      callFfi: (port_) =>
+          _platform.inner.wire_get_merged_metadata_for_bundle(port_, arg0),
+      parseSuccessData: _wire2api_bundle_meta_data,
+      constMeta: kGetMergedMetadataForBundleConstMeta,
+      argValues: [bundlePath],
+      hint: hint,
+    ));
+  }
+
+  FlutterRustBridgeTaskConstMeta get kGetMergedMetadataForBundleConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "get_merged_metadata_for_bundle",
+        argNames: ["bundlePath"],
+      );
+
   Future<BookMetaDataFromProvider?> getMetadataFromProvider(
       {required ProviderEnum provider, required String isbn, dynamic hint}) {
     var arg0 = api2wire_provider_enum(provider);
@@ -140,6 +178,20 @@ class NativeImpl implements Native {
     );
   }
 
+  BookMetaData _wire2api_book_meta_data(dynamic raw) {
+    final arr = raw as List<dynamic>;
+    if (arr.length != 6)
+      throw Exception('unexpected arr length: expect 6 but see ${arr.length}');
+    return BookMetaData(
+      isbn: _wire2api_String(arr[0]),
+      title: _wire2api_opt_String(arr[1]),
+      authors: _wire2api_list_author(arr[2]),
+      blurb: _wire2api_opt_String(arr[3]),
+      keywords: _wire2api_StringList(arr[4]),
+      priceCent: _wire2api_opt_box_autoadd_i32(arr[5]),
+    );
+  }
+
   BookMetaDataFromProvider _wire2api_book_meta_data_from_provider(dynamic raw) {
     final arr = raw as List<dynamic>;
     if (arr.length != 5)
@@ -156,6 +208,25 @@ class NativeImpl implements Native {
   BookMetaDataFromProvider _wire2api_box_autoadd_book_meta_data_from_provider(
       dynamic raw) {
     return _wire2api_book_meta_data_from_provider(raw);
+  }
+
+  int _wire2api_box_autoadd_i32(dynamic raw) {
+    return raw as int;
+  }
+
+  ItemState _wire2api_box_autoadd_item_state(dynamic raw) {
+    return _wire2api_item_state(raw);
+  }
+
+  BundleMetaData _wire2api_bundle_meta_data(dynamic raw) {
+    final arr = raw as List<dynamic>;
+    if (arr.length != 3)
+      throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+    return BundleMetaData(
+      weightGrams: _wire2api_opt_box_autoadd_i32(arr[0]),
+      itemState: _wire2api_opt_box_autoadd_item_state(arr[1]),
+      books: _wire2api_list_book_meta_data(arr[2]),
+    );
   }
 
   double _wire2api_f32(dynamic raw) {
@@ -180,12 +251,20 @@ class NativeImpl implements Native {
     );
   }
 
+  ItemState _wire2api_item_state(dynamic raw) {
+    return ItemState.values[raw as int];
+  }
+
   List<Author> _wire2api_list_author(dynamic raw) {
     return (raw as List<dynamic>).map(_wire2api_author).toList();
   }
 
   List<BarcodeDetectResult> _wire2api_list_barcode_detect_result(dynamic raw) {
     return (raw as List<dynamic>).map(_wire2api_barcode_detect_result).toList();
+  }
+
+  List<BookMetaData> _wire2api_list_book_meta_data(dynamic raw) {
+    return (raw as List<dynamic>).map(_wire2api_book_meta_data).toList();
   }
 
   List<ISBNMetadataPair> _wire2api_list_isbn_metadata_pair(dynamic raw) {
@@ -212,6 +291,14 @@ class NativeImpl implements Native {
     return raw == null
         ? null
         : _wire2api_box_autoadd_book_meta_data_from_provider(raw);
+  }
+
+  int? _wire2api_opt_box_autoadd_i32(dynamic raw) {
+    return raw == null ? null : _wire2api_box_autoadd_i32(raw);
+  }
+
+  ItemState? _wire2api_opt_box_autoadd_item_state(dynamic raw) {
+    return raw == null ? null : _wire2api_box_autoadd_item_state(raw);
   }
 
   Point _wire2api_point(dynamic raw) {

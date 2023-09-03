@@ -17,6 +17,16 @@ pub fn wire_get_auto_metadata_from_bundle(port_: MessagePort, path: String) {
 }
 
 #[wasm_bindgen]
+pub fn wire_get_manual_metadata_for_bundle(port_: MessagePort, bundle_path: String) {
+    wire_get_manual_metadata_for_bundle_impl(port_, bundle_path)
+}
+
+#[wasm_bindgen]
+pub fn wire_get_merged_metadata_for_bundle(port_: MessagePort, bundle_path: String) {
+    wire_get_merged_metadata_for_bundle_impl(port_, bundle_path)
+}
+
+#[wasm_bindgen]
 pub fn wire_get_metadata_from_provider(port_: MessagePort, provider: i32, isbn: String) {
     wire_get_metadata_from_provider_impl(port_, provider, isbn)
 }

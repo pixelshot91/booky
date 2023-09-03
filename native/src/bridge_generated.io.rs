@@ -21,6 +21,22 @@ pub extern "C" fn wire_get_auto_metadata_from_bundle(port_: i64, path: *mut wire
 }
 
 #[no_mangle]
+pub extern "C" fn wire_get_manual_metadata_for_bundle(
+    port_: i64,
+    bundle_path: *mut wire_uint_8_list,
+) {
+    wire_get_manual_metadata_for_bundle_impl(port_, bundle_path)
+}
+
+#[no_mangle]
+pub extern "C" fn wire_get_merged_metadata_for_bundle(
+    port_: i64,
+    bundle_path: *mut wire_uint_8_list,
+) {
+    wire_get_merged_metadata_for_bundle_impl(port_, bundle_path)
+}
+
+#[no_mangle]
 pub extern "C" fn wire_get_metadata_from_provider(
     port_: i64,
     provider: i32,

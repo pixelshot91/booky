@@ -1,5 +1,3 @@
-import 'package:booky/common.dart';
-
 import '../bundle.dart';
 
 sealed class BookyStep {}
@@ -21,9 +19,9 @@ class MetadataCollectingStep implements BookyStep {
 class AdEditingStep implements BookyStep {
   Bundle bundle;
 
-  Iterable<BookMetaDataManual> metadata = {};
+  // Iterable<BookMetaData> metadata = {};
 
-  AdEditingStep({required this.bundle, required this.metadata});
+  AdEditingStep({required this.bundle});
 }
 
 // Example State

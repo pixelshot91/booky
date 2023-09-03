@@ -26,6 +26,16 @@ abstract class Native {
 
   FlutterRustBridgeTaskConstMeta get kGetAutoMetadataFromBundleConstMeta;
 
+  Future<BundleMetaData> getManualMetadataForBundle(
+      {required String bundlePath, dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta get kGetManualMetadataForBundleConstMeta;
+
+  Future<BundleMetaData> getMergedMetadataForBundle(
+      {required String bundlePath, dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta get kGetMergedMetadataForBundleConstMeta;
+
   Future<BookMetaDataFromProvider?> getMetadataFromProvider(
       {required ProviderEnum provider, required String isbn, dynamic hint});
 
@@ -60,6 +70,24 @@ class BarcodeDetectResults {
   });
 }
 
+class BookMetaData {
+  final String isbn;
+  final String? title;
+  final List<Author> authors;
+  final String? blurb;
+  final List<String> keywords;
+  final int? priceCent;
+
+  const BookMetaData({
+    required this.isbn,
+    this.title,
+    required this.authors,
+    this.blurb,
+    required this.keywords,
+    this.priceCent,
+  });
+}
+
 class BookMetaDataFromProvider {
   final String? title;
   final List<Author> authors;
@@ -76,6 +104,18 @@ class BookMetaDataFromProvider {
   });
 }
 
+class BundleMetaData {
+  int? weightGrams;
+  ItemState? itemState;
+  final List<BookMetaData> books;
+
+  BundleMetaData({
+    this.weightGrams,
+    this.itemState,
+    required this.books,
+  });
+}
+
 class ISBNMetadataPair {
   final String isbn;
   final List<ProviderMetadataPair> metadatas;
@@ -84,6 +124,13 @@ class ISBNMetadataPair {
     required this.isbn,
     required this.metadatas,
   });
+}
+
+enum ItemState {
+  BrandNew,
+  VeryGood,
+  Good,
+  Medium,
 }
 
 class Point {

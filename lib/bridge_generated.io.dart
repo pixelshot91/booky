@@ -194,6 +194,42 @@ class NativeWire implements FlutterRustBridgeWireBase {
       _wire_get_auto_metadata_from_bundlePtr
           .asFunction<void Function(int, ffi.Pointer<wire_uint_8_list>)>();
 
+  void wire_get_manual_metadata_for_bundle(
+    int port_,
+    ffi.Pointer<wire_uint_8_list> bundle_path,
+  ) {
+    return _wire_get_manual_metadata_for_bundle(
+      port_,
+      bundle_path,
+    );
+  }
+
+  late final _wire_get_manual_metadata_for_bundlePtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Void Function(ffi.Int64, ffi.Pointer<wire_uint_8_list>)>>(
+      'wire_get_manual_metadata_for_bundle');
+  late final _wire_get_manual_metadata_for_bundle =
+      _wire_get_manual_metadata_for_bundlePtr
+          .asFunction<void Function(int, ffi.Pointer<wire_uint_8_list>)>();
+
+  void wire_get_merged_metadata_for_bundle(
+    int port_,
+    ffi.Pointer<wire_uint_8_list> bundle_path,
+  ) {
+    return _wire_get_merged_metadata_for_bundle(
+      port_,
+      bundle_path,
+    );
+  }
+
+  late final _wire_get_merged_metadata_for_bundlePtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Void Function(ffi.Int64, ffi.Pointer<wire_uint_8_list>)>>(
+      'wire_get_merged_metadata_for_bundle');
+  late final _wire_get_merged_metadata_for_bundle =
+      _wire_get_merged_metadata_for_bundlePtr
+          .asFunction<void Function(int, ffi.Pointer<wire_uint_8_list>)>();
+
   void wire_get_metadata_from_provider(
     int port_,
     int provider,

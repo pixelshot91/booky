@@ -6,6 +6,7 @@ use std::path::Path;
 use crate::client::Client;
 use crate::common;
 use crate::{abebooks, babelio, booksprice, google_books, justbooks, leslibraires};
+use flutter_rust_bridge::frb;
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 use strum::IntoEnumIterator;
@@ -163,6 +164,63 @@ pub fn get_auto_metadata_from_bundle(path: String) -> Result<Vec<ISBNMetadataPai
         })
         .collect_vec();
     Ok(vec_of_vec)
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+enum ItemState {
+    BrandNew,
+    VeryGood,
+    Good,
+    Medium,
+}
+
+#[derive(Default, Debug, Deserialize, Serialize)]
+#[frb(non_final)]
+pub struct BundleMetaData {
+    #[frb(non_final)]
+    pub weight_grams: Option<i32>,
+    #[frb(non_final)]
+    pub item_state: Option<ItemState>,
+    pub books: Vec<BookMetaData>,
+}
+#[derive(Debug, Deserialize, Serialize)]
+pub struct BookMetaData {
+    pub isbn: String,
+    pub title: Option<String>,
+    pub authors: Vec<common::Author>,
+    // A book blurb is a short promotional description.
+    // A synopsis summarizes the twists, turns, and conclusion of the story.
+    pub blurb: Option<String>,
+    pub keywords: Vec<String>,
+
+    pub price_cent: Option<i32>,
+}
+
+pub fn get_manual_metadata_for_bundle(bundle_path: String) -> Result<BundleMetaData> {
+    // get from metadata.json
+    let mut file = File::open(format!("{bundle_path}/metadata.json"))?;
+    let mut contents = String::new();
+    file.read_to_string(&mut contents).unwrap();
+
+    let manual_bundle_md: BundleMetaData = serde_json::from_str(&contents).unwrap();
+    return Ok(manual_bundle_md);
+}
+
+// Retrieve a summary of all the information of a bundle
+// If a book metadata is not available, try to use a metadata from a Provider
+pub fn get_merged_metadata_for_bundle(bundle_path: String) -> Result<BundleMetaData> {
+    // get from metadata.json
+    let mut file = File::open(format!("{bundle_path}/metadata.json"))?;
+    let mut contents = String::new();
+    file.read_to_string(&mut contents).unwrap();
+
+    let manual_bundle_md: BundleMetaData = serde_json::from_str(&contents).unwrap();
+
+    // Get MD from Provider
+    let auto_md = get_auto_metadata_from_bundle(format!("{bundle_path}/automatic_metadata.json"));
+
+    // For each missing MD of metadata.json use the best estimate from the providers
+    return Ok(manual_bundle_md);
 }
 
 fn gen_client(cache_dir: &str) -> Box<dyn Client> {

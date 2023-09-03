@@ -1,7 +1,5 @@
-import 'dart:convert';
 import 'dart:io';
 
-import 'package:booky/common.dart';
 import 'package:booky/helpers.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge.dart';
@@ -25,15 +23,17 @@ class Bundle {
 
   File get metadataFile => File(path.join(directory.path, 'metadata.json'));
 
-  BundleMetadata get metadata {
+  /*BundleMetadata get metadata {
     try {
       return BundleMetadata.fromJson(jsonDecode(metadataFile.readAsStringSync()) as Map<String, dynamic>);
     } on PathNotFoundException {
       return BundleMetadata();
     }
-  }
+  }*/
 
-  Future<bool> overwriteMetadata(BundleMetadata md) async {
+  Future<bool> overwriteMetadata(BundleMetaData md) async {
+    throw UnimplementedError('overwrite in Rust');
+    /*
     final tmpFile = File('tmp.json');
 
     try {
@@ -43,7 +43,7 @@ class Bundle {
       return false;
     }
 
-    return common.launchCommandLine('gio', ['move', tmpFile.path, metadataFile.path]);
+    return common.launchCommandLine('gio', ['move', tmpFile.path, metadataFile.path]);*/
   }
 
   Future<bool> removeAutoMetadata() async {
@@ -71,6 +71,15 @@ class Bundle {
   }
 
   // Return the best information either manually submitted, manually verified, or automatically, for every book of the bundle
+  Future<BundleMetaData> getMergedMetadata() async {
+    return api.getMergedMetadataForBundle(bundlePath: directory.path);
+  }
+
+  Future<BundleMetaData> getManualMetadata() async {
+    return api.getManualMetadataForBundle(bundlePath: directory.path);
+  }
+
+/*
   Future<BundleMetadata> getMergedMetadata() async {
     final md = metadata;
     final autoMD = await getAutoMetadata();
@@ -98,6 +107,7 @@ class Bundle {
       }).toList(),
     );
   }
+*/
 }
 
 extension MapProviderEnumBookMetaDataFromProviderExt on Map<ProviderEnum, BookMetaDataFromProvider?> {

@@ -14,7 +14,6 @@ import 'package:stream_transform/stream_transform.dart';
 
 import '../bundle.dart';
 import '../common.dart' as common;
-import '../common.dart';
 import '../ffi.dart';
 import '../helpers.dart';
 import '../widgets/scrollable_bundle_images.dart';
@@ -103,18 +102,18 @@ class CustomSearchHintDelegate extends SearchDelegate<String> {
           builder: (bundlesWithMD) {
             final whereNotNull = bundlesWithMD.whereNotNull();
             final bundlesMatchingISBN = matchOnISBN
-                ? whereNotNull.where((b) => b.books?.any((book) => book.isbn.contains(query)) ?? false)
-                : const Iterable<BundleMetadata>.empty();
+                ? whereNotNull.where((b) => b.books.any((book) => book.isbn.contains(query)) ?? false)
+                : const Iterable<BundleMetaData>.empty();
             final bundlesMatchingTitle = matchOnTitle
                 ? whereNotNull
-                    .where((b) => b.books?.any((book) => book.title?.containsIgnoringCase(query) ?? false) ?? false)
-                : const Iterable<BundleMetadata>.empty();
+                    .where((b) => b.books.any((book) => book.title?.containsIgnoringCase(query) ?? false) ?? false)
+                : const Iterable<BundleMetaData>.empty();
             final bundlesMatchingAuthor = matchOnAuthor
                 ? whereNotNull.where((b) =>
-                    b.books?.any((book) => book.authors
+                    b.books.any((book) => book.authors
                         .any((author) => '${author.firstName} ${author.lastName}'.containsIgnoringCase(query))) ??
                     false)
-                : const Iterable<BundleMetadata>.empty();
+                : const Iterable<BundleMetaData>.empty();
             final bundleMatching =
                 bundlesMatchingISBN.followedBy(bundlesMatchingTitle).followedBy(bundlesMatchingAuthor);
             return ListView.builder(
@@ -125,7 +124,7 @@ class CustomSearchHintDelegate extends SearchDelegate<String> {
                   child: Padding(
                     padding: const EdgeInsets.all(6.0),
                     child: Text(
-                      b.books?.firstOrNull?.title ?? 'None',
+                      b.books.firstOrNull?.title ?? 'None',
                     ),
                   ),
                 );
@@ -282,11 +281,11 @@ class _BundleSelectionState extends State<BundleSelection> {
         }
         return;
       }
-      final Set<String> isbns = bundle.metadata.books?.map((book) => book.isbn).toSet() ?? {};
+      final List<String> isbns = (await bundle.getManualMetadata()).books.map((book) => book.isbn).toList();
 
       try {
         await api.getMetadataFromIsbns(
-          isbns: isbns.toList(),
+          isbns: isbns,
           path: bundle.autoMetadataFile.path,
         );
       } on FfiException catch (e) {

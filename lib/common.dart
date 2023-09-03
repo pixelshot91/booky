@@ -1,12 +1,8 @@
 import 'dart:io';
 
-import 'package:json_annotation/json_annotation.dart';
+import 'package:booky/ffi.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart' as path_provider;
-
-import 'bridge_definitions.dart';
-
-part 'common.g.dart';
 
 /// All ISBN (EAN-13) should start with 978
 /// Use to prevent false barcode decoding
@@ -60,6 +56,21 @@ Future<BookyDir> bookyDir() async {
   return Future(() => BookyDir(Directory('/home/julien/Perso/LeBonCoin/chain_automatisation/saved_folder/')));
 }
 
+extension ItemStateExt on ItemState {
+  String get loc {
+    switch (this) {
+      case ItemState.BrandNew:
+        return 'Brand New';
+      case ItemState.VeryGood:
+        return 'Very Good';
+      case ItemState.Good:
+        return 'Good';
+      case ItemState.Medium:
+        return 'Medium';
+    }
+  }
+}
+/*
 enum ItemState {
   brandNew,
   veryGood,
@@ -121,4 +132,4 @@ class BookMetaDataManual {
   factory BookMetaDataManual.fromJson(Map<String, dynamic> json) => _$BookMetaDataManualFromJson(json);
 
   Map<String, dynamic> toJson() => _$BookMetaDataManualToJson(this);
-}
+}*/
