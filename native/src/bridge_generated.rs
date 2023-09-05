@@ -91,6 +91,26 @@ fn wire_get_manual_metadata_for_bundle_impl(
         },
     )
 }
+fn wire_set_merged_metadata_for_bundle_impl(
+    port_: MessagePort,
+    bundle_path: impl Wire2Api<String> + UnwindSafe,
+    bundle_metadata: impl Wire2Api<BundleMetaData> + UnwindSafe,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap::<_, _, _, ()>(
+        WrapInfo {
+            debug_name: "set_merged_metadata_for_bundle",
+            port: Some(port_),
+            mode: FfiCallMode::Normal,
+        },
+        move || {
+            let api_bundle_path = bundle_path.wire2api();
+            let api_bundle_metadata = bundle_metadata.wire2api();
+            move |task_callback| {
+                set_merged_metadata_for_bundle(api_bundle_path, api_bundle_metadata)
+            }
+        },
+    )
+}
 fn wire_get_merged_metadata_for_bundle_impl(
     port_: MessagePort,
     bundle_path: impl Wire2Api<String> + UnwindSafe,
@@ -153,6 +173,18 @@ impl Wire2Api<i32> for i32 {
         self
     }
 }
+impl Wire2Api<ItemState> for i32 {
+    fn wire2api(self) -> ItemState {
+        match self {
+            0 => ItemState::BrandNew,
+            1 => ItemState::VeryGood,
+            2 => ItemState::Good,
+            3 => ItemState::Medium,
+            _ => unreachable!("Invalid variant for ItemState: {}", self),
+        }
+    }
+}
+
 impl Wire2Api<ProviderEnum> for i32 {
     fn wire2api(self) -> ProviderEnum {
         match self {

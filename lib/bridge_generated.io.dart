@@ -32,6 +32,58 @@ class NativePlatform extends FlutterRustBridgeBase<NativeWire> {
   }
 
   @protected
+  ffi.Pointer<wire_BundleMetaData> api2wire_box_autoadd_bundle_meta_data(
+      BundleMetaData raw) {
+    final ptr = inner.new_box_autoadd_bundle_meta_data_0();
+    _api_fill_to_wire_bundle_meta_data(raw, ptr.ref);
+    return ptr;
+  }
+
+  @protected
+  ffi.Pointer<ffi.Int32> api2wire_box_autoadd_i32(int raw) {
+    return inner.new_box_autoadd_i32_0(api2wire_i32(raw));
+  }
+
+  @protected
+  ffi.Pointer<ffi.Int32> api2wire_box_autoadd_item_state(ItemState raw) {
+    return inner.new_box_autoadd_item_state_0(api2wire_item_state(raw));
+  }
+
+  @protected
+  ffi.Pointer<wire_list_author> api2wire_list_author(List<Author> raw) {
+    final ans = inner.new_list_author_0(raw.length);
+    for (var i = 0; i < raw.length; ++i) {
+      _api_fill_to_wire_author(raw[i], ans.ref.ptr[i]);
+    }
+    return ans;
+  }
+
+  @protected
+  ffi.Pointer<wire_list_book_meta_data> api2wire_list_book_meta_data(
+      List<BookMetaData> raw) {
+    final ans = inner.new_list_book_meta_data_0(raw.length);
+    for (var i = 0; i < raw.length; ++i) {
+      _api_fill_to_wire_book_meta_data(raw[i], ans.ref.ptr[i]);
+    }
+    return ans;
+  }
+
+  @protected
+  ffi.Pointer<wire_uint_8_list> api2wire_opt_String(String? raw) {
+    return raw == null ? ffi.nullptr : api2wire_String(raw);
+  }
+
+  @protected
+  ffi.Pointer<ffi.Int32> api2wire_opt_box_autoadd_i32(int? raw) {
+    return raw == null ? ffi.nullptr : api2wire_box_autoadd_i32(raw);
+  }
+
+  @protected
+  ffi.Pointer<ffi.Int32> api2wire_opt_box_autoadd_item_state(ItemState? raw) {
+    return raw == null ? ffi.nullptr : api2wire_box_autoadd_item_state(raw);
+  }
+
+  @protected
   ffi.Pointer<wire_uint_8_list> api2wire_uint_8_list(Uint8List raw) {
     final ans = inner.new_uint_8_list_0(raw.length);
     ans.ref.ptr.asTypedList(raw.length).setAll(0, raw);
@@ -40,6 +92,33 @@ class NativePlatform extends FlutterRustBridgeBase<NativeWire> {
 // Section: finalizer
 
 // Section: api_fill_to_wire
+
+  void _api_fill_to_wire_author(Author apiObj, wire_Author wireObj) {
+    wireObj.first_name = api2wire_String(apiObj.firstName);
+    wireObj.last_name = api2wire_String(apiObj.lastName);
+  }
+
+  void _api_fill_to_wire_book_meta_data(
+      BookMetaData apiObj, wire_BookMetaData wireObj) {
+    wireObj.isbn = api2wire_String(apiObj.isbn);
+    wireObj.title = api2wire_opt_String(apiObj.title);
+    wireObj.authors = api2wire_list_author(apiObj.authors);
+    wireObj.blurb = api2wire_opt_String(apiObj.blurb);
+    wireObj.keywords = api2wire_StringList(apiObj.keywords);
+    wireObj.price_cent = api2wire_opt_box_autoadd_i32(apiObj.priceCent);
+  }
+
+  void _api_fill_to_wire_box_autoadd_bundle_meta_data(
+      BundleMetaData apiObj, ffi.Pointer<wire_BundleMetaData> wireObj) {
+    _api_fill_to_wire_bundle_meta_data(apiObj, wireObj.ref);
+  }
+
+  void _api_fill_to_wire_bundle_meta_data(
+      BundleMetaData apiObj, wire_BundleMetaData wireObj) {
+    wireObj.weight_grams = api2wire_opt_box_autoadd_i32(apiObj.weightGrams);
+    wireObj.item_state = api2wire_opt_box_autoadd_item_state(apiObj.itemState);
+    wireObj.books = api2wire_list_book_meta_data(apiObj.books);
+  }
 }
 
 // ignore_for_file: camel_case_types, non_constant_identifier_names, avoid_positional_boolean_parameters, annotate_overrides, constant_identifier_names
@@ -212,6 +291,28 @@ class NativeWire implements FlutterRustBridgeWireBase {
       _wire_get_manual_metadata_for_bundlePtr
           .asFunction<void Function(int, ffi.Pointer<wire_uint_8_list>)>();
 
+  void wire_set_merged_metadata_for_bundle(
+    int port_,
+    ffi.Pointer<wire_uint_8_list> bundle_path,
+    ffi.Pointer<wire_BundleMetaData> bundle_metadata,
+  ) {
+    return _wire_set_merged_metadata_for_bundle(
+      port_,
+      bundle_path,
+      bundle_metadata,
+    );
+  }
+
+  late final _wire_set_merged_metadata_for_bundlePtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Void Function(ffi.Int64, ffi.Pointer<wire_uint_8_list>,
+                  ffi.Pointer<wire_BundleMetaData>)>>(
+      'wire_set_merged_metadata_for_bundle');
+  late final _wire_set_merged_metadata_for_bundle =
+      _wire_set_merged_metadata_for_bundlePtr.asFunction<
+          void Function(int, ffi.Pointer<wire_uint_8_list>,
+              ffi.Pointer<wire_BundleMetaData>)>();
+
   void wire_get_merged_metadata_for_bundle(
     int port_,
     ffi.Pointer<wire_uint_8_list> bundle_path,
@@ -265,6 +366,75 @@ class NativeWire implements FlutterRustBridgeWireBase {
   late final _new_StringList_0 = _new_StringList_0Ptr
       .asFunction<ffi.Pointer<wire_StringList> Function(int)>();
 
+  ffi.Pointer<wire_BundleMetaData> new_box_autoadd_bundle_meta_data_0() {
+    return _new_box_autoadd_bundle_meta_data_0();
+  }
+
+  late final _new_box_autoadd_bundle_meta_data_0Ptr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<wire_BundleMetaData> Function()>>(
+          'new_box_autoadd_bundle_meta_data_0');
+  late final _new_box_autoadd_bundle_meta_data_0 =
+      _new_box_autoadd_bundle_meta_data_0Ptr
+          .asFunction<ffi.Pointer<wire_BundleMetaData> Function()>();
+
+  ffi.Pointer<ffi.Int32> new_box_autoadd_i32_0(
+    int value,
+  ) {
+    return _new_box_autoadd_i32_0(
+      value,
+    );
+  }
+
+  late final _new_box_autoadd_i32_0Ptr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<ffi.Int32> Function(ffi.Int32)>>(
+          'new_box_autoadd_i32_0');
+  late final _new_box_autoadd_i32_0 = _new_box_autoadd_i32_0Ptr
+      .asFunction<ffi.Pointer<ffi.Int32> Function(int)>();
+
+  ffi.Pointer<ffi.Int32> new_box_autoadd_item_state_0(
+    int value,
+  ) {
+    return _new_box_autoadd_item_state_0(
+      value,
+    );
+  }
+
+  late final _new_box_autoadd_item_state_0Ptr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<ffi.Int32> Function(ffi.Int32)>>(
+          'new_box_autoadd_item_state_0');
+  late final _new_box_autoadd_item_state_0 = _new_box_autoadd_item_state_0Ptr
+      .asFunction<ffi.Pointer<ffi.Int32> Function(int)>();
+
+  ffi.Pointer<wire_list_author> new_list_author_0(
+    int len,
+  ) {
+    return _new_list_author_0(
+      len,
+    );
+  }
+
+  late final _new_list_author_0Ptr = _lookup<
+          ffi
+          .NativeFunction<ffi.Pointer<wire_list_author> Function(ffi.Int32)>>(
+      'new_list_author_0');
+  late final _new_list_author_0 = _new_list_author_0Ptr
+      .asFunction<ffi.Pointer<wire_list_author> Function(int)>();
+
+  ffi.Pointer<wire_list_book_meta_data> new_list_book_meta_data_0(
+    int len,
+  ) {
+    return _new_list_book_meta_data_0(
+      len,
+    );
+  }
+
+  late final _new_list_book_meta_data_0Ptr = _lookup<
+      ffi.NativeFunction<
+          ffi.Pointer<wire_list_book_meta_data> Function(
+              ffi.Int32)>>('new_list_book_meta_data_0');
+  late final _new_list_book_meta_data_0 = _new_list_book_meta_data_0Ptr
+      .asFunction<ffi.Pointer<wire_list_book_meta_data> Function(int)>();
+
   ffi.Pointer<wire_uint_8_list> new_uint_8_list_0(
     int len,
   ) {
@@ -309,6 +479,48 @@ final class wire_StringList extends ffi.Struct {
 
   @ffi.Int32()
   external int len;
+}
+
+final class wire_Author extends ffi.Struct {
+  external ffi.Pointer<wire_uint_8_list> first_name;
+
+  external ffi.Pointer<wire_uint_8_list> last_name;
+}
+
+final class wire_list_author extends ffi.Struct {
+  external ffi.Pointer<wire_Author> ptr;
+
+  @ffi.Int32()
+  external int len;
+}
+
+final class wire_BookMetaData extends ffi.Struct {
+  external ffi.Pointer<wire_uint_8_list> isbn;
+
+  external ffi.Pointer<wire_uint_8_list> title;
+
+  external ffi.Pointer<wire_list_author> authors;
+
+  external ffi.Pointer<wire_uint_8_list> blurb;
+
+  external ffi.Pointer<wire_StringList> keywords;
+
+  external ffi.Pointer<ffi.Int32> price_cent;
+}
+
+final class wire_list_book_meta_data extends ffi.Struct {
+  external ffi.Pointer<wire_BookMetaData> ptr;
+
+  @ffi.Int32()
+  external int len;
+}
+
+final class wire_BundleMetaData extends ffi.Struct {
+  external ffi.Pointer<ffi.Int32> weight_grams;
+
+  external ffi.Pointer<ffi.Int32> item_state;
+
+  external ffi.Pointer<wire_list_book_meta_data> books;
 }
 
 typedef DartPostCObjectFnType = ffi.Pointer<

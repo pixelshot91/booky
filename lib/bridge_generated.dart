@@ -97,6 +97,28 @@ class NativeImpl implements Native {
         argNames: ["bundlePath"],
       );
 
+  Future<void> setMergedMetadataForBundle(
+      {required String bundlePath,
+      required BundleMetaData bundleMetadata,
+      dynamic hint}) {
+    var arg0 = _platform.api2wire_String(bundlePath);
+    var arg1 = _platform.api2wire_box_autoadd_bundle_meta_data(bundleMetadata);
+    return _platform.executeNormal(FlutterRustBridgeTask(
+      callFfi: (port_) => _platform.inner
+          .wire_set_merged_metadata_for_bundle(port_, arg0, arg1),
+      parseSuccessData: _wire2api_unit,
+      constMeta: kSetMergedMetadataForBundleConstMeta,
+      argValues: [bundlePath, bundleMetadata],
+      hint: hint,
+    ));
+  }
+
+  FlutterRustBridgeTaskConstMeta get kSetMergedMetadataForBundleConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "set_merged_metadata_for_bundle",
+        argNames: ["bundlePath", "bundleMetadata"],
+      );
+
   Future<BundleMetaData> getMergedMetadataForBundle(
       {required String bundlePath, dynamic hint}) {
     var arg0 = _platform.api2wire_String(bundlePath);
@@ -347,6 +369,11 @@ class NativeImpl implements Native {
 @protected
 int api2wire_i32(int raw) {
   return raw;
+}
+
+@protected
+int api2wire_item_state(ItemState raw) {
+  return api2wire_i32(raw.index);
 }
 
 @protected

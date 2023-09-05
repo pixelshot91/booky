@@ -27,7 +27,7 @@ class _Metadata {
 }
 
 class _BooksMetadataCollectingWidgetState extends State<BooksMetadataCollectingWidget> {
-  Map<String, _Metadata>? controllers;
+  KtMap<String, _Metadata>? controllers;
 
   @override
   void initState() {
@@ -46,7 +46,7 @@ class _BooksMetadataCollectingWidgetState extends State<BooksMetadataCollectingW
         setState(() {
           // Use the order from metadata.json, and not the one coming from autoMd
           // (which is out of order because the json is a map so the Rust parser may not respect the order)
-          controllers = Map.fromEntries(mergeMd.books.map((b) => MapEntry(b.isbn, map[b.isbn]!)));
+          controllers = Map.fromEntries(mergeMd.books.map((b) => MapEntry(b.isbn, map[b.isbn]!))).kt;
         });
       }
     });
@@ -77,19 +77,42 @@ class _BooksMetadataCollectingWidgetState extends State<BooksMetadataCollectingW
                                       isbn: entry.key,
                                       metadatas: entry.value,
                                     ))
-                                .toList(),
+                                .toList()
+                                .dart,
                             Padding(
                               padding: const EdgeInsets.all(8.0),
                               child: ElevatedButton(
-                                  onPressed: () {
-                                    Navigator.push(
-                                        context,
-                                        MaterialPageRoute<void>(
-                                            builder: (context) => AdEditingWidget(
-                                                    step: AdEditingStep(
-                                                  bundle: widget.step.bundle,
-                                                  // TODO: save metadata in metadata.json
-                                                  /* metadata: controllers.entries.map((entry) {
+                                  onPressed: () async {
+                                    /*final booksMetadata = controllers.entries.map((entry) {
+                                      final bookControllerSet = entry.value.bookControllerSet;
+                                      return BookMetaData(
+                                        isbn: entry.key,
+                                        title: bookControllerSet.titleTextFieldController.text,
+                                        authors: _stringToAuthors(bookControllerSet.authorsTextFieldController.text),
+                                        blurb: bookControllerSet.blurbTextFieldController.text,
+                                        keywords: _stringToKeywords(bookControllerSet.keywordsTextFieldController.text),
+                                        priceCent: double.parse(bookControllerSet.priceTextFieldController.text)
+                                            .multiply(100)
+                                            .round(),
+                                      );
+                                    });*/
+                                    final bundleMetadata = await api.getMergedMetadataForBundle(
+                                        bundlePath: widget.step.bundle.directory.path);
+                                    bundleMetadata.books.forEach((book) {
+                                      book.title =
+                                          controllers[book.isbn]?.bookControllerSet.titleTextFieldController.text;
+                                    });
+                                    await api.setMergedMetadataForBundle(
+                                        bundlePath: widget.step.bundle.directory.path, bundleMetadata: bundleMetadata);
+                                    if (context.mounted) {
+                                      Navigator.push(
+                                          context,
+                                          MaterialPageRoute<void>(
+                                              builder: (context) => AdEditingWidget(
+                                                      step: AdEditingStep(
+                                                    bundle: widget.step.bundle,
+                                                    // TODO: save metadata in metadata.json
+                                                    /* metadata: controllers.entries.map((entry) {
                                                       final bookControllerSet = entry.value.bookControllerSet;
                                                       return BookMetaDataManual(
                                                         isbn: entry.key,
@@ -105,7 +128,8 @@ class _BooksMetadataCollectingWidgetState extends State<BooksMetadataCollectingW
                                                             .round(),
                                                       );
                                                     })*/
-                                                ))));
+                                                  ))));
+                                    }
                                   },
                                   child: const Text('Validate Metadatas')),
                             )

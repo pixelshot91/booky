@@ -31,6 +31,13 @@ abstract class Native {
 
   FlutterRustBridgeTaskConstMeta get kGetManualMetadataForBundleConstMeta;
 
+  Future<void> setMergedMetadataForBundle(
+      {required String bundlePath,
+      required BundleMetaData bundleMetadata,
+      dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta get kSetMergedMetadataForBundleConstMeta;
+
   Future<BundleMetaData> getMergedMetadataForBundle(
       {required String bundlePath, dynamic hint});
 
@@ -71,14 +78,14 @@ class BarcodeDetectResults {
 }
 
 class BookMetaData {
-  final String isbn;
-  final String? title;
-  final List<Author> authors;
-  final String? blurb;
-  final List<String> keywords;
-  final int? priceCent;
+  String isbn;
+  String? title;
+  List<Author> authors;
+  String? blurb;
+  List<String> keywords;
+  int? priceCent;
 
-  const BookMetaData({
+  BookMetaData({
     required this.isbn,
     this.title,
     required this.authors,

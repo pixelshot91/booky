@@ -12,7 +12,7 @@ use serde::{Deserialize, Serialize};
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 
-use anyhow::Result;
+use anyhow::{Ok, Result};
 
 #[derive(EnumIter, PartialEq, Eq, Hash, Debug, Deserialize, Serialize, Copy, Clone)]
 pub enum ProviderEnum {
@@ -184,15 +184,21 @@ pub struct BundleMetaData {
     pub books: Vec<BookMetaData>,
 }
 #[derive(Debug, Deserialize, Serialize)]
+#[frb(non_final)]
 pub struct BookMetaData {
+    #[frb(non_final)]
     pub isbn: String,
+    #[frb(non_final)]
     pub title: Option<String>,
+    #[frb(non_final)]
     pub authors: Vec<common::Author>,
     // A book blurb is a short promotional description.
     // A synopsis summarizes the twists, turns, and conclusion of the story.
+    #[frb(non_final)]
     pub blurb: Option<String>,
+    #[frb(non_final)]
     pub keywords: Vec<String>,
-
+    #[frb(non_final)]
     pub price_cent: Option<i32>,
 }
 
@@ -204,6 +210,16 @@ pub fn get_manual_metadata_for_bundle(bundle_path: String) -> Result<BundleMetaD
 
     let manual_bundle_md: BundleMetaData = serde_json::from_str(&contents).unwrap();
     return Ok(manual_bundle_md);
+}
+const METADATA_FILE_NAME: &str = "metadata.json";
+pub fn set_merged_metadata_for_bundle(
+    bundle_path: String,
+    bundle_metadata: BundleMetaData,
+) -> Result<()> {
+    let file_path = format!("{}/{}", bundle_path, METADATA_FILE_NAME);
+    let contents = serde_json::to_string(&bundle_metadata).unwrap();
+    std::fs::write(file_path, contents)?;
+    Ok(())
 }
 
 // Retrieve a summary of all the information of a bundle
@@ -219,7 +235,8 @@ pub fn get_merged_metadata_for_bundle(bundle_path: String) -> Result<BundleMetaD
     // Get MD from Provider
     let auto_md = get_auto_metadata_from_bundle(format!("{bundle_path}/automatic_metadata.json"));
 
-    // For each missing MD of metadata.json use the best estimate from the providers
+    // TODO: For each missing MD of metadata.json use the best estimate from the providers
+
     return Ok(manual_bundle_md);
 }
 
