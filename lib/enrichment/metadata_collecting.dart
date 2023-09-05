@@ -1,5 +1,4 @@
 import 'package:booky/bundle.dart';
-import 'package:booky/common.dart';
 import 'package:booky/enrichment/ad_editing.dart';
 import 'package:booky/helpers.dart';
 import 'package:booky/widgets/scrollable_bundle_images.dart';
@@ -42,11 +41,13 @@ class _BooksMetadataCollectingWidgetState extends State<BooksMetadataCollectingW
               providerMetadatas:
                   entry.metadatas.map((md) => MapEntry(md.provider, md.metadata)).let((e) => Map.fromEntries(e)),
               bookControllerSet: _BookControllerSet()))));
+      final mergeMd = await api.getMergedMetadataForBundle(bundlePath: widget.step.bundle.directory.path);
+      print('MergeMd = $mergeMd');
       if (mounted) {
         setState(() {
           // Use the order from metadata.json, and not the one coming from autoMd
           // (which is out of order because the json is a map so the Rust parser may not respect the order)
-          controllers = Map.fromEntries(widget.step.bundle.metadata.books!.map((b) => MapEntry(b.isbn, map[b]!)));
+          controllers = Map.fromEntries(mergeMd.books!.map((b) => MapEntry(b.isbn, map[b]!)));
         });
       }
     });
@@ -86,9 +87,10 @@ class _BooksMetadataCollectingWidgetState extends State<BooksMetadataCollectingW
                                         context,
                                         MaterialPageRoute<void>(
                                             builder: (context) => AdEditingWidget(
-                                                step: AdEditingStep(
-                                                    bundle: widget.step.bundle,
-                                                    metadata: controllers.entries.map((entry) {
+                                                    step: AdEditingStep(
+                                                  bundle: widget.step.bundle,
+                                                  // TODO: save metadata in metadata.json
+                                                  /* metadata: controllers.entries.map((entry) {
                                                       final bookControllerSet = entry.value.bookControllerSet;
                                                       return BookMetaDataManual(
                                                         isbn: entry.key,
@@ -103,7 +105,8 @@ class _BooksMetadataCollectingWidgetState extends State<BooksMetadataCollectingW
                                                             .multiply(100)
                                                             .round(),
                                                       );
-                                                    })))));
+                                                    })*/
+                                                ))));
                                   },
                                   child: const Text('Validate Metadatas')),
                             )
