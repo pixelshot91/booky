@@ -53,7 +53,8 @@ Future<BookyDir> bookyDir() async {
   }
   return Future(() => BookyDir(
       Directory('/run/user/1000/gvfs/mtp:host=SAMSUNG_SAMSUNG_Android_RFCRA1CG6KT/Internal storage/DCIM/booky/')));
-  return Future(() => BookyDir(Directory('/home/julien/Perso/LeBonCoin/chain_automatisation/saved_folder/')));
+  return Future(
+      () => BookyDir(Directory('/home/julien/Perso/LeBonCoin/chain_automatisation/saved_folder/after_migration')));
 }
 
 extension ItemStateExt on ItemState {
