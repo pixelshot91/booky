@@ -167,7 +167,7 @@ pub fn get_auto_metadata_from_bundle(path: String) -> Result<Vec<ISBNMetadataPai
 }
 
 #[derive(Debug, Deserialize, Serialize)]
-enum ItemState {
+pub enum ItemState {
     BrandNew,
     VeryGood,
     Good,

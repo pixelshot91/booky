@@ -40,14 +40,13 @@ class _BooksMetadataCollectingWidgetState extends State<BooksMetadataCollectingW
           _Metadata(
               providerMetadatas:
                   entry.metadatas.map((md) => MapEntry(md.provider, md.metadata)).let((e) => Map.fromEntries(e)),
-              bookControllerSet: _BookControllerSet()))));
+              bookControllerSet: _BookControllerSet())))).kt;
       final mergeMd = await api.getMergedMetadataForBundle(bundlePath: widget.step.bundle.directory.path);
-      print('MergeMd = $mergeMd');
       if (mounted) {
         setState(() {
           // Use the order from metadata.json, and not the one coming from autoMd
           // (which is out of order because the json is a map so the Rust parser may not respect the order)
-          controllers = Map.fromEntries(mergeMd.books!.map((b) => MapEntry(b.isbn, map[b]!)));
+          controllers = Map.fromEntries(mergeMd.books.map((b) => MapEntry(b.isbn, map[b.isbn]!)));
         });
       }
     });
