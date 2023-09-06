@@ -483,12 +483,22 @@ class _BundleWidgetState extends State<BundleWidget> {
                     return Row(children: [
                       if (autoMetadata.size > 1) _NumberOfBookBadge(autoMetadata.size),
                       Expanded(
-                          child: md.title.ifIs(
+                          child: Column(
+                        children: [
+                          FutureWidget(
+                            future: widget.bundle.getMergedMetadata(),
+                            builder: (mergeMD) {
+                              return Text(mergeMD.books.firstOrNull?.title ?? 'None');
+                            },
+                          ),
+                          md.title.ifIs(
                               notnull: (t) => TextWithTooltip(t),
                               nul: () => const Text(
                                     'No title found',
                                     style: TextStyle(fontStyle: FontStyle.italic),
-                                  ))),
+                                  )),
+                        ],
+                      )),
                       priceRange.isEmpty
                           ? const Text('?')
                           : Text('${priceRange.first.toInt()} - ${priceRange.last.toInt()} €'),
