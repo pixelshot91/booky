@@ -64,6 +64,8 @@ pub fn detect_barcode_in_image(img_path: String) -> Result<BarcodeDetectResults>
 #[cfg(test)]
 mod tests {
     use super::{BarcodeDetectResult, BarcodeDetectResults, Point};
+    use crate::api::get_merged_metadata_for_bundle;
+
     #[test]
     fn test_detect_barcode_in_image() {
         let res =
@@ -84,6 +86,12 @@ mod tests {
                 }]
             }
         )
+    }
+
+    #[test]
+    fn test_get_merged_metadata_for_bundle() {
+        let merged = get_merged_metadata_for_bundle("/home/julien/Perso/LeBonCoin/chain_automatisation/saved_folder/after_migration/to_publish/2023-07-16T18_05_24.212557".to_owned());
+        println!("{:?}", merged);
     }
 }
 
@@ -246,26 +254,55 @@ pub fn get_merged_metadata_for_bundle(bundle_path: String) -> Result<BundleMetaD
         _get_auto_metadata_from_bundle(format!("{bundle_path}/automatic_metadata.json"))?;
     manual_bundle_md.books.iter_mut().for_each(|book| {
         let auto_mds = bundle_auto_md.get(&book.isbn);
-        let title_is_empty = match &book.title {
-            None => true,
-            Some(s) => s.is_empty(),
-        };
-        if title_is_empty {
-            let longest_title = auto_mds.and_then(|auto_md| {
-                let titles = auto_md
-                    .values()
-                    .map(|auto| auto.as_ref().and_then(|a| a.title.as_ref()))
-                    .filter_map(|f| f);
-                let longest = titles.max_by(|a, b| a.len().cmp(&b.len()));
-                longest
-            });
-            book.title = longest_title.map(|s| s.to_owned());
-        }
+        replace_with_longest_string_if_none_or_empty(
+            book,
+            auto_mds,
+            |auto| &auto.title,
+            |bookmd| &mut bookmd.title,
+        );
     });
 
     // TODO: For each missing MD of metadata.json use the best estimate from the providers
 
     return Ok(manual_bundle_md);
+}
+
+fn replace_with_longest_string_if_none_or_empty<F1, F2>(
+    book: &mut BookMetaData,
+    auto_mds: Option<&HashMap<ProviderEnum, Option<common::BookMetaDataFromProvider>>>,
+    auto_string_getter: F1,
+    book_md_string_getter: F2,
+) where
+    F1: Fn(&common::BookMetaDataFromProvider) -> &Option<String>,
+    F2: Fn(&mut BookMetaData) -> &mut Option<String>,
+{
+    fn is_none_or_empty(s: &Option<String>) -> bool {
+        match s {
+            None => true,
+            Some(s) => s.is_empty(),
+        }
+    }
+    fn get_longest_string<F>(
+        auto_mds: Option<&HashMap<ProviderEnum, Option<common::BookMetaDataFromProvider>>>,
+        string_getter: F,
+    ) -> Option<String>
+    where
+        F: Fn(&common::BookMetaDataFromProvider) -> &Option<String>,
+    {
+        auto_mds
+            .and_then(|auto_md| {
+                auto_md
+                    .values()
+                    .filter_map(|auto| auto.as_ref().and_then(|a| string_getter(a).as_ref())) // a.title.as_ref()))
+                    .max_by(|a, b| a.len().cmp(&b.len()))
+            })
+            .map(|s| s.to_owned())
+    }
+
+    if is_none_or_empty(book_md_string_getter(book)) {
+        // bookMD_string_getter(book).insert(get_longest_string(auto_mds, auto_string_getter).unwrap());
+        *book_md_string_getter(book) = get_longest_string(auto_mds, auto_string_getter);
+    }
 }
 
 fn gen_client(cache_dir: &str) -> Box<dyn Client> {
