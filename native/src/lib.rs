@@ -7,8 +7,5 @@ mod client;
 mod common;
 mod config;
 mod google_books;
-mod image_tools;
 mod justbooks;
-mod jwt_decoder;
 mod leslibraires;
-mod publisher;

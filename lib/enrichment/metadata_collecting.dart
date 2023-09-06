@@ -192,9 +192,9 @@ class _BookMetadataCollectingWidgetState extends State<_BookMetadataCollectingWi
     super.initState();
     final manualMD = widget.metadatas.providerMetadatas.mergeAllProvider();
     final controllers = widget.metadatas.bookControllerSet;
-    if (controllers.titleTextFieldController.text.isEmpty) {
+    /*if (controllers.titleTextFieldController.text.isEmpty) {
       controllers.titleTextFieldController.text = manualMD.title ?? '';
-    }
+    }*/
     controllers.authorsTextFieldController.text = _authorsToString(manualMD.authors);
     controllers.blurbTextFieldController.text = manualMD.blurb ?? '';
     controllers.keywordsTextFieldController.text = _keywordsToString(manualMD.keywords);

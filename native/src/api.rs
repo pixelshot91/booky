@@ -131,13 +131,20 @@ pub struct ProviderMetadataPair {
     pub metadata: Option<common::BookMetaDataFromProvider>,
 }
 
-pub fn get_auto_metadata_from_bundle(path: String) -> Result<Vec<ISBNMetadataPair>> {
+fn _get_auto_metadata_from_bundle(
+    path: String,
+) -> Result<HashMap<String, HashMap<ProviderEnum, Option<common::BookMetaDataFromProvider>>>> {
     let mut file = File::open(path)?;
     let mut contents = String::new();
-    file.read_to_string(&mut contents).unwrap();
+    file.read_to_string(&mut contents)?;
 
     let raw_map: HashMap<String, HashMap<ProviderEnum, Option<common::BookMetaDataFromProvider>>> =
-        serde_json::from_str(&contents).unwrap();
+        serde_json::from_str(&contents)?;
+    Ok(raw_map)
+}
+
+pub fn get_auto_metadata_from_bundle(path: String) -> Result<Vec<ISBNMetadataPair>> {
+    let raw_map = _get_auto_metadata_from_bundle(path)?;
 
     let vec_of_vec = raw_map
         .iter()
@@ -202,16 +209,18 @@ pub struct BookMetaData {
     pub price_cent: Option<i32>,
 }
 
+const METADATA_FILE_NAME: &str = "metadata.json";
+
 pub fn get_manual_metadata_for_bundle(bundle_path: String) -> Result<BundleMetaData> {
     // get from metadata.json
-    let mut file = File::open(format!("{bundle_path}/metadata.json"))?;
+    let mut file = File::open(format!("{bundle_path}/{METADATA_FILE_NAME}"))?;
     let mut contents = String::new();
     file.read_to_string(&mut contents).unwrap();
 
     let manual_bundle_md: BundleMetaData = serde_json::from_str(&contents).unwrap();
     return Ok(manual_bundle_md);
 }
-const METADATA_FILE_NAME: &str = "metadata.json";
+
 pub fn set_merged_metadata_for_bundle(
     bundle_path: String,
     bundle_metadata: BundleMetaData,
@@ -233,10 +242,26 @@ pub fn get_merged_metadata_for_bundle(bundle_path: String) -> Result<BundleMetaD
     let mut manual_bundle_md: BundleMetaData = serde_json::from_str(&contents).unwrap();
 
     // Get MD from Provider
-    let auto_md = get_auto_metadata_from_bundle(format!("{bundle_path}/automatic_metadata.json"));
-    /* manual_bundle_md.books.iter_mut().for_each(|book| {
-        book.title = Some("ds".to_owned());
-    }); */
+    let bundle_auto_md =
+        _get_auto_metadata_from_bundle(format!("{bundle_path}/automatic_metadata.json"))?;
+    manual_bundle_md.books.iter_mut().for_each(|book| {
+        let auto_mds = bundle_auto_md.get(&book.isbn);
+        let title_is_empty = match &book.title {
+            None => true,
+            Some(s) => s.is_empty(),
+        };
+        if title_is_empty {
+            let longest_title = auto_mds.and_then(|auto_md| {
+                let titles = auto_md
+                    .values()
+                    .map(|auto| auto.as_ref().and_then(|a| a.title.as_ref()))
+                    .filter_map(|f| f);
+                let longest = titles.max_by(|a, b| a.len().cmp(&b.len()));
+                longest
+            });
+            book.title = longest_title.map(|s| s.to_owned());
+        }
+    });
 
     // TODO: For each missing MD of metadata.json use the best estimate from the providers
 

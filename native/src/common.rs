@@ -26,11 +26,6 @@ pub trait Provider {
     fn get_book_metadata_from_isbn(&self, isbn: &str) -> Option<BookMetaDataFromProvider>;
 }
 
-pub struct LbcCredential {
-    pub lbc_token: String,
-    pub datadome_cookie: String,
-}
-
 pub struct Ad {
     pub title: String,
     pub description: String,
