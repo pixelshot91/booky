@@ -216,7 +216,7 @@ pub fn set_merged_metadata_for_bundle(
     bundle_path: String,
     bundle_metadata: BundleMetaData,
 ) -> Result<()> {
-    let file_path = format!("{}/{}", bundle_path, METADATA_FILE_NAME);
+    let file_path = format!("{bundle_path}/{METADATA_FILE_NAME}");
     let contents = serde_json::to_string(&bundle_metadata).unwrap();
     std::fs::write(file_path, contents)?;
     Ok(())
@@ -226,14 +226,17 @@ pub fn set_merged_metadata_for_bundle(
 // If a book metadata is not available, try to use a metadata from a Provider
 pub fn get_merged_metadata_for_bundle(bundle_path: String) -> Result<BundleMetaData> {
     // get from metadata.json
-    let mut file = File::open(format!("{bundle_path}/metadata.json"))?;
+    let mut file = File::open(format!("{bundle_path}/{METADATA_FILE_NAME}"))?;
     let mut contents = String::new();
     file.read_to_string(&mut contents).unwrap();
 
-    let manual_bundle_md: BundleMetaData = serde_json::from_str(&contents).unwrap();
+    let mut manual_bundle_md: BundleMetaData = serde_json::from_str(&contents).unwrap();
 
     // Get MD from Provider
     let auto_md = get_auto_metadata_from_bundle(format!("{bundle_path}/automatic_metadata.json"));
+    /* manual_bundle_md.books.iter_mut().for_each(|book| {
+        book.title = Some("ds".to_owned());
+    }); */
 
     // TODO: For each missing MD of metadata.json use the best estimate from the providers
 

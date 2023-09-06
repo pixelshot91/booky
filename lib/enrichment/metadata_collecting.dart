@@ -35,13 +35,28 @@ class _BooksMetadataCollectingWidgetState extends State<BooksMetadataCollectingW
 
     Future(() async {
       final autoMd = await api.getAutoMetadataFromBundle(path: widget.step.bundle.autoMetadataFile.path);
-      final map = Map.fromEntries(autoMd.map((entry) => MapEntry(
-          entry.isbn,
-          _Metadata(
-              providerMetadatas:
-                  entry.metadatas.map((md) => MapEntry(md.provider, md.metadata)).let((e) => Map.fromEntries(e)),
-              bookControllerSet: _BookControllerSet())))).kt;
       final mergeMd = await api.getMergedMetadataForBundle(bundlePath: widget.step.bundle.directory.path);
+      final map = Map.fromEntries(autoMd.map((entry) {
+        final bookControllerSet = _BookControllerSet();
+        final mergeMDForBook = mergeMd.books.singleWhere((book) => book.isbn == entry.isbn);
+        bookControllerSet.titleTextFieldController.text = mergeMDForBook.title ?? '';
+        bookControllerSet.authorsTextFieldController.text = _authorsToString(mergeMDForBook.authors);
+        bookControllerSet.blurbTextFieldController.text = mergeMDForBook.blurb ?? '';
+        bookControllerSet.keywordsTextFieldController.text = _keywordsToString(mergeMDForBook.keywords);
+        /*if (mergeMDForBook.marketPrice.isEmpty) {
+          bookControllerSet.priceTextFieldController.text = '';
+        } else {
+          final minMarketPrice = mergeMDForBook.marketPrice.min;
+          bookControllerSet.priceTextFieldController.text = minMarketPrice.round().toString();
+        }*/
+        return MapEntry(
+            entry.isbn,
+            _Metadata(
+                providerMetadatas:
+                    entry.metadatas.map((md) => MapEntry(md.provider, md.metadata)).let((e) => Map.fromEntries(e)),
+                bookControllerSet: bookControllerSet));
+      })).kt;
+
       if (mounted) {
         setState(() {
           // Use the order from metadata.json, and not the one coming from autoMd
@@ -177,7 +192,9 @@ class _BookMetadataCollectingWidgetState extends State<_BookMetadataCollectingWi
     super.initState();
     final manualMD = widget.metadatas.providerMetadatas.mergeAllProvider();
     final controllers = widget.metadatas.bookControllerSet;
-    controllers.titleTextFieldController.text = manualMD.title ?? '';
+    if (controllers.titleTextFieldController.text.isEmpty) {
+      controllers.titleTextFieldController.text = manualMD.title ?? '';
+    }
     controllers.authorsTextFieldController.text = _authorsToString(manualMD.authors);
     controllers.blurbTextFieldController.text = manualMD.blurb ?? '';
     controllers.keywordsTextFieldController.text = _keywordsToString(manualMD.keywords);
