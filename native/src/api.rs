@@ -295,32 +295,73 @@ fn replace_with_longest_string_if_none_or_empty<F1, F2>(
     F1: Fn(&common::BookMetaDataFromProvider) -> &Option<String>,
     F2: Fn(&mut BookMetaData) -> &mut Option<String>,
 {
-    fn is_none_or_empty(s: &Option<String>) -> bool {
+    replace_with_longest_x_if_none_or_empty(
+        book,
+        auto_mds,
+        auto_string_getter,
+        book_md_string_getter,
+        |s| s.len(),
+    );
+}
+
+fn replace_with_longest_vec_if_none_or_empty<F1, F2>(
+    book: &mut BookMetaData,
+    auto_mds: Option<&HashMap<ProviderEnum, Option<common::BookMetaDataFromProvider>>>,
+    auto_string_getter: F1,
+    book_md_string_getter: F2,
+) where
+    F1: Fn(&common::BookMetaDataFromProvider) -> &Option<String>,
+    F2: Fn(&mut BookMetaData) -> &mut Option<String>,
+{
+    replace_with_longest_x_if_none_or_empty(
+        book,
+        auto_mds,
+        auto_string_getter,
+        book_md_string_getter,
+        |s| s.len(),
+    );
+}
+
+fn replace_with_longest_x_if_none_or_empty<F1, F2, F3, T>(
+    book: &mut BookMetaData,
+    auto_mds: Option<&HashMap<ProviderEnum, Option<common::BookMetaDataFromProvider>>>,
+    auto_string_getter: F1,
+    book_md_string_getter: F2,
+    to_len: F3,
+) where
+    F1: Fn(&common::BookMetaDataFromProvider) -> &Option<T>,
+    F2: Fn(&mut BookMetaData) -> &mut Option<T>,
+    F3: Fn(&T) -> usize,
+{
+    fn is_none_or_empty<F, T>(s: &Option<T>, to_len: F) -> bool
+    where F: Fn(&T) -> usize, {
         match s {
             None => true,
-            Some(s) => s.is_empty(),
+            Some(s) => to_len(s) == 0,
         }
     }
-    fn get_longest_string<F>(
+    fn get_longest_x<F1, F2, T>(
         auto_mds: Option<&HashMap<ProviderEnum, Option<common::BookMetaDataFromProvider>>>,
-        string_getter: F,
-    ) -> Option<String>
+        string_getter: F1,
+        to_len: F2,
+    ) -> Option<T>
     where
-        F: Fn(&common::BookMetaDataFromProvider) -> &Option<String>,
+        F1: Fn(&common::BookMetaDataFromProvider) -> &Option<T>,
+        F2: Fn(&T) -> usize,
     {
         auto_mds
             .and_then(|auto_md| {
                 auto_md
                     .values()
                     .filter_map(|auto| auto.as_ref().and_then(|a| string_getter(a).as_ref()))
-                    .max_by(|a, b| a.len().cmp(&b.len()))
+                    .max_by(|a, b| to_len(a).cmp(&to_len(b)))
             })
             .map(|s| s.to_owned())
     }
 
-    if is_none_or_empty(book_md_string_getter(book)) {
+    if is_none_or_empty(book_md_string_getter(book), to_len) {
         // bookMD_string_getter(book).insert(get_longest_string(auto_mds, auto_string_getter).unwrap());
-        *book_md_string_getter(book) = get_longest_string(auto_mds, auto_string_getter);
+        *book_md_string_getter(book) = get_longest_x(auto_mds, auto_string_getter, to_len);
     }
 }
 
