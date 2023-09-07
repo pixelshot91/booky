@@ -1,8 +1,6 @@
-import 'package:booky/bundle.dart';
 import 'package:booky/enrichment/ad_editing.dart';
 import 'package:booky/helpers.dart';
 import 'package:booky/widgets/scrollable_bundle_images.dart';
-import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:kt_dart/kt.dart';
@@ -187,7 +185,7 @@ class _BookMetadataCollectingWidget extends StatefulWidget {
 }
 
 class _BookMetadataCollectingWidgetState extends State<_BookMetadataCollectingWidget> {
-  @override
+  /*@override
   void initState() {
     super.initState();
     final manualMD = widget.metadatas.providerMetadatas.mergeAllProvider();
@@ -195,7 +193,7 @@ class _BookMetadataCollectingWidgetState extends State<_BookMetadataCollectingWi
     /*if (controllers.titleTextFieldController.text.isEmpty) {
       controllers.titleTextFieldController.text = manualMD.title ?? '';
     }*/
-    controllers.authorsTextFieldController.text = _authorsToString(manualMD.authors);
+    /*controllers.authorsTextFieldController.text = _authorsToString(manualMD.authors);
     controllers.blurbTextFieldController.text = manualMD.blurb ?? '';
     controllers.keywordsTextFieldController.text = _keywordsToString(manualMD.keywords);
     if (manualMD.marketPrice.isEmpty) {
@@ -203,8 +201,8 @@ class _BookMetadataCollectingWidgetState extends State<_BookMetadataCollectingWi
     } else {
       final minMarketPrice = manualMD.marketPrice.min;
       controllers.priceTextFieldController.text = minMarketPrice.round().toString();
-    }
-  }
+    }*/
+  }*/
 
   void _updateManualTitle(String newTitle) {
     setState(() => widget.metadatas.bookControllerSet.titleTextFieldController.text = newTitle);

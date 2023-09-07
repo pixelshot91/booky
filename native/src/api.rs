@@ -260,6 +260,25 @@ pub fn get_merged_metadata_for_bundle(bundle_path: String) -> Result<BundleMetaD
             |auto| &auto.title,
             |bookmd| &mut bookmd.title,
         );
+        replace_with_longest_string_if_none_or_empty(
+            book,
+            auto_mds,
+            |auto| &auto.blurb,
+            |bookmd| &mut bookmd.blurb,
+        );
+        if book.keywords.is_empty() {
+            book.keywords = auto_mds.map_or(vec![], |auto_md| {
+                let a = auto_md
+                    .values()
+                    .filter_map(|auto_md| auto_md.as_ref())
+                    .map(|md| &md.keywords);
+                let res: Vec<String> = a.fold(vec![], |mut kwa, kwb| {
+                    kwa.extend(kwb.clone());
+                    kwa
+                });
+                res
+            });
+        }
     });
 
     // TODO: For each missing MD of metadata.json use the best estimate from the providers
@@ -293,7 +312,7 @@ fn replace_with_longest_string_if_none_or_empty<F1, F2>(
             .and_then(|auto_md| {
                 auto_md
                     .values()
-                    .filter_map(|auto| auto.as_ref().and_then(|a| string_getter(a).as_ref())) // a.title.as_ref()))
+                    .filter_map(|auto| auto.as_ref().and_then(|a| string_getter(a).as_ref()))
                     .max_by(|a, b| a.len().cmp(&b.len()))
             })
             .map(|s| s.to_owned())

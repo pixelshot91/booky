@@ -114,6 +114,7 @@ extension MapProviderEnumBookMetaDataFromProviderExt on Map<ProviderEnum, BookMe
   List<double> getPrices() =>
       values.map((e) => e?.marketPrice.toList()).whereNotNull().expand((i) => i).toList()..sort();
 
+  @Deprecated('use Rust getMergedMetadata')
   BookMetaDataFromProvider mergeAllProvider() {
     return BookMetaDataFromProvider(
         title: entries.map((e) => e.value?.title).whereNotNull().biggest(),

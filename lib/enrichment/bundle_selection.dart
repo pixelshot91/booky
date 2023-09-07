@@ -488,7 +488,7 @@ class _BundleWidgetState extends State<BundleWidget> {
                           FutureWidget(
                             future: widget.bundle.getMergedMetadata(),
                             builder: (mergeMD) {
-                              return Text(mergeMD.books.firstOrNull?.title ?? 'None');
+                              return Text(mergeMD.books.firstOrNull?.title ?? 'No title found');
                             },
                           ),
                           md.title.ifIs(
