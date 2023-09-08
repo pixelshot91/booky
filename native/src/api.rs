@@ -4,7 +4,7 @@ use std::io::{Read, Write};
 use std::path::Path;
 
 use crate::client::Client;
-use crate::common;
+use crate::common::{self, BookMetaDataFromProvider};
 use crate::{abebooks, babelio, booksprice, google_books, justbooks, leslibraires};
 use flutter_rust_bridge::frb;
 use itertools::Itertools;
@@ -254,6 +254,22 @@ pub fn get_merged_metadata_for_bundle(bundle_path: String) -> Result<BundleMetaD
         _get_auto_metadata_from_bundle(format!("{bundle_path}/automatic_metadata.json"))?;
     manual_bundle_md.books.iter_mut().for_each(|book| {
         let auto_mds = bundle_auto_md.get(&book.isbn);
+        auto_mds.map(|auto_mds| {
+            let r = auto_mds
+                .values()
+                .into_iter()
+                .filter_map(|s| s.as_ref())
+                .reduce(|a, b| {
+                    let t1 = a.title;
+                    let t2 = b.title;
+                    BookMetaDataFromProvider{
+                        
+                    }
+                });
+            /* .reduce(|best, auto_md| {
+
+            }); */
+        });
         replace_with_longest_string_if_none_or_empty(
             book,
             auto_mds,
@@ -334,7 +350,9 @@ fn replace_with_longest_x_if_none_or_empty<F1, F2, F3, T>(
     F3: Fn(&T) -> usize,
 {
     fn is_none_or_empty<F, T>(s: &Option<T>, to_len: F) -> bool
-    where F: Fn(&T) -> usize, {
+    where
+        F: Fn(&T) -> usize,
+    {
         match s {
             None => true,
             Some(s) => to_len(s) == 0,
