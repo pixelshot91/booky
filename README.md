@@ -1,15 +1,21 @@
 # Booky
 
 Booky is an application to help publish second-hand book.
-It enable taking multiple picture of the book(s). Add books state (brand new, worn out), add the weight (for shipping), then extract the ISBN from the barcode in the pictures to have  additional metadata by scrapping some website.
+It enable taking multiple picture of the book(s). Add books state (brand new, worn out), add the weight (for shipping), then extract the ISBN from the barcode in the pictures to find the books metadata.
 
-Metadata include:
+It is then very easy to create a compelling ad to sell your book.
+
+<p align="center">
+<img alt="screenshot of Booky homescreen" src="doc/images/bunle_selection.webp" width=30%>
+</p>
+
+## Enrichment
+Booky will scrape various websites to find metadata like:
 - Title
 - Author
 - Blurb. A book blurb is a short promotional description, whereas a synopsis summarizes the twists, turns, and conclusion of the story.
 - Keywords or genres
 
-## Enrichment
 ### Example using Babelio as source
 #### Input
 
