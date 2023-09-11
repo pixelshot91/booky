@@ -45,6 +45,7 @@ class _BundleSelectionState extends State<BundleSelection> {
   int? autoMdCollectedBundleNb;
 
   final gridViewController = ScrollController();
+
   @override
   void initState() {
     super.initState();
@@ -181,7 +182,7 @@ class _BundleSelectionState extends State<BundleSelection> {
 
   static Future<Iterable<Bundle>?> _listBundles() async {
     try {
-      final dirs = await common.bookyDir.list().whereType<Directory>().toList();
+      final dirs = await (await common.bookyDir()).toPublish.list().whereType<Directory>().toList();
       return dirs.sorted((d1, d2) => d1.path.compareTo(d2.path)).map((d) => Bundle(d));
     } catch (e) {
       if (e is PathNotFoundException || e is FileSystemException) {
@@ -279,6 +280,7 @@ class _BundleSelectionState extends State<BundleSelection> {
 
 class ProgressIndicator extends StatelessWidget {
   const ProgressIndicator(this.description, {required this.total, required this.itemDone});
+
   final String description;
   final int? total;
   final int itemDone;
@@ -319,6 +321,7 @@ class BundleWidget extends StatefulWidget {
 
 class _BundleWidgetState extends State<BundleWidget> {
   late Future<KtMutableMap<String, KtMutableMap<ProviderEnum, BookMetaDataFromProvider?>>> cachedAutoMetadata;
+
   @override
   void initState() {
     super.initState();
@@ -474,6 +477,7 @@ class _ActionButtons extends StatelessWidget {
 
 class _NumberOfBookBadge extends StatelessWidget {
   const _NumberOfBookBadge(this.number);
+
   final int number;
 
   @override
@@ -499,6 +503,7 @@ class _NumberOfBookBadge extends StatelessWidget {
 
 class MetadataIcons extends StatelessWidget {
   const MetadataIcons(this.metadata);
+
   final KtMutableMap<String, KtMutableMap<ProviderEnum, BookMetaDataFromProvider?>> metadata;
 
   @override
@@ -526,6 +531,7 @@ class MetadataIcons extends StatelessWidget {
 
 class _IconStatus extends StatelessWidget {
   const _IconStatus(this.icon, this.isChecked);
+
   final IconData icon;
   final bool isChecked;
 

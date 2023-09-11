@@ -1,6 +1,8 @@
 import 'dart:io';
 
 import 'package:json_annotation/json_annotation.dart';
+import 'package:path/path.dart' as path;
+import 'package:path_provider/path_provider.dart' as path_provider;
 
 part 'common.g.dart';
 
@@ -25,9 +27,35 @@ Future<bool> launchCommandLine(String executable, List<String> arguments) async 
   return true;
 }
 
-final bookyDir = Platform.isAndroid
-    ? Directory('/storage/emulated/0/DCIM/booky/')
-    : Directory('/run/user/1000/gvfs/mtp:host=SAMSUNG_SAMSUNG_Android_RFCRA1CG6KT/Internal storage/DCIM/booky/');
+class BookyDir {
+  BookyDir(this.root);
+
+  Directory root;
+
+  // Contain the bundle create by the Camera
+  Directory get toPublish => root.joinDir('to_publish');
+
+  // Contain bundle after they have been published at the end of AdEditing
+  Directory get published => root.joinDir('published');
+
+  // Contain bundles that have been deleted
+  Directory get deleted => root.joinDir('deleted');
+}
+
+extension DirectoryExt on Directory {
+  Directory joinDir(String d) => Directory(path.join(this.path, d));
+
+  File joinFile(String f) => File(path.join(this.path, f));
+}
+
+Future<BookyDir> bookyDir() async {
+  if (Platform.isAndroid) {
+    final extDir = (await path_provider.getExternalStorageDirectory())!;
+    return BookyDir(extDir);
+  }
+  return Future(() => BookyDir(
+      Directory('/run/user/1000/gvfs/mtp:host=SAMSUNG_SAMSUNG_Android_RFCRA1CG6KT/Internal storage/DCIM/booky/')));
+}
 
 enum ItemState {
   brandNew,
@@ -52,6 +80,7 @@ enum ItemState {
 @JsonSerializable()
 class Metadata {
   Metadata({this.weightGrams, this.itemState, this.isbns});
+
   int? weightGrams;
   ItemState? itemState;
   List<String>? isbns;

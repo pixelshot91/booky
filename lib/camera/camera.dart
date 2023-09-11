@@ -10,7 +10,6 @@ import 'package:flutter/material.dart';
 import 'package:google_mlkit_barcode_scanning/google_mlkit_barcode_scanning.dart';
 import 'package:image/image.dart' as img;
 import 'package:path/path.dart' as path;
-import 'package:permission_handler/permission_handler.dart';
 
 import '../bundle.dart';
 import '../common.dart' as common;
@@ -48,11 +47,13 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
   // toward 1 the image become thinner in width
   // toward -1 the image become shorter in height
   double _cropValue = 0;
+
   // Prevent from cropping more than 80% of the image
   static const double maxCropRatio = 0.8;
 
-  Directory get getBundleDir => Directory(path.join(common.bookyDir.path, bundleName));
-  Bundle get getBundle => Bundle(getBundleDir);
+  Future<Directory> get getBundleDir async => (await common.bookyDir()).toPublish.joinDir(bundleName);
+
+  Future<Bundle> get getBundle async => Bundle(await getBundleDir);
 
   void _generateNewFolderPath() {
     bundleName = common.nowAsFileName();
@@ -163,21 +164,24 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
           Expanded(
             child: Padding(
               padding: const EdgeInsets.all(5.0),
-              child: BottomWidget(
-                bundle: getBundle,
-                onSubmit: () {
-                  setState(() {
-                    _generateNewFolderPath();
-                    _registeredBarcodes.clear();
-                  });
-                  Navigator.pop(context);
-                },
-                onBarcodeDetectStart: () => controller!.startImageStream(_processCameraImage),
-                onBarcodeDetectStop: () async {
-                  controller!.addListener(_listener);
-                  await controller!.stopImageStream();
-                },
-                isbns: _getValidRegisteredBarcodes(),
+              child: FutureWidget(
+                future: getBundle,
+                builder: (bundle) => BottomWidget(
+                  bundle: bundle,
+                  onSubmit: () {
+                    setState(() {
+                      _generateNewFolderPath();
+                      _registeredBarcodes.clear();
+                    });
+                    Navigator.pop(context);
+                  },
+                  onBarcodeDetectStart: () => controller!.startImageStream(_processCameraImage),
+                  onBarcodeDetectStop: () async {
+                    controller!.addListener(_listener);
+                    await controller!.stopImageStream();
+                  },
+                  isbns: _getValidRegisteredBarcodes(),
+                ),
               ),
             ),
           ),
@@ -473,8 +477,8 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
 
       AudioPlayer().play(AssetSource('sounds/take_picture.mp3'), mode: PlayerMode.lowLatency);
 
-      await getBundleDir.create();
-      final firstUnusedImagePath = await _getFirstUnusedName(getBundleDir);
+      await (await getBundleDir).create();
+      final firstUnusedImagePath = await _getFirstUnusedName(await getBundleDir);
 
       if (_cropValue != 0) {
         final croppedImage = await crop(file, _cropValue);
@@ -501,8 +505,8 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
   }
 
   Future<String> _getFirstUnusedName(Directory dir) async {
-    final numberOfImages = (await getBundle.images).length;
-    return _numberToImgPath(getBundleDir, numberOfImages);
+    final numberOfImages = (await (await getBundle).images).length;
+    return _numberToImgPath((await getBundleDir), numberOfImages);
   }
 
   Future<void> onCaptureOrientationLockButtonPressed() async {
@@ -635,6 +639,7 @@ class BottomWidget extends StatefulWidget {
     required this.onBarcodeDetectStop,
     required this.isbns,
   });
+
   final Bundle bundle;
   final void Function() onSubmit;
   final void Function() onBarcodeDetectStart;
@@ -750,6 +755,7 @@ class MetadataWidget extends StatefulWidget {
     required this.onSubmit,
     required this.isbns,
   });
+
   final Directory directory;
   final void Function() onSubmit;
   final List<String> isbns;
@@ -805,12 +811,11 @@ class _MetadataWidgetState extends State<MetadataWidget> {
         IconButton(
             icon: const Icon(Icons.save),
             onPressed: () async {
-              final managePerm = await Permission.manageExternalStorage.request();
-              print('managePerm = $managePerm');
               if (additionalISBNController.text.isNotEmpty) {
                 metadata.isbns!.addAll(additionalISBNController.text.split(' '));
               }
-              File(path.join(widget.directory.path, 'metadata.json')).writeAsStringSync(jsonEncode(metadata.toJson()));
+              await File(path.join(widget.directory.path, 'metadata.json'))
+                  .writeAsString(jsonEncode(metadata.toJson()));
               widget.onSubmit();
             })
       ]
