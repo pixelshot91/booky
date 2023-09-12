@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use std::fs::File;
 use std::io::{Read, Write};
 use std::path::Path;
+use std::vec;
 
 use crate::client::Client;
 use crate::common::{self, BookMetaDataFromProvider};
@@ -270,18 +271,51 @@ pub fn get_merged_metadata_for_bundle(bundle_path: String) -> Result<BundleMetaD
 
             }); */
         }); */
-        replace_with_longest_string_if_none_or_empty(
-            book,
-            auto_mds,
-            |auto| &auto.title,
-            |bookmd| &mut bookmd.title,
-        );
-        replace_with_longest_string_if_none_or_empty(
-            book,
-            auto_mds,
-            |auto| &auto.blurb,
-            |bookmd| &mut bookmd.blurb,
-        );
+
+        replace_with_longest_string_if_none_or_empty(auto_mds, |auto| &auto.title, &mut book.title);
+        replace_with_longest_string_if_none_or_empty(auto_mds, |auto| &auto.blurb, &mut book.blurb);
+        // replace_with_longest_vec_if_none_or_empty(auto_mds, |auto| &auto.authors,&mut book.authors);
+
+        if book.authors.is_empty() {
+            /* fn longest_vec(
+                auto_mds: Option<&HashMap<ProviderEnum, Option<common::BookMetaDataFromProvider>>>,
+            ) -> &Option<&Vec<common::Author>> {
+                &auto_mds.and_then(|auto_mds| {
+                    auto_mds
+                    .values()
+                    .filter_map(|auto_md| {
+
+                        let vec = &auto_md.as_ref()?.authors;
+                        Some(vec)
+                    })
+                    .max_by(|authors1, authors2| authors1.len().cmp(&authors2.len())) 
+                }) //.unwrap_or(&vec![])
+                /* match auto_mds {
+                    None => vec![],
+                    Some(auto_mds) => {
+                        let a = auto_mds
+                            .values()
+                            .filter_map(|auto_md| Some(auto_md.as_ref()?.authors))
+                            .max_by(|authors1, authors2| authors1.len().cmp(&authors2.len()));
+                        vec![]
+                    }
+                } */
+            }
+            book.authors = longest_vec(auto_mds).unwrap_or(&vec![]).to_vec();
+            */
+            let longest_authors = &auto_mds.and_then(|auto_mds| {
+                auto_mds
+                .values()
+                .filter_map(|auto_md| {
+
+                    let vec = &auto_md.as_ref()?.authors;
+                    Some(vec)
+                })
+                .max_by(|authors1, authors2| authors1.len().cmp(&authors2.len())) 
+            });
+            book.authors = longest_authors.unwrap_or(&vec![]).to_vec();
+        }
+
         if book.keywords.is_empty() {
             book.keywords = auto_mds.map_or(vec![], |auto_md| {
                 let a = auto_md
@@ -302,51 +336,37 @@ pub fn get_merged_metadata_for_bundle(bundle_path: String) -> Result<BundleMetaD
     return Ok(manual_bundle_md);
 }
 
-fn replace_with_longest_string_if_none_or_empty<F1, F2>(
-    book: &mut BookMetaData,
+fn replace_with_longest_string_if_none_or_empty<F1>(
     auto_mds: Option<&HashMap<ProviderEnum, Option<common::BookMetaDataFromProvider>>>,
     auto_string_getter: F1,
-    book_md_string_getter: F2,
+    book_md_string: &mut Option<String>,
 ) where
     F1: Fn(&common::BookMetaDataFromProvider) -> &Option<String>,
-    F2: Fn(&mut BookMetaData) -> &mut Option<String>,
 {
-    replace_with_longest_x_if_none_or_empty(
-        book,
-        auto_mds,
-        auto_string_getter,
-        book_md_string_getter,
-        |s| s.len(),
-    );
+    replace_with_longest_x_if_none_or_empty(auto_mds, auto_string_getter, book_md_string, |s| {
+        s.len()
+    })
 }
 
-fn replace_with_longest_vec_if_none_or_empty<F1, F2>(
-    book: &mut BookMetaData,
+/* fn replace_with_longest_vec_if_none_or_empty<F1, T>(
     auto_mds: Option<&HashMap<ProviderEnum, Option<common::BookMetaDataFromProvider>>>,
     auto_string_getter: F1,
-    book_md_string_getter: F2,
+    book_md_string: &mut Vec<T>,
 ) where
-    F1: Fn(&common::BookMetaDataFromProvider) -> &Option<String>,
-    F2: Fn(&mut BookMetaData) -> &mut Option<String>,
+    F1: Fn(&common::BookMetaDataFromProvider) -> &Vec<T>,
 {
-    replace_with_longest_x_if_none_or_empty(
-        book,
-        auto_mds,
-        auto_string_getter,
-        book_md_string_getter,
-        |s| s.len(),
-    );
-}
+    replace_with_longest_x_if_none_or_empty(auto_mds, auto_string_getter, book_md_string, |s| {
+        s.len()
+    });
+} */
 
-fn replace_with_longest_x_if_none_or_empty<F1, F2, F3, T: Clone>(
-    book: &mut BookMetaData,
+fn replace_with_longest_x_if_none_or_empty<F1, F3, T: Clone>(
     auto_mds: Option<&HashMap<ProviderEnum, Option<common::BookMetaDataFromProvider>>>,
     auto_string_getter: F1,
-    book_md_string_getter: F2,
+    book_md_string: &mut Option<T>,
     to_len: F3,
 ) where
     F1: Fn(&common::BookMetaDataFromProvider) -> &Option<T>,
-    F2: Fn(&mut BookMetaData) -> &mut Option<T>,
     F3: Fn(&T) -> usize,
 {
     fn is_none_or_empty<F, T>(s: &Option<T>, to_len: F) -> bool
@@ -374,9 +394,8 @@ fn replace_with_longest_x_if_none_or_empty<F1, F2, F3, T: Clone>(
             .map(|s| (*s).to_owned())
     }
 
-    if is_none_or_empty(book_md_string_getter(book), &to_len) {
-        // bookMD_string_getter(book).insert(get_longest_string(auto_mds, auto_string_getter).unwrap());
-        *book_md_string_getter(book) = get_longest_x(auto_mds, auto_string_getter, to_len);
+    if is_none_or_empty(book_md_string, &to_len) {
+        *book_md_string = get_longest_x(auto_mds, auto_string_getter, to_len);
     }
 }
 
