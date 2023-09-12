@@ -254,7 +254,7 @@ pub fn get_merged_metadata_for_bundle(bundle_path: String) -> Result<BundleMetaD
         _get_auto_metadata_from_bundle(format!("{bundle_path}/automatic_metadata.json"))?;
     manual_bundle_md.books.iter_mut().for_each(|book| {
         let auto_mds = bundle_auto_md.get(&book.isbn);
-        auto_mds.map(|auto_mds| {
+        /* auto_mds.map(|auto_mds| {
             let r = auto_mds
                 .values()
                 .into_iter()
@@ -263,13 +263,13 @@ pub fn get_merged_metadata_for_bundle(bundle_path: String) -> Result<BundleMetaD
                     let t1 = a.title;
                     let t2 = b.title;
                     BookMetaDataFromProvider{
-                        
+
                     }
                 });
             /* .reduce(|best, auto_md| {
 
             }); */
-        });
+        }); */
         replace_with_longest_string_if_none_or_empty(
             book,
             auto_mds,
@@ -338,7 +338,7 @@ fn replace_with_longest_vec_if_none_or_empty<F1, F2>(
     );
 }
 
-fn replace_with_longest_x_if_none_or_empty<F1, F2, F3, T>(
+fn replace_with_longest_x_if_none_or_empty<F1, F2, F3, T: Clone>(
     book: &mut BookMetaData,
     auto_mds: Option<&HashMap<ProviderEnum, Option<common::BookMetaDataFromProvider>>>,
     auto_string_getter: F1,
@@ -358,7 +358,7 @@ fn replace_with_longest_x_if_none_or_empty<F1, F2, F3, T>(
             Some(s) => to_len(s) == 0,
         }
     }
-    fn get_longest_x<F1, F2, T>(
+    fn get_longest_x<F1, F2, T: Clone>(
         auto_mds: Option<&HashMap<ProviderEnum, Option<common::BookMetaDataFromProvider>>>,
         string_getter: F1,
         to_len: F2,
@@ -367,17 +367,14 @@ fn replace_with_longest_x_if_none_or_empty<F1, F2, F3, T>(
         F1: Fn(&common::BookMetaDataFromProvider) -> &Option<T>,
         F2: Fn(&T) -> usize,
     {
-        auto_mds
-            .and_then(|auto_md| {
-                auto_md
-                    .values()
-                    .filter_map(|auto| auto.as_ref().and_then(|a| string_getter(a).as_ref()))
-                    .max_by(|a, b| to_len(a).cmp(&to_len(b)))
-            })
-            .map(|s| s.to_owned())
+        auto_mds?
+            .values()
+            .filter_map(|auto| string_getter(auto.as_ref()?).as_ref())
+            .max_by(|a, b| to_len(a).cmp(&to_len(b)))
+            .map(|s| (*s).to_owned())
     }
 
-    if is_none_or_empty(book_md_string_getter(book), to_len) {
+    if is_none_or_empty(book_md_string_getter(book), &to_len) {
         // bookMD_string_getter(book).insert(get_longest_string(auto_mds, auto_string_getter).unwrap());
         *book_md_string_getter(book) = get_longest_x(auto_mds, auto_string_getter, to_len);
     }
