@@ -72,7 +72,11 @@ class Bundle {
 
   // Return the best information either manually submitted, manually verified, or automatically, for every book of the bundle
   Future<BundleMetaData> getMergedMetadata() async {
-    return api.getMergedMetadataForBundle(bundlePath: directory.path);
+    try {
+      return await api.getMergedMetadataForBundle(bundlePath: directory.path);
+    } on FfiException {
+      return BundleMetaData(books: []);
+    }
   }
 
   Future<BundleMetaData> getManualMetadata() async {
