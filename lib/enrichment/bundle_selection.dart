@@ -10,6 +10,7 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge.dart';
 import 'package:flutter_scroll_shadow/flutter_scroll_shadow.dart';
 import 'package:kt_dart/kt.dart';
 import 'package:path/path.dart' as path;
+import 'package:scroll_to_index/scroll_to_index.dart';
 import 'package:stream_transform/stream_transform.dart';
 
 import '../bundle.dart';
@@ -36,12 +37,14 @@ class CustomSearchHintDelegate extends SearchDelegate<String> {
   CustomSearchHintDelegate({
     required String hintText,
     required this.bundles,
+    required this.bundlesScrollController,
   }) : super(
           searchFieldLabel: hintText,
           keyboardType: TextInputType.text,
           textInputAction: TextInputAction.search,
         );
   final Future<Iterable<Bundle>?> bundles;
+  AutoScrollController bundlesScrollController;
 
   bool matchOnISBN = true, matchOnTitle = true, matchOnAuthor = true;
 
@@ -93,27 +96,26 @@ class CustomSearchHintDelegate extends SearchDelegate<String> {
       builder: (bundles) {
         if (bundles == null) return const Text('Loading bundles');
 
-        final bundlesWithMD = bundles.map((b) async {
-          return b.getMergedMetadata();
-          // return (b, listOfAutoMd);
+        final bundlesWithMD = bundles.mapIndexed((index, b) async {
+          final mergedMetadata = await b.getMergedMetadata();
+          return (index, mergedMetadata);
         });
         return FutureWidget(
           future: Future.wait(bundlesWithMD),
           builder: (bundlesWithMD) {
-            final whereNotNull = bundlesWithMD.whereNotNull();
             final bundlesMatchingISBN = matchOnISBN
-                ? whereNotNull.where((b) => b.books.any((book) => book.isbn.contains(query)) ?? false)
-                : const Iterable<BundleMetaData>.empty();
+                ? bundlesWithMD.where((b) => b.$2.books.any((book) => book.isbn.contains(query)) ?? false)
+                : const Iterable<(int, BundleMetaData)>.empty();
             final bundlesMatchingTitle = matchOnTitle
-                ? whereNotNull
-                    .where((b) => b.books.any((book) => book.title?.containsIgnoringCase(query) ?? false) ?? false)
-                : const Iterable<BundleMetaData>.empty();
+                ? bundlesWithMD
+                    .where((b) => b.$2.books.any((book) => book.title?.containsIgnoringCase(query) ?? false) ?? false)
+                : const Iterable<(int, BundleMetaData)>.empty();
             final bundlesMatchingAuthor = matchOnAuthor
-                ? whereNotNull.where((b) =>
-                    b.books.any((book) => book.authors
+                ? bundlesWithMD.where((b) =>
+                    b.$2.books.any((book) => book.authors
                         .any((author) => '${author.firstName} ${author.lastName}'.containsIgnoringCase(query))) ??
                     false)
-                : const Iterable<BundleMetaData>.empty();
+                : const Iterable<(int, BundleMetaData)>.empty();
             final bundleMatching =
                 bundlesMatchingISBN.followedBy(bundlesMatchingTitle).followedBy(bundlesMatchingAuthor);
             return ListView.builder(
@@ -123,8 +125,20 @@ class CustomSearchHintDelegate extends SearchDelegate<String> {
                   color: Colors.white,
                   child: Padding(
                     padding: const EdgeInsets.all(6.0),
-                    child: Text(
-                      b.books.firstOrNull?.title ?? 'None',
+                    child: Row(
+                      children: [
+                        Text(
+                          b.$2.books.firstOrNull?.title ?? 'None',
+                        ),
+                        TextButton(
+                            onPressed: () async {
+                              Navigator.of(context).pop();
+                              await bundlesScrollController.scrollToIndex(b.$1,
+                                  preferPosition: AutoScrollPosition.middle);
+                              await bundlesScrollController.highlight(b.$1);
+                            },
+                            child: Text('See in list')),
+                      ],
                     ),
                   ),
                 );
@@ -157,11 +171,14 @@ class _BundleSelectionState extends State<BundleSelection> {
   int? compressedBundleNb;
   int? autoMdCollectedBundleNb;
 
-  final gridViewController = ScrollController();
+  late final AutoScrollController gridViewController;
 
   @override
   void initState() {
     super.initState();
+    gridViewController = AutoScrollController(
+        viewportBoundaryGetter: () => Rect.fromLTRB(0, 0, 0, MediaQuery.of(context).padding.bottom),
+        axis: Axis.vertical);
     Future(_compressImages);
   }
 
@@ -181,7 +198,10 @@ class _BundleSelectionState extends State<BundleSelection> {
               onPressed: () {
                 showSearch(
                     context: context,
-                    delegate: CustomSearchHintDelegate(hintText: 'Search all the bundles', bundles: _listBundles())
+                    delegate: CustomSearchHintDelegate(
+                        hintText: 'Search all the bundles',
+                        bundles: _listBundles(),
+                        bundlesScrollController: gridViewController)
                       ..showResults(context));
               }),
           IconButton(
@@ -364,6 +384,12 @@ class _BundleSelectionState extends State<BundleSelection> {
         if (compressedBundleNb != null) ProgressIndicator('Compressing', total: bundleNb, itemDone: compressedBundleNb),
         if (autoMdCollectedBundleNb != null)
           ProgressIndicator('Collecting autoMetadata', total: bundleNb, itemDone: autoMdCollectedBundleNb),
+        ElevatedButton(
+            onPressed: () {
+              gridViewController.scrollToIndex(6, preferPosition: AutoScrollPosition.middle);
+              gridViewController.highlight(6);
+            },
+            child: Text('scroll to')),
         Expanded(
           child: ScrollShadow(
             // Controller are theoretically optional on vertically scrolling content, but on Linux without a controller, nothing is shown
@@ -376,7 +402,12 @@ class _BundleSelectionState extends State<BundleSelection> {
               maxCrossAxisExtent: 500,
               childAspectRatio: 2,
               children: bundles
-                  .map((bundle) => GestureDetector(
+                  .mapIndexed((index, bundle) => AutoScrollTag(
+                      key: ValueKey(index),
+                      controller: gridViewController,
+                      index: index,
+                      highlightColor: Colors.black.withOpacity(0.5),
+                      child: GestureDetector(
                         child: BundleWidget(
                           key: const PageStorageKey('BundleWidget'),
                           bundle,
@@ -390,7 +421,7 @@ class _BundleSelectionState extends State<BundleSelection> {
                                   builder: (context) =>
                                       BooksMetadataCollectingWidget(step: MetadataCollectingStep(bundle: bundle))));
                         },
-                      ))
+                      )))
                   .toList(),
             ),
           ),
@@ -468,6 +499,7 @@ class _BundleWidgetState extends State<BundleWidget> {
 
   @override
   Widget build(BuildContext context) => Card(
+        // color: Colors.white.withOpacity(0.1),
         child: Padding(
           padding: const EdgeInsets.all(4.0),
           child: Column(
