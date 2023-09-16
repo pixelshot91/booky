@@ -12,9 +12,9 @@ import 'package:google_mlkit_barcode_scanning/google_mlkit_barcode_scanning.dart
 import 'package:image/image.dart' as img;
 import 'package:path/path.dart' as path;
 
-import '../bridge_definitions.dart';
 import '../bundle.dart';
 import '../common.dart' as common;
+import '../ffi.dart';
 import '../helpers.dart';
 import 'barcode_detection.dart';
 import 'barcode_detector_painter.dart';
@@ -815,7 +815,8 @@ class _MetadataWidgetState extends State<MetadataWidget> {
         IconButton(
             icon: const Icon(Icons.save),
             onPressed: () async {
-              throw UnimplementedError('write in Rust');
+              await api.setMergedMetadataForBundle(bundlePath: widget.directory.path, bundleMetadata: metadata);
+              // throw UnimplementedError('write in Rust');
               /*if (additionalISBNController.text.isNotEmpty) {
                 metadata.books!.addAll(additionalISBNController.text
                     .split(' ')

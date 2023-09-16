@@ -104,17 +104,14 @@ class CustomSearchHintDelegate extends SearchDelegate<String> {
           future: Future.wait(bundlesWithMD),
           builder: (bundlesWithMD) {
             final bundlesMatchingISBN = matchOnISBN
-                ? bundlesWithMD.where((b) => b.$2.books.any((book) => book.isbn.contains(query)) ?? false)
+                ? bundlesWithMD.where((b) => b.$2.books.any((book) => book.isbn.contains(query)))
                 : const Iterable<(int, BundleMetaData)>.empty();
             final bundlesMatchingTitle = matchOnTitle
-                ? bundlesWithMD
-                    .where((b) => b.$2.books.any((book) => book.title?.containsIgnoringCase(query) ?? false) ?? false)
+                ? bundlesWithMD.where((b) => b.$2.books.any((book) => book.title?.containsIgnoringCase(query) ?? false))
                 : const Iterable<(int, BundleMetaData)>.empty();
             final bundlesMatchingAuthor = matchOnAuthor
-                ? bundlesWithMD.where((b) =>
-                    b.$2.books.any((book) => book.authors
-                        .any((author) => '${author.firstName} ${author.lastName}'.containsIgnoringCase(query))) ??
-                    false)
+                ? bundlesWithMD.where((b) => b.$2.books.any((book) =>
+                    book.authors.any((author) => '${author.firstName} ${author.lastName}'.containsIgnoringCase(query))))
                 : const Iterable<(int, BundleMetaData)>.empty();
             final bundleMatching =
                 bundlesMatchingISBN.followedBy(bundlesMatchingTitle).followedBy(bundlesMatchingAuthor);
@@ -137,7 +134,7 @@ class CustomSearchHintDelegate extends SearchDelegate<String> {
                                   preferPosition: AutoScrollPosition.middle);
                               await bundlesScrollController.highlight(b.$1);
                             },
-                            child: Text('See in list')),
+                            child: const Text('See in list')),
                       ],
                     ),
                   ),
@@ -384,12 +381,6 @@ class _BundleSelectionState extends State<BundleSelection> {
         if (compressedBundleNb != null) ProgressIndicator('Compressing', total: bundleNb, itemDone: compressedBundleNb),
         if (autoMdCollectedBundleNb != null)
           ProgressIndicator('Collecting autoMetadata', total: bundleNb, itemDone: autoMdCollectedBundleNb),
-        ElevatedButton(
-            onPressed: () {
-              gridViewController.scrollToIndex(6, preferPosition: AutoScrollPosition.middle);
-              gridViewController.highlight(6);
-            },
-            child: Text('scroll to')),
         Expanded(
           child: ScrollShadow(
             // Controller are theoretically optional on vertically scrolling content, but on Linux without a controller, nothing is shown
@@ -499,31 +490,21 @@ class _BundleWidgetState extends State<BundleWidget> {
 
   @override
   Widget build(BuildContext context) => Card(
-        // color: Colors.white.withOpacity(0.1),
         child: Padding(
           padding: const EdgeInsets.all(4.0),
           child: Column(
             children: [
-              // Text(path.basename(widget.bundle.directory.path)),
               FutureWidget(
-                  future: cachedAutoMetadata,
-                  builder: (autoMetadata) {
-                    final firstBook = autoMetadata.iter.firstOrNull;
+                  future: widget.bundle.getMergedMetadata(),
+                  builder: (bundleMergedMD) {
+                    final firstBook = bundleMergedMD.books.firstOrNull;
                     if (firstBook == null) return const Text('No book identified');
-                    final md = firstBook.value.dart.mergeAllProvider();
-                    final priceRange = md.marketPrice.toList();
                     return Row(children: [
-                      if (autoMetadata.size > 1) _NumberOfBookBadge(autoMetadata.size),
+                      if (bundleMergedMD.books.length > 1) _NumberOfBookBadge(bundleMergedMD.books.length),
                       Expanded(
                           child: Column(
                         children: [
-                          FutureWidget(
-                            future: widget.bundle.getMergedMetadata(),
-                            builder: (mergeMD) {
-                              return Text(mergeMD.books.firstOrNull?.title ?? 'No title found');
-                            },
-                          ),
-                          md.title.ifIs(
+                          firstBook.title.ifIs(
                               notnull: (t) => TextWithTooltip(t),
                               nul: () => const Text(
                                     'No title found',
@@ -531,9 +512,10 @@ class _BundleWidgetState extends State<BundleWidget> {
                                   )),
                         ],
                       )),
-                      priceRange.isEmpty
-                          ? const Text('?')
-                          : Text('${priceRange.first.toInt()} - ${priceRange.last.toInt()} €'),
+                      bundleMergedMD.books
+                          .map((b) => b.priceCent)
+                          .whereNotNull()
+                          .let((prices) => prices.isEmpty ? const Text('?') : Text('${prices.sum} €')),
                     ]);
                   }),
               Expanded(
