@@ -112,8 +112,15 @@ class _BooksMetadataCollectingWidgetState extends State<BooksMetadataCollectingW
                                     final bundleMetadata = await api.getMergedMetadataForBundle(
                                         bundlePath: widget.step.bundle.directory.path);
                                     bundleMetadata.books.forEach((book) {
-                                      book.title =
-                                          controllers[book.isbn]?.bookControllerSet.titleTextFieldController.text;
+                                      final bookController = controllers[book.isbn]!.bookControllerSet;
+                                      book.title = bookController.titleTextFieldController.text;
+                                      book.authors = _stringToAuthors(bookController.authorsTextFieldController.text);
+                                      book.blurb = bookController.blurbTextFieldController.text;
+                                      book.keywords =
+                                          _stringToKeywords(bookController.keywordsTextFieldController.text);
+                                      book.priceCent = double.parse(bookController.priceTextFieldController.text)
+                                          .multiply(100)
+                                          .round();
                                     });
                                     await api.setMergedMetadataForBundle(
                                         bundlePath: widget.step.bundle.directory.path, bundleMetadata: bundleMetadata);

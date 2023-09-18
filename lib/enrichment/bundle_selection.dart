@@ -464,7 +464,7 @@ class BundleWidget extends StatefulWidget {
 }
 
 class _BundleWidgetState extends State<BundleWidget> {
-  late Future<KtMutableMap<String, KtMutableMap<ProviderEnum, BookMetaDataFromProvider?>>> cachedAutoMetadata;
+  late Future<BundleMetaData> cachedMergedMd;
 
   @override
   void initState() {
@@ -479,58 +479,55 @@ class _BundleWidgetState extends State<BundleWidget> {
   }
 
   void _loadAutoMetadata() {
-    cachedAutoMetadata = widget.bundle.getAutoMetadata();
-/*    cachedAutoMetadata = api.getAutoMetadataFromBundle(path: widget.bundle.autoMetadataFile.path).then((value) {
-      return Map.fromEntries(value.map((e) {
-        final providerMdMap = Map.fromEntries(e.metadatas.map((e) => MapEntry(e.provider, e.metadata))).kt;
-        return MapEntry(e.isbn, providerMdMap);
-      })).kt;
-    });*/
+    cachedMergedMd = widget.bundle.getMergedMetadata();
+  }
+
+  Widget _buildTitleLine(BundleMetaData bundleMergedMD) {
+    final firstBook = bundleMergedMD.books.firstOrNull;
+    if (firstBook == null) return const Text('No book identified');
+    return Row(children: [
+      if (bundleMergedMD.books.length > 1) _NumberOfBookBadge(bundleMergedMD.books.length),
+      Expanded(
+          child: Column(
+        children: [
+          firstBook.title.ifIs(
+              notnull: (t) => TextWithTooltip(t),
+              nul: () => const Text(
+                    'No title found',
+                    style: TextStyle(fontStyle: FontStyle.italic),
+                  )),
+        ],
+      )),
+      bundleMergedMD.books
+          .map((b) => b.priceCent)
+          .whereNotNull()
+          .let((prices) => prices.isEmpty ? const Text('?') : Text('${prices.sum} €')),
+    ]);
   }
 
   @override
   Widget build(BuildContext context) => Card(
         child: Padding(
           padding: const EdgeInsets.all(4.0),
-          child: Column(
-            children: [
-              FutureWidget(
-                  future: widget.bundle.getMergedMetadata(),
-                  builder: (bundleMergedMD) {
-                    final firstBook = bundleMergedMD.books.firstOrNull;
-                    if (firstBook == null) return const Text('No book identified');
-                    return Row(children: [
-                      if (bundleMergedMD.books.length > 1) _NumberOfBookBadge(bundleMergedMD.books.length),
-                      Expanded(
-                          child: Column(
-                        children: [
-                          firstBook.title.ifIs(
-                              notnull: (t) => TextWithTooltip(t),
-                              nul: () => const Text(
-                                    'No title found',
-                                    style: TextStyle(fontStyle: FontStyle.italic),
-                                  )),
-                        ],
-                      )),
-                      bundleMergedMD.books
-                          .map((b) => b.priceCent)
-                          .whereNotNull()
-                          .let((prices) => prices.isEmpty ? const Text('?') : Text('${prices.sum} €')),
-                    ]);
-                  }),
-              Expanded(
-                child: Row(
-                  children: [
-                    FutureWidget(future: cachedAutoMetadata, builder: (md) => MetadataIcons(md)),
-                    Expanded(child: ScrollableBundleImages(widget.bundle, Axis.horizontal)),
-                    _ActionButtons(
-                        bundle: widget.bundle,
-                        refreshParent: widget.refreshParent,
-                        downloadMetadataForBundles: widget.downloadMetadataForBundles),
-                  ],
+          child: FutureWidget(
+            future: cachedMergedMd,
+            builder: (bundleMergedMD) => Column(
+              children: [
+                _buildTitleLine(bundleMergedMD),
+                Expanded(
+                  child: Row(
+                    children: [
+                      MetadataIcons(bundleMergedMD),
+                      Expanded(child: ScrollableBundleImages(widget.bundle, Axis.horizontal)),
+                      _ActionButtons(
+                          bundle: widget.bundle,
+                          refreshParent: widget.refreshParent,
+                          downloadMetadataForBundles: widget.downloadMetadataForBundles),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       );
@@ -649,20 +646,20 @@ class _NumberOfBookBadge extends StatelessWidget {
 }
 
 class MetadataIcons extends StatelessWidget {
-  const MetadataIcons(this.metadata);
+  const MetadataIcons(this.bundleMergeMD);
 
-  final KtMutableMap<String, KtMutableMap<ProviderEnum, BookMetaDataFromProvider?>> metadata;
+  final BundleMetaData bundleMergeMD;
 
   @override
   Widget build(BuildContext context) {
-    if (metadata.size == 0) return const SizedBox.shrink();
+    if (bundleMergeMD.books.length == 0) return const SizedBox.shrink();
 
-    final mergedMd = metadata.mapValues((p0) => p0.value.dart.mergeAllProvider());
-    final allBooksHaveTitle = mergedMd.all((key, value) => (value.title?.length ?? 0) > 0);
-    final allBooksHaveAuthor = mergedMd.all((key, value) => (value.authors.length) >= 1);
-    final allBooksHaveBlurb = mergedMd.all((key, value) => (value.blurb?.length ?? 0) > 50);
-    final allBooksHaveKeywords = mergedMd.all((key, value) => (value.keywords.length) > 5);
-    final allBooksHavePrice = mergedMd.all((key, value) => (value.marketPrice.length) >= 1);
+    final books = bundleMergeMD.books;
+    final allBooksHaveTitle = books.every((b) => (b.title?.length ?? 0) > 0);
+    final allBooksHaveAuthor = books.every((b) => b.authors.length > 0);
+    final allBooksHaveBlurb = books.every((b) => (b.blurb?.length ?? 0) > 0);
+    final allBooksHaveKeywords = books.every((b) => b.keywords.length > 0);
+    final allBooksHavePrice = books.every((b) => b.priceCent != null);
 
     return Column(
       children: [
