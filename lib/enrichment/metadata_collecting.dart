@@ -41,12 +41,7 @@ class _BooksMetadataCollectingWidgetState extends State<BooksMetadataCollectingW
         bookControllerSet.authorsTextFieldController.text = _authorsToString(mergeMDForBook.authors);
         bookControllerSet.blurbTextFieldController.text = mergeMDForBook.blurb ?? '';
         bookControllerSet.keywordsTextFieldController.text = _keywordsToString(mergeMDForBook.keywords);
-        /*if (mergeMDForBook.marketPrice.isEmpty) {
-          bookControllerSet.priceTextFieldController.text = '';
-        } else {
-          final minMarketPrice = mergeMDForBook.marketPrice.min;
-          bookControllerSet.priceTextFieldController.text = minMarketPrice.round().toString();
-        }*/
+        bookControllerSet.priceTextFieldController.text = mergeMDForBook.priceCent?.divide(100).toString() ?? '';
         return MapEntry(
             entry.isbn,
             _Metadata(
@@ -96,19 +91,6 @@ class _BooksMetadataCollectingWidgetState extends State<BooksMetadataCollectingW
                               padding: const EdgeInsets.all(8.0),
                               child: ElevatedButton(
                                   onPressed: () async {
-                                    /*final booksMetadata = controllers.entries.map((entry) {
-                                      final bookControllerSet = entry.value.bookControllerSet;
-                                      return BookMetaData(
-                                        isbn: entry.key,
-                                        title: bookControllerSet.titleTextFieldController.text,
-                                        authors: _stringToAuthors(bookControllerSet.authorsTextFieldController.text),
-                                        blurb: bookControllerSet.blurbTextFieldController.text,
-                                        keywords: _stringToKeywords(bookControllerSet.keywordsTextFieldController.text),
-                                        priceCent: double.parse(bookControllerSet.priceTextFieldController.text)
-                                            .multiply(100)
-                                            .round(),
-                                      );
-                                    });*/
                                     final bundleMetadata = await api.getMergedMetadataForBundle(
                                         bundlePath: widget.step.bundle.directory.path);
                                     bundleMetadata.books.forEach((book) {
@@ -131,23 +113,6 @@ class _BooksMetadataCollectingWidgetState extends State<BooksMetadataCollectingW
                                               builder: (context) => AdEditingWidget(
                                                       step: AdEditingStep(
                                                     bundle: widget.step.bundle,
-                                                    // TODO: save metadata in metadata.json
-                                                    /* metadata: controllers.entries.map((entry) {
-                                                      final bookControllerSet = entry.value.bookControllerSet;
-                                                      return BookMetaDataManual(
-                                                        isbn: entry.key,
-                                                        title: bookControllerSet.titleTextFieldController.text,
-                                                        authors: _stringToAuthors(
-                                                            bookControllerSet.authorsTextFieldController.text),
-                                                        blurb: bookControllerSet.blurbTextFieldController.text,
-                                                        keywords: _stringToKeywords(
-                                                            bookControllerSet.keywordsTextFieldController.text),
-                                                        priceCent: double.parse(
-                                                                bookControllerSet.priceTextFieldController.text)
-                                                            .multiply(100)
-                                                            .round(),
-                                                      );
-                                                    })*/
                                                   ))));
                                     }
                                   },

@@ -501,7 +501,7 @@ class _BundleWidgetState extends State<BundleWidget> {
       bundleMergedMD.books
           .map((b) => b.priceCent)
           .whereNotNull()
-          .let((prices) => prices.isEmpty ? const Text('?') : Text('${prices.sum} €')),
+          .let((prices) => prices.isEmpty ? const Text('?') : Text('${prices.sum ~/ 100} €')),
     ]);
   }
 
