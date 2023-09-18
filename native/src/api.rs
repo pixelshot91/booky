@@ -235,7 +235,7 @@ pub fn set_merged_metadata_for_bundle(
     bundle_metadata: BundleMetaData,
 ) -> Result<()> {
     let file_path = format!("{bundle_path}/{METADATA_FILE_NAME}");
-    let contents = serde_json::to_string(&bundle_metadata).unwrap();
+    let contents = serde_json::to_string(&bundle_metadata)?;
     std::fs::write(file_path, contents)?;
     Ok(())
 }

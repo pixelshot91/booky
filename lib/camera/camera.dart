@@ -8,6 +8,7 @@ import 'package:booky/image_helper.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_rust_bridge/flutter_rust_bridge.dart';
 import 'package:google_mlkit_barcode_scanning/google_mlkit_barcode_scanning.dart';
 import 'package:image/image.dart' as img;
 import 'package:path/path.dart' as path;
@@ -815,16 +816,23 @@ class _MetadataWidgetState extends State<MetadataWidget> {
         IconButton(
             icon: const Icon(Icons.save),
             onPressed: () async {
-              await api.setMergedMetadataForBundle(bundlePath: widget.directory.path, bundleMetadata: metadata);
-              // throw UnimplementedError('write in Rust');
-              /*if (additionalISBNController.text.isNotEmpty) {
-                metadata.books!.addAll(additionalISBNController.text
+              if (additionalISBNController.text.isNotEmpty) {
+                metadata.books.addAll(additionalISBNController.text
                     .split(' ')
-                    .map((isbn) => BookMetaDataManual(isbn: isbn, authors: [], keywords: [], priceCent: null)));
+                    .map((isbn) => BookMetaData(isbn: isbn, authors: [], keywords: [], priceCent: null)));
+              }
+              try {
+                await api.setMergedMetadataForBundle(bundlePath: widget.directory.path, bundleMetadata: metadata);
+              } on FfiException catch (e) {
+                print('Error while saving metadata. e = $e');
+
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                    content: Text('Error while saving metadata.'),
+                  ));
+                }
               }
 
-              await File(path.join(widget.directory.path, 'metadata.json'))
-                  .writeAsString(jsonEncode(metadata.toJson()));*/
               widget.onSubmit();
             })
       ]

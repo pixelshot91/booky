@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:booky/helpers.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge.dart';
 import 'package:kt_dart/collection.dart';
@@ -117,16 +116,6 @@ class Bundle {
 extension MapProviderEnumBookMetaDataFromProviderExt on Map<ProviderEnum, BookMetaDataFromProvider?> {
   List<double> getPrices() =>
       values.map((e) => e?.marketPrice.toList()).whereNotNull().expand((i) => i).toList()..sort();
-
-  @Deprecated('use Rust getMergedMetadata')
-  BookMetaDataFromProvider mergeAllProvider() {
-    return BookMetaDataFromProvider(
-        title: entries.map((e) => e.value?.title).whereNotNull().biggest(),
-        authors: values.whereNotNull().map((md) => md.authors).biggest(),
-        blurb: values.map((e) => e?.blurb).whereNotNull().biggest(),
-        keywords: values.whereNotNull().map((e) => e.keywords).expand((e) => e).toList(),
-        marketPrice: Float32List.fromList(getPrices()));
-  }
 }
 
 extension _DirExt on Directory {
