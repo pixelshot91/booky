@@ -304,6 +304,22 @@ pub fn get_merged_metadata_for_bundle(bundle_path: String) -> Result<BundleMetaD
                 res
             });
         }
+
+        if book.price_cent.is_none() {
+            book.price_cent = auto_mds.and_then(|auto_md| {
+                auto_md
+                    .values()
+                    .filter_map(|auto_md| auto_md.as_ref())
+                    // get minimum price of each provider in cents
+                    .filter_map(|md| {
+                        md.market_price
+                            .iter()
+                            .map(|price_euro| (price_euro * 100.0).round() as i32)
+                            .min()
+                    })
+                    .min()
+            });
+        }
     });
 
     return Ok(manual_bundle_md);
