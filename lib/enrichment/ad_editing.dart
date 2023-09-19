@@ -199,7 +199,8 @@ class _AdEditingWidgetState extends State<AdEditingWidget> {
                         onPressed: () {
                           final initialDirectory = widget.step.bundle.directory;
                           final segments = path.split(initialDirectory.path);
-                          segments[segments.length - 2] = 'booky_done';
+                          // TODO: Use common.BookyDir
+                          segments[segments.length - 2] = 'published';
                           final finalDirectory = Directory(path.joinAll(segments));
                           initialDirectory.renameSync(finalDirectory.path);
                           ScaffoldMessenger.of(context).showSnackBar(SnackBar(

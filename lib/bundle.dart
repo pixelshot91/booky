@@ -73,7 +73,8 @@ class Bundle {
   Future<BundleMetaData> getMergedMetadata() async {
     try {
       return await api.getMergedMetadataForBundle(bundlePath: directory.path);
-    } on FfiException {
+    } on FfiException catch (e) {
+      print('getMergedMetadata. FfiException. e = $e');
       return BundleMetaData(books: []);
     }
   }

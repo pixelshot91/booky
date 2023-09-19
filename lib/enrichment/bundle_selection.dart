@@ -589,7 +589,7 @@ class _ActionButtons extends StatelessWidget {
                 onPressed: () async {
                   final initialDirectoryLocation = bundle.directory;
                   final segments = path.split(initialDirectoryLocation.path);
-                  segments[segments.length - 2] = 'booky_deleted';
+                  segments[segments.length - 2] = 'deleted';
                   final finalDirectoryLocation = await initialDirectoryLocation.rename(path.joinAll(segments));
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
