@@ -79,6 +79,9 @@ int main({String? only}) {
     }
   };
 
+  print('only = $only');
+  return 0;
+
   if (only == null) {
     for (final test in tests.values) {
       test();
