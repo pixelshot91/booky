@@ -7,62 +7,89 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 
-void main() {
+int main({String? only}) {
   final IntegrationTestWidgetsFlutterBinding binding = IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
-  testWidgets('verify screenshot', (WidgetTester tester) async {
-    // Build our app.
-    app.main();
+  final tests = {
+    'basic_screenshot': () {
+      Future<void> takeScreenshot(String name) async {
+        await binding.takeScreenshot('basic_screenshot/$name');
+      }
 
-    // On Android, this is required prior to taking the screenshot.
-    await binding.convertFlutterSurfaceToImage();
+      testWidgets('verify screenshot', (WidgetTester tester) async {
+        // Build our app.
+        app.main();
 
-    // Pump a frame before taking the screenshot.
-    await tester.pumpAndSettle();
-    await binding.takeScreenshot('1');
+        // On Android, this is required prior to taking the screenshot.
+        await binding.convertFlutterSurfaceToImage();
 
-    // Pump another frame before taking the screenshot.
-    await tester.pumpAndSettle(const Duration(seconds: 2));
-    await binding.takeScreenshot('2');
+        // Pump a frame before taking the screenshot.
+        await tester.pumpAndSettle();
+        await takeScreenshot('1');
 
-    final Finder f = find.byIcon(Icons.send);
-    expect(tester.elementList(f).length, equals(5));
+        // Pump another frame before taking the screenshot.
+        await tester.pumpAndSettle(const Duration(seconds: 2));
+        await takeScreenshot('2');
 
-    await tester.tap(f.first);
+        final Finder f = find.byIcon(Icons.send);
+        expect(tester.elementList(f).length, equals(5));
 
-    await tester.pumpAndSettle(const Duration(seconds: 2));
+        await tester.tap(f.first);
 
-    await binding.takeScreenshot('3');
+        await tester.pumpAndSettle(const Duration(seconds: 2));
 
-    await tester.pageBack();
+        await takeScreenshot('3');
 
-    await tester.pumpAndSettle(const Duration(seconds: 2));
+        await tester.pageBack();
 
-    await binding.takeScreenshot('4');
-  });
+        await tester.pumpAndSettle(const Duration(seconds: 2));
 
-  testWidgets('test SearchBar', (WidgetTester tester) async {
-    // Build our app.
-    app.main();
+        await takeScreenshot('4');
+      });
+    },
+    'searchbar': () {
+      Future<void> takeScreenshot(String name) async {
+        await binding.takeScreenshot('searchbar/$name');
+      }
 
-    // On Android, this is required prior to taking the screenshot.
-    await binding.convertFlutterSurfaceToImage();
+      testWidgets('test SearchBar', (WidgetTester tester) async {
+        // Build our app.
+        app.main();
 
-    // Pump a frame before taking the screenshot.
-    await tester.pumpAndSettle();
-    await binding.takeScreenshot('1');
+        // On Android, this is required prior to taking the screenshot.
+        await binding.convertFlutterSurfaceToImage();
 
-    final Finder f = find.byIcon(Icons.search);
-    expect(tester.elementList(f).length, equals(1));
-    await tester.tap(f.first);
+        // Pump a frame before taking the screenshot.
+        await tester.pumpAndSettle();
+        await takeScreenshot('1');
 
-    await tester.pumpAndSettle(const Duration(seconds: 1));
-    await binding.takeScreenshot('2');
+        final Finder f = find.byIcon(Icons.search);
+        expect(tester.elementList(f).length, equals(1));
+        await tester.tap(f.first);
 
-    await tester.pageBack();
+        await tester.pumpAndSettle(const Duration(seconds: 1));
+        await takeScreenshot('2');
 
-    await tester.pumpAndSettle(const Duration(seconds: 2));
+        await tester.pageBack();
 
-    await binding.takeScreenshot('4');
-  });
+        await tester.pumpAndSettle(const Duration(seconds: 2));
+
+        await takeScreenshot('4');
+      });
+    }
+  };
+
+  if (only == null) {
+    for (final test in tests.values) {
+      test();
+    }
+  } else {
+    final test = tests[only];
+    if (test == null) {
+      print("Unknown test: '$only'");
+      return -1;
+    }
+    test();
+  }
+  return 0;
 }

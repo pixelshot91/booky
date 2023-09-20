@@ -15,7 +15,13 @@ import 'package:integration_test/integration_test.dart';
 
 import '_extended_test_io.dart' if (dart.library.html) '_extended_test_web.dart' as tests;
 
-void main() {
+String? maybeFromEnv(String name) {
+  return bool.hasEnvironment(name) ? String.fromEnvironment(name) : null;
+}
+
+int main(List<String> arguments) {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
-  tests.main();
+  print('extended arguments = $arguments');
+
+  return tests.main(only: maybeFromEnv('only'));
 }
