@@ -199,7 +199,7 @@ pub struct BundleMetaData {
     pub item_state: Option<ItemState>,
     pub books: Vec<BookMetaData>,
 }
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Default, Debug, Deserialize, Serialize)]
 #[frb(non_final)]
 pub struct BookMetaData {
     #[frb(non_final)]

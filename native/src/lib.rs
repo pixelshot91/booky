@@ -1,5 +1,5 @@
 mod abebooks;
-mod api;
+pub mod api;
 mod babelio;
 mod booksprice;
 mod bridge_generated;
