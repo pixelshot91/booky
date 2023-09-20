@@ -54,7 +54,7 @@ class CustomSearchHintDelegate extends SearchDelegate<String> {
 
   @override
   PreferredSizeWidget buildBottom(BuildContext context) => PreferredSize(
-      preferredSize: const Size.fromHeight(30.0),
+      preferredSize: const Size.fromHeight(50),
       child: StatefulBuilder(builder: (BuildContext context, StateSetter setState) {
         return Padding(
           padding: const EdgeInsets.all(8.0),
@@ -124,8 +124,10 @@ class CustomSearchHintDelegate extends SearchDelegate<String> {
                     padding: const EdgeInsets.all(6.0),
                     child: Row(
                       children: [
-                        Text(
-                          b.$2.books.firstOrNull?.title ?? 'None',
+                        Expanded(
+                          child: Text(
+                            b.$2.books.firstOrNull?.title ?? 'None',
+                          ),
                         ),
                         TextButton(
                             onPressed: () async {

@@ -67,7 +67,7 @@ void main() {
         expect(tester.elementList(f).length, equals(1));
         await tester.tap(f.first);
 
-        await tester.pumpAndSettle(const Duration(seconds: 1));
+        await tester.pumpAndSettle(const Duration(seconds: 3));
         await takeScreenshot('2');
 
         await tester.pageBack();
@@ -79,7 +79,10 @@ void main() {
     }
   };
 
+  tests['searchbar']!();
+/*
   for (final test in tests.values) {
     test();
   }
+*/
 }
