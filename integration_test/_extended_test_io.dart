@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 
-int main({String? only}) {
+void main() {
   final IntegrationTestWidgetsFlutterBinding binding = IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
   final tests = {
@@ -79,17 +79,7 @@ int main({String? only}) {
     }
   };
 
-  if (only == null) {
-    for (final test in tests.values) {
-      test();
-    }
-  } else {
-    final test = tests[only];
-    if (test == null) {
-      print("Unknown test: '$only'");
-      return -1;
-    }
+  for (final test in tests.values) {
     test();
   }
-  return 0;
 }
