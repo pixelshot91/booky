@@ -70,6 +70,19 @@ void main() {
         await tester.pumpAndSettle(const Duration(seconds: 3));
         await takeScreenshot('2');
 
+        final findSearchBarTextField = find.byWidgetPredicate(
+            (widget) => widget is TextField && widget.decoration?.hintText == 'Search all the bundles');
+        expect(findSearchBarTextField, findsOneWidget);
+        await tester.enterText(findSearchBarTextField, 'nord');
+
+        await tester.pumpAndSettle(const Duration(seconds: 3));
+        await takeScreenshot('3');
+
+        expect(
+            find.byWidgetPredicate(
+                (widget) => widget is Text && widget.data!.startsWith('Harricana: Le Royaume du Nord')),
+            findsOneWidget);
+
         await tester.pageBack();
 
         await tester.pumpAndSettle(const Duration(seconds: 2));

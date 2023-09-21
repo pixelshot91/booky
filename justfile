@@ -18,8 +18,10 @@ serve *args='':
 take_automated_screenshot:
     # 'flutter drive' seems to delete app data at the end of the run
     # So be sure to copy some mock data before every 'flutter drive'
-    adb push extra/mock_data/basic/ /storage/emulated/0/Android/data/fr.pimoid.booky.debug/files/
+    adb push extra/mock_data/basic/* /storage/emulated/0/Android/data/fr.pimoid.booky.debug/files/
     screenshot_dir=real_android_device flutter drive --driver=test_driver/screenshot_test.dart --target=integration_test/extended_test.dart --dart-define="only=searchbar"
+    # screenshot_dir=real_android_device flutter drive --driver=test_driver/screenshot_test.dart --target=integration_test/extended_test.dart --dart-define="only=searchbar" --use-existing-app="http://127.0.0.1:37277/R2TKD1kh9N8=/"
+    # screenshot_dir=real_android_device flutter drive --driver=test_driver/screenshot_test.dart --target=integration_test/extended_test.dart --dart-define="only=searchbar" --keep-app-running
 
 test_screenshots +device_ids:
     echo {{device_ids}}
