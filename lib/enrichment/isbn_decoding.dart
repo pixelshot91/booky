@@ -15,6 +15,7 @@ import 'enrichment.dart';
 
 class ISBNDecodingWidget extends StatefulWidget {
   const ISBNDecodingWidget({required this.step});
+
   final ISBNDecodingStep step;
 
   @override
@@ -23,7 +24,12 @@ class ISBNDecodingWidget extends StatefulWidget {
 
 class _ISBNDecodingWidgetState extends State<ISBNDecodingWidget> {
   KtMutableMap<String, Future<BarcodeDetectResults>> decodedIsbns = KtMutableMap.empty();
-  KtMutableSet<String> selectedIsbns = KtMutableSet.empty();
+
+  // TODO: Should be a list to preserve order
+  late Future<KtMutableSet<String>> selectedIsbns;
+
+  // ISBN as saved on storage
+  late Future<KtMutableSet<String>> savedIsbns;
 
   @override
   void initState() {
@@ -35,7 +41,11 @@ class _ISBNDecodingWidgetState extends State<ISBNDecodingWidget> {
       });
     });
 
-    selectedIsbns = (widget.step.bundle.metadata.isbns ?? []).toSet().kt;
+    selectedIsbns = Future(() async {
+      final manualMetaData = await widget.step.bundle.getManualMetadata();
+      return (manualMetaData.books.map((b) => b.isbn)).toSet().kt;
+    });
+    savedIsbns = selectedIsbns;
   }
 
   String? _isbn10Validator(String text) {
@@ -78,132 +88,144 @@ class _ISBNDecodingWidgetState extends State<ISBNDecodingWidget> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('ISBN decoding')),
-      body: SingleChildScrollView(
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-                child: FutureWidget(
-              future: widget.step.bundle.images,
-              builder: (images) => Wrap(
-                children: images
-                    .map((imgPath) => Card(
-                          child: Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Column(
-                              children: [
-                                SizedBox(
-                                    height: 600,
-                                    child: InteractiveViewer(
-                                      maxScale: 10,
-                                      child: ImageWidget(imgPath),
-                                    )),
-                                FutureWidget(
-                                    future: decodedIsbns[imgPath.path]!,
-                                    builder: (results) {
-                                      return Column(
-                                          children: results.results.map(
-                                        (result) {
-                                          final isbn = result.value;
+      body: FutureWidget(
+        future: Future.wait([selectedIsbns, savedIsbns]),
+        builder: (futureResult) {
+          final selectedIsbns = futureResult[0];
+          final savedIsbns = futureResult[1];
+          return SingleChildScrollView(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                    child: FutureWidget(
+                  future: widget.step.bundle.images,
+                  builder: (images) => Wrap(
+                    children: images
+                        .map((imgPath) => Card(
+                              child: Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Column(
+                                  children: [
+                                    SizedBox(
+                                        height: 600,
+                                        child: InteractiveViewer(
+                                          maxScale: 10,
+                                          child: ImageWidget(imgPath),
+                                        )),
+                                    FutureWidget(
+                                        future: decodedIsbns[imgPath.path]!,
+                                        builder: (results) {
+                                          return Column(
+                                              children: results.results.map(
+                                            (result) {
+                                              final isbn = result.value;
 
-                                          return Padding(
-                                            padding: const EdgeInsets.all(8.0),
-                                            child: Row(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                ElevatedButton(
-                                                    onPressed: selectedIsbns.contains(isbn)
-                                                        ? null
-                                                        : () => setState(() => selectedIsbns.add(isbn)),
-                                                    child: Text(
-                                                      isbn,
-                                                      style: TextStyle(
-                                                          decoration: isbn.startsWith(common.isbnPrefix)
-                                                              ? null
-                                                              : TextDecoration.lineThrough),
-                                                    )),
-                                                const SizedBox(width: 20),
-                                                ISBNPreview(imgFile: imgPath, result: result),
-                                              ],
-                                            ),
-                                          );
-                                        },
-                                      ).toList());
-                                    })
-                              ],
-                            ),
-                          ),
-                        ))
-                    .toList(),
-              ),
-            )),
-            // const Spacer(),
-            SizedBox(
-              width: 300,
-              child: Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      TextFormField(
-                        inputFormatters: [
-                          FilteringTextInputFormatter.allow(RegExp(r'^[0-9X]{0,13}')),
-                        ],
-                        autovalidateMode: AutovalidateMode.always,
-                        validator: (s) => _isbnValidator(s!),
-                        onFieldSubmitted: (newIsbn) {
-                          if (_isbnValidator(newIsbn) != null) return;
-                          setState(() => selectedIsbns.add(newIsbn));
-                        },
-                        decoration: const InputDecoration(hintText: 'Type manually the ISBN here'),
-                      ),
-                      const SizedBox(height: 20),
-                      ...selectedIsbns.iter.map((isbn) => Row(
-                            children: [
-                              IconButton(
-                                icon: const Icon(Icons.delete),
-                                onPressed: () {
-                                  setState(() => selectedIsbns.remove(isbn));
-                                },
+                                              return Padding(
+                                                padding: const EdgeInsets.all(8.0),
+                                                child: Row(
+                                                  mainAxisSize: MainAxisSize.min,
+                                                  children: [
+                                                    ElevatedButton(
+                                                        onPressed: selectedIsbns.contains(isbn)
+                                                            ? null
+                                                            : () => setState(() => selectedIsbns.add(isbn)),
+                                                        child: Text(
+                                                          isbn,
+                                                          style: TextStyle(
+                                                              decoration: isbn.startsWith(common.isbnPrefix)
+                                                                  ? null
+                                                                  : TextDecoration.lineThrough),
+                                                        )),
+                                                    const SizedBox(width: 20),
+                                                    ISBNPreview(imgFile: imgPath, result: result),
+                                                  ],
+                                                ),
+                                              );
+                                            },
+                                          ).toList());
+                                        })
+                                  ],
+                                ),
                               ),
-                              SelectableText(isbn),
-                            ],
-                          )),
-                      const SizedBox(height: 20),
-                      () {
-                        final md = widget.step.bundle.metadata;
-                        final isbnsDidNotChanged = (md.isbns ?? []).toImmutableSet() == selectedIsbns;
-                        return ElevatedButton(
-                            onPressed: isbnsDidNotChanged
-                                ? null
-                                : () async {
-                                    final md = widget.step.bundle.metadata;
-
-                                    md.isbns = selectedIsbns.toList().asList();
-                                    final res = await widget.step.bundle.overwriteMetadata(md);
-                                    print('res = $res');
-                                    if (res) {
-                                      widget.step.bundle.autoMetadataFile.delete();
-                                    }
-                                    if (!mounted) return;
-                                    if (res) {
-                                      Navigator.pop(context);
-                                    } else {
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                          const SnackBar(content: Text('Error while trying to update metadata.json')));
-                                    }
-                                  },
-                            child: const Text('Validate ISBNs'));
-                      }(),
-                    ],
+                            ))
+                        .toList(),
                   ),
-                ),
-              ),
-            )
-          ],
-        ),
+                )),
+                // const Spacer(),
+                SizedBox(
+                  width: 300,
+                  child: Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          TextFormField(
+                            inputFormatters: [
+                              FilteringTextInputFormatter.allow(RegExp(r'^[0-9X]{0,13}')),
+                            ],
+                            autovalidateMode: AutovalidateMode.always,
+                            validator: (s) => _isbnValidator(s!),
+                            onFieldSubmitted: (newIsbn) {
+                              if (_isbnValidator(newIsbn) != null) return;
+                              setState(() => selectedIsbns.add(newIsbn));
+                            },
+                            decoration: const InputDecoration(hintText: 'Type manually the ISBN here'),
+                          ),
+                          const SizedBox(height: 20),
+                          ...selectedIsbns.iter.map((isbn) => Row(
+                                children: [
+                                  IconButton(
+                                    icon: const Icon(Icons.delete),
+                                    onPressed: () {
+                                      setState(() => selectedIsbns.remove(isbn));
+                                    },
+                                  ),
+                                  SelectableText(isbn),
+                                ],
+                              )),
+                          const SizedBox(height: 20),
+                          () {
+                            final isbnsDidNotChanged = (savedIsbns == selectedIsbns);
+                            return ElevatedButton(
+                                onPressed: isbnsDidNotChanged
+                                    ? null
+                                    : () async {
+                                        throw UnimplementedError('Chang ISBN');
+                                        /*final md = widget.step.bundle.metadata;
+
+                                        md.books = selectedIsbns.toList().asList().map((selectedIsbn) {
+                                          final oldBook =
+                                              md.books?.singleWhereOrNull((book) => book.isbn == selectedIsbn);
+                                          if (oldBook != null) return oldBook;
+                                          return BookMetaDataManual.fromIsbn(isbn: selectedIsbn);
+                                        }).toList();
+                                        final res = await widget.step.bundle.overwriteMetadata(md);
+                                        print('res = $res');
+                                        if (res) {
+                                          widget.step.bundle.autoMetadataFile.delete();
+                                        }
+                                        if (!mounted) return;
+                                        if (res) {
+                                          Navigator.pop(context);
+                                        } else {
+                                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                                              content: Text('Error while trying to update metadata.json')));
+                                        }*/
+                                      },
+                                child: const Text('Validate ISBNs'));
+                          }(),
+                        ],
+                      ),
+                    ),
+                  ),
+                )
+              ],
+            ),
+          );
+        },
       ),
     );
   }
@@ -215,6 +237,7 @@ extension _PointExt on Point {
 
 class ISBNPreview extends StatefulWidget {
   const ISBNPreview({required this.imgFile, required this.result});
+
   final File imgFile;
   final BarcodeDetectResult result;
 
@@ -225,6 +248,7 @@ class ISBNPreview extends StatefulWidget {
 class _ISBNPreviewState extends State<ISBNPreview> {
   late num barcodeWidth;
   late Vector3 translate;
+
   @override
   void initState() {
     super.initState();

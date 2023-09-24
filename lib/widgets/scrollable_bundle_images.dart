@@ -18,6 +18,7 @@ extension _AxisExt on Axis {
 
 class _Gap extends StatelessWidget {
   const _Gap(this.size, this.axis);
+
   final double size;
   final Axis axis;
 
@@ -47,8 +48,6 @@ class _ScrollableBundleImagesState extends State<ScrollableBundleImages> {
   @override
   Widget build(BuildContext context) {
     return ScrollShadow(
-      scrollDirection: widget.axis,
-      controller: imageScrollController,
       color: defaultScrollShadowColor,
       child: ScrollbarTheme(
         data: ScrollbarThemeData(

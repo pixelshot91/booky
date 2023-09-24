@@ -1,10 +1,8 @@
 import 'dart:io';
 
-import 'package:json_annotation/json_annotation.dart';
+import 'package:booky/ffi.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart' as path_provider;
-
-part 'common.g.dart';
 
 /// All ISBN (EAN-13) should start with 978
 /// Use to prevent false barcode decoding
@@ -53,39 +51,24 @@ Future<BookyDir> bookyDir() async {
     final extDir = (await path_provider.getExternalStorageDirectory())!;
     return BookyDir(extDir);
   }
-  return Future(() => BookyDir(
-      Directory('/run/user/1000/gvfs/mtp:host=SAMSUNG_SAMSUNG_Android_RFCRA1CG6KT/Internal storage/DCIM/booky/')));
+
+  return Future(() => BookyDir(Directory(
+      '/run/user/1000/gvfs/mtp:host=SAMSUNG_SAMSUNG_Android_RFCRA1CG6KT/Internal storage/Android/data/fr.pimoid.booky/files')));
+  return Future(
+      () => BookyDir(Directory('/home/julien/Perso/LeBonCoin/chain_automatisation/saved_folder/after_migration')));
 }
 
-enum ItemState {
-  brandNew,
-  veryGood,
-  good,
-  medium;
-
+extension ItemStateExt on ItemState {
   String get loc {
     switch (this) {
-      case ItemState.brandNew:
+      case ItemState.BrandNew:
         return 'Brand New';
-      case ItemState.veryGood:
+      case ItemState.VeryGood:
         return 'Very Good';
-      case ItemState.good:
+      case ItemState.Good:
         return 'Good';
-      case ItemState.medium:
+      case ItemState.Medium:
         return 'Medium';
     }
   }
-}
-
-@JsonSerializable()
-class Metadata {
-  Metadata({this.weightGrams, this.itemState, this.isbns});
-
-  int? weightGrams;
-  ItemState? itemState;
-  List<String>? isbns;
-
-  factory Metadata.fromJson(Map<String, dynamic> json) => _$MetadataFromJson(json);
-
-  Map<String, dynamic> toJson() => _$MetadataToJson(this);
 }

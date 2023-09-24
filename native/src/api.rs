@@ -1,20 +1,18 @@
+use anyhow::{Ok, Result};
+use flutter_rust_bridge::frb;
+use itertools::Itertools;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::{Read, Write};
 use std::path::Path;
-
-use crate::client::Client;
-use crate::common;
-use crate::common::Ad;
-use crate::common::LbcCredential;
-use crate::publisher::Publisher;
-use crate::{abebooks, babelio, booksprice, google_books, justbooks, leboncoin, leslibraires};
-use itertools::Itertools;
-use serde::{Deserialize, Serialize};
+use std::vec;
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 
-use anyhow::Result;
+use crate::{abebooks, babelio, booksprice, google_books, justbooks, leslibraires};
+use crate::client::Client;
+use crate::common;
 
 #[derive(EnumIter, PartialEq, Eq, Hash, Debug, Deserialize, Serialize, Copy, Clone)]
 pub enum ProviderEnum {
@@ -31,6 +29,7 @@ pub struct Point {
     pub x: u16,
     pub y: u16,
 }
+
 #[derive(PartialEq, Debug, Deserialize, Serialize)]
 pub struct BarcodeDetectResult {
     pub value: String,
@@ -46,8 +45,8 @@ pub fn detect_barcode_in_image(img_path: String) -> Result<BarcodeDetectResults>
     let output = std::process::Command::new(
         "/home/julien/Perso/LeBonCoin/chain_automatisation/booky/native/detect_barcode",
     )
-    .arg(format!("--in={}", img_path))
-    .output()?;
+        .arg(format!("--in={}", img_path))
+        .output()?;
 
     if !output.status.success() {
         println!("status: {}", output.status);
@@ -65,7 +64,39 @@ pub fn detect_barcode_in_image(img_path: String) -> Result<BarcodeDetectResults>
 
 #[cfg(test)]
 mod tests {
+    use crate::api::{get_merged_metadata_for_bundle, ProviderEnum};
+
     use super::{BarcodeDetectResult, BarcodeDetectResults, Point};
+
+    #[test]
+    fn test_sort_longest() {
+        for _ in 1..10 {
+            let mut book_title: Option<String> = None;
+            crate::api::replace_with_longest_string_if_none_or_empty(
+                Some(&std::collections::HashMap::from([
+                    (
+                        ProviderEnum::AbeBooks,
+                        Some(crate::common::BookMetaDataFromProvider {
+                            title: Some("title1".to_owned()),
+                            ..Default::default()
+                        }),
+                    ),
+                    (
+                        ProviderEnum::Babelio,
+                        Some(crate::common::BookMetaDataFromProvider {
+                            title: Some("title2".to_owned()),
+                            ..Default::default()
+                        }),
+                    ),
+                ])),
+                |auto| &auto.title,
+                &mut book_title,
+            );
+            println!("longest is {:?}", book_title);
+            assert_eq!(book_title, Some("title1".to_owned()));
+        }
+    }
+
     #[test]
     fn test_detect_barcode_in_image() {
         let res =
@@ -81,8 +112,8 @@ mod tests {
                         Point { x: 3229, y: 2749 },
                         Point { x: 3089, y: 2746 },
                         Point { x: 3106, y: 1906 },
-                        Point { x: 3246, y: 1909 }
-                    ]
+                        Point { x: 3246, y: 1909 },
+                    ],
                 }]
             }
         )
@@ -126,20 +157,27 @@ pub struct ISBNMetadataPair {
     pub isbn: String,
     pub metadatas: Vec<ProviderMetadataPair>,
 }
-#[derive(Debug)]
 
+#[derive(Debug)]
 pub struct ProviderMetadataPair {
     pub provider: ProviderEnum,
     pub metadata: Option<common::BookMetaDataFromProvider>,
 }
 
-pub fn get_auto_metadata_from_bundle(path: String) -> Result<Vec<ISBNMetadataPair>> {
+fn _get_auto_metadata_from_bundle(
+    path: String,
+) -> Result<HashMap<String, HashMap<ProviderEnum, Option<common::BookMetaDataFromProvider>>>> {
     let mut file = File::open(path)?;
     let mut contents = String::new();
-    file.read_to_string(&mut contents).unwrap();
+    file.read_to_string(&mut contents)?;
 
     let raw_map: HashMap<String, HashMap<ProviderEnum, Option<common::BookMetaDataFromProvider>>> =
-        serde_json::from_str(&contents).unwrap();
+        serde_json::from_str(&contents)?;
+    Ok(raw_map)
+}
+
+pub fn get_auto_metadata_from_bundle(path: String) -> Result<Vec<ISBNMetadataPair>> {
+    let raw_map = _get_auto_metadata_from_bundle(path)?;
 
     let vec_of_vec = raw_map
         .iter()
@@ -168,12 +206,173 @@ pub fn get_auto_metadata_from_bundle(path: String) -> Result<Vec<ISBNMetadataPai
     Ok(vec_of_vec)
 }
 
+#[derive(Debug, Deserialize, Serialize)]
+pub enum ItemState {
+    BrandNew,
+    VeryGood,
+    Good,
+    Medium,
+}
+
+#[derive(Default, Debug, Deserialize, Serialize)]
+#[frb(non_final)]
+pub struct BundleMetaData {
+    #[frb(non_final)]
+    pub weight_grams: Option<i32>,
+    #[frb(non_final)]
+    pub item_state: Option<ItemState>,
+    pub books: Vec<BookMetaData>,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+#[frb(non_final)]
+pub struct BookMetaData {
+    #[frb(non_final)]
+    pub isbn: String,
+    #[frb(non_final)]
+    pub title: Option<String>,
+    #[frb(non_final)]
+    pub authors: Vec<common::Author>,
+    // A book blurb is a short promotional description.
+    // A synopsis summarizes the twists, turns, and conclusion of the story.
+    #[frb(non_final)]
+    pub blurb: Option<String>,
+    #[frb(non_final)]
+    pub keywords: Vec<String>,
+    #[frb(non_final)]
+    pub price_cent: Option<i32>,
+}
+
+const METADATA_FILE_NAME: &str = "metadata.json";
+
+pub fn get_manual_metadata_for_bundle(bundle_path: String) -> Result<BundleMetaData> {
+    let mut file = File::open(format!("{bundle_path}/{METADATA_FILE_NAME}"))?;
+    let mut contents = String::new();
+    file.read_to_string(&mut contents).unwrap();
+
+    let manual_bundle_md: BundleMetaData = serde_json::from_str(&contents).unwrap();
+    return Ok(manual_bundle_md);
+}
+
+pub fn set_merged_metadata_for_bundle(
+    bundle_path: String,
+    bundle_metadata: BundleMetaData,
+) -> Result<()> {
+    let file_path = format!("{bundle_path}/{METADATA_FILE_NAME}");
+    let contents = serde_json::to_string(&bundle_metadata)?;
+    std::fs::write(file_path, contents)?;
+    Ok(())
+}
+
+// Retrieve a summary of all the information of a bundle
+// If a book metadata is not available, try to use a metadata from a Provider
+pub fn get_merged_metadata_for_bundle(bundle_path: String) -> Result<BundleMetaData> {
+    // get from metadata.json
+    let path = format!("{bundle_path}/{METADATA_FILE_NAME}");
+    let mut file = File::open(&path)?;
+    let mut contents = String::new();
+    file.read_to_string(&mut contents).unwrap();
+
+    let mut manual_bundle_md: BundleMetaData =
+        serde_json::from_str(&contents).expect(&format!("Unable to deserialize {}", path));
+
+    // Get MD from Provider
+    let bundle_auto_md =
+        _get_auto_metadata_from_bundle(format!("{bundle_path}/automatic_metadata.json"))?;
+
+    // For each missing MD of metadata.json use the best estimate from the providers
+    manual_bundle_md.books.iter_mut().for_each(|book| {
+        let auto_mds = bundle_auto_md.get(&book.isbn);
+
+        replace_with_longest_string_if_none_or_empty(auto_mds, |auto| &auto.title, &mut book.title);
+        replace_with_longest_string_if_none_or_empty(auto_mds, |auto| &auto.blurb, &mut book.blurb);
+
+        // Take the authors from the provider which has the most authors
+        if book.authors.is_empty() {
+            let longest_authors = &auto_mds.and_then(|auto_mds| {
+                auto_mds
+                    .values()
+                    .filter_map(|auto_md| Some(&auto_md.as_ref()?.authors))
+                    .max_by(|authors1, authors2| authors1.len().cmp(&authors2.len()))
+            });
+            book.authors = longest_authors.unwrap_or(&vec![]).to_vec();
+        }
+
+        // Merge the keyword from all providers
+        if book.keywords.is_empty() {
+            book.keywords = auto_mds.map_or(vec![], |auto_md| {
+                let res: Vec<String> = auto_md
+                    .values()
+                    .filter_map(|auto_md| auto_md.as_ref())
+                    .map(|md| &md.keywords)
+                    .fold(vec![], |mut kwa, kwb| {
+                        kwa.extend(kwb.clone());
+                        kwa
+                    });
+                res
+            });
+        }
+
+        if book.price_cent.is_none() {
+            book.price_cent = auto_mds.and_then(|auto_md| {
+                auto_md
+                    .values()
+                    .filter_map(|auto_md| auto_md.as_ref())
+                    // get minimum price of each provider in cents
+                    .filter_map(|md| {
+                        md.market_price
+                            .iter()
+                            .map(|price_euro| (price_euro * 100.0).round() as i32)
+                            .min()
+                    })
+                    .min()
+            });
+        }
+    });
+
+    return Ok(manual_bundle_md);
+}
+
+fn replace_with_longest_string_if_none_or_empty<F1>(
+    auto_mds: Option<&HashMap<ProviderEnum, Option<common::BookMetaDataFromProvider>>>,
+    auto_string_getter: F1,
+    book_md_string: &mut Option<String>,
+) where
+    F1: Fn(&common::BookMetaDataFromProvider) -> &Option<String>,
+{
+    fn is_none_or_empty(s: &Option<String>) -> bool {
+        match s {
+            None => true,
+            Some(s) => s.is_empty(),
+        }
+    }
+    fn get_longest_str<F1>(
+        auto_mds: Option<&HashMap<ProviderEnum, Option<common::BookMetaDataFromProvider>>>,
+        string_getter: F1,
+    ) -> Option<String>
+        where
+            F1: Fn(&common::BookMetaDataFromProvider) -> &Option<String>,
+    {
+        auto_mds?
+            .values()
+            .filter_map(|auto| string_getter(auto.as_ref()?).as_ref())
+            // Find the longest string. In case of tie, use the smallest by lexicographical order
+            .max_by(|a, b| a.len().cmp(&b.len()).then_with(|| b.cmp(&a)))
+            .map(|s| (*s).to_owned())
+    }
+
+    if is_none_or_empty(book_md_string) {
+        *book_md_string = get_longest_str(auto_mds, auto_string_getter);
+    }
+}
+
 fn gen_client(cache_dir: &str) -> Box<dyn Client> {
     Box::new(crate::client::cached_http_client::CachedHttpClient {
         http_client: reqwest::blocking::Client::builder().build().unwrap(),
         cache_dir: cache_dir.to_owned(),
     })
 }
+
 fn gen_provider(provider: ProviderEnum) -> Box<dyn common::Provider> {
     match provider {
         ProviderEnum::Babelio => Box::new(babelio::Babelio {
@@ -200,9 +399,4 @@ pub fn get_metadata_from_provider(
     isbn: String,
 ) -> Option<common::BookMetaDataFromProvider> {
     gen_provider(provider).get_book_metadata_from_isbn(&isbn)
-}
-
-pub fn publish_ad(ad: Ad, credential: LbcCredential) -> bool {
-    let lbc_publisher = leboncoin::Leboncoin {};
-    Publisher::publish(&lbc_publisher, ad, credential)
 }

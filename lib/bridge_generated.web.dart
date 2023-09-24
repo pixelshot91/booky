@@ -31,29 +31,69 @@ class NativePlatform extends FlutterRustBridgeBase<NativeWire>
   }
 
   @protected
-  List<dynamic> api2wire_ad(Ad raw) {
+  List<dynamic> api2wire_author(Author raw) {
+    return [api2wire_String(raw.firstName), api2wire_String(raw.lastName)];
+  }
+
+  @protected
+  List<dynamic> api2wire_book_meta_data(BookMetaData raw) {
     return [
-      api2wire_String(raw.title),
-      api2wire_String(raw.description),
-      api2wire_i32(raw.priceCent),
-      api2wire_i32(raw.weightGrams),
-      api2wire_StringList(raw.imgsPath)
+      api2wire_String(raw.isbn),
+      api2wire_opt_String(raw.title),
+      api2wire_list_author(raw.authors),
+      api2wire_opt_String(raw.blurb),
+      api2wire_StringList(raw.keywords),
+      api2wire_opt_box_autoadd_i32(raw.priceCent)
     ];
   }
 
   @protected
-  List<dynamic> api2wire_box_autoadd_ad(Ad raw) {
-    return api2wire_ad(raw);
+  List<dynamic> api2wire_box_autoadd_bundle_meta_data(BundleMetaData raw) {
+    return api2wire_bundle_meta_data(raw);
   }
 
   @protected
-  List<dynamic> api2wire_box_autoadd_lbc_credential(LbcCredential raw) {
-    return api2wire_lbc_credential(raw);
+  int api2wire_box_autoadd_i32(int raw) {
+    return api2wire_i32(raw);
   }
 
   @protected
-  List<dynamic> api2wire_lbc_credential(LbcCredential raw) {
-    return [api2wire_String(raw.lbcToken), api2wire_String(raw.datadomeCookie)];
+  int api2wire_box_autoadd_item_state(ItemState raw) {
+    return api2wire_item_state(raw);
+  }
+
+  @protected
+  List<dynamic> api2wire_bundle_meta_data(BundleMetaData raw) {
+    return [
+      api2wire_opt_box_autoadd_i32(raw.weightGrams),
+      api2wire_opt_box_autoadd_item_state(raw.itemState),
+      api2wire_list_book_meta_data(raw.books)
+    ];
+  }
+
+  @protected
+  List<dynamic> api2wire_list_author(List<Author> raw) {
+    return raw.map(api2wire_author).toList();
+  }
+
+  @protected
+  List<dynamic> api2wire_list_book_meta_data(List<BookMetaData> raw) {
+    return raw.map(api2wire_book_meta_data).toList();
+  }
+
+  @protected
+  String? api2wire_opt_String(String? raw) {
+    return raw == null ? null : api2wire_String(raw);
+  }
+
+  @protected
+  int? api2wire_opt_box_autoadd_i32(int? raw) {
+    return raw == null ? null : api2wire_box_autoadd_i32(raw);
+  }
+
+  @protected
+  int? api2wire_opt_box_autoadd_item_state(ItemState? raw) {
+    return raw == null ? null : api2wire_box_autoadd_item_state(raw);
   }
 
   @protected
@@ -82,11 +122,17 @@ class NativeWasmModule implements WasmModule {
   external dynamic /* void */ wire_get_auto_metadata_from_bundle(
       NativePortType port_, String path);
 
+  external dynamic /* void */ wire_get_manual_metadata_for_bundle(
+      NativePortType port_, String bundle_path);
+
+  external dynamic /* void */ wire_set_merged_metadata_for_bundle(
+      NativePortType port_, String bundle_path, List<dynamic> bundle_metadata);
+
+  external dynamic /* void */ wire_get_merged_metadata_for_bundle(
+      NativePortType port_, String bundle_path);
+
   external dynamic /* void */ wire_get_metadata_from_provider(
       NativePortType port_, int provider, String isbn);
-
-  external dynamic /* void */ wire_publish_ad(
-      NativePortType port_, List<dynamic> ad, List<dynamic> credential);
 }
 
 // Section: WASM wire connector
@@ -105,11 +151,20 @@ class NativeWire extends FlutterRustBridgeWasmWireBase<NativeWasmModule> {
   void wire_get_auto_metadata_from_bundle(NativePortType port_, String path) =>
       wasmModule.wire_get_auto_metadata_from_bundle(port_, path);
 
+  void wire_get_manual_metadata_for_bundle(
+          NativePortType port_, String bundle_path) =>
+      wasmModule.wire_get_manual_metadata_for_bundle(port_, bundle_path);
+
+  void wire_set_merged_metadata_for_bundle(NativePortType port_,
+          String bundle_path, List<dynamic> bundle_metadata) =>
+      wasmModule.wire_set_merged_metadata_for_bundle(
+          port_, bundle_path, bundle_metadata);
+
+  void wire_get_merged_metadata_for_bundle(
+          NativePortType port_, String bundle_path) =>
+      wasmModule.wire_get_merged_metadata_for_bundle(port_, bundle_path);
+
   void wire_get_metadata_from_provider(
           NativePortType port_, int provider, String isbn) =>
       wasmModule.wire_get_metadata_from_provider(port_, provider, isbn);
-
-  void wire_publish_ad(
-          NativePortType port_, List<dynamic> ad, List<dynamic> credential) =>
-      wasmModule.wire_publish_ad(port_, ad, credential);
 }

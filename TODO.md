@@ -22,9 +22,11 @@
 * [ ] AdEditing: Disable 'Mark as published' if the title is empty
 * [ ] AdEditing: Save the ad as it was published
 * [ ] Search with Selenium in headless mode
+* [ ] Test: Launch github action runner without opening graphical interface (use -no-boot-anim  -no-window)
 
 # DONE
 
+* [x] Add CI
 * [x] MetadataCollecting: Show images on the side with zoom on click
 * [x] Use a scroll indicator to show that more content is available by scrolling
 * [x] Camera: Add slider to change picture ratio

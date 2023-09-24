@@ -10,52 +10,89 @@ import 'package:integration_test/integration_test.dart';
 void main() {
   final IntegrationTestWidgetsFlutterBinding binding = IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
-  /*testWidgets('verify text', (WidgetTester tester) async {
-    // Build our app.
-    app.main();
+  final tests = {
+    'basic_screenshot': () {
+      Future<void> takeScreenshot(String name) async {
+        await binding.takeScreenshot('basic_screenshot/$name');
+      }
 
-    // Pump a frame.
-    await tester.pumpAndSettle();
+      testWidgets('verify screenshot', (WidgetTester tester) async {
+        // Build our app.
+        app.main();
 
-    // Verify that platform version is retrieved.
-    expect(
-      find.byWidgetPredicate(
-        (Widget widget) => widget is Text && widget.data!.startsWith('Platform: ${Platform.operatingSystem}'),
-      ),
-      findsOneWidget,
-    );
-  });*/
+        // On Android, this is required prior to taking the screenshot.
+        await binding.convertFlutterSurfaceToImage();
 
-  testWidgets('verify screenshot', (WidgetTester tester) async {
-    // Build our app.
-    app.main();
+        // Pump a frame before taking the screenshot.
+        await tester.pumpAndSettle();
+        await takeScreenshot('1');
 
-    // On Android, this is required prior to taking the screenshot.
-    await binding.convertFlutterSurfaceToImage();
+        // Pump another frame before taking the screenshot.
+        await tester.pumpAndSettle(const Duration(seconds: 2));
+        await takeScreenshot('2');
 
-    // Pump a frame before taking the screenshot.
-    await tester.pumpAndSettle();
-    final List<int> firstPng = await binding.takeScreenshot('1');
-    expect(firstPng.isNotEmpty, isTrue);
+        final Finder f = find.byIcon(Icons.send);
+        expect(tester.elementList(f).length, equals(5));
 
-    // Pump another frame before taking the screenshot.
-    await tester.pumpAndSettle(const Duration(seconds: 2));
-    final List<int> secondPng = await binding.takeScreenshot('2');
-    expect(secondPng.isNotEmpty, isTrue);
+        await tester.tap(f.first);
 
-    final Finder f = find.byIcon(Icons.send);
-    // expect(tester.elementList(f).length, equals(5));
+        await tester.pumpAndSettle(const Duration(seconds: 2));
 
-    await tester.tap(f.first);
+        await takeScreenshot('3');
 
-    await tester.pumpAndSettle(const Duration(seconds: 2));
+        await tester.pageBack();
 
-    await binding.takeScreenshot('3');
+        await tester.pumpAndSettle(const Duration(seconds: 2));
 
-    await tester.pageBack();
+        await takeScreenshot('4');
+      });
+    },
+    'searchbar': () {
+      Future<void> takeScreenshot(String name) async {
+        await binding.takeScreenshot('searchbar/$name');
+      }
 
-    await tester.pumpAndSettle(const Duration(seconds: 2));
+      testWidgets('test SearchBar', (WidgetTester tester) async {
+        // Build our app.
+        app.main();
 
-    await binding.takeScreenshot('4');
-  });
+        // On Android, this is required prior to taking the screenshot.
+        await binding.convertFlutterSurfaceToImage();
+
+        // Pump a frame before taking the screenshot.
+        await tester.pumpAndSettle();
+        await takeScreenshot('1');
+
+        final Finder f = find.byIcon(Icons.search);
+        expect(tester.elementList(f).length, equals(1));
+        await tester.tap(f.first);
+
+        await tester.pumpAndSettle(const Duration(seconds: 3));
+        await takeScreenshot('2');
+
+        final findSearchBarTextField = find.byWidgetPredicate(
+            (widget) => widget is TextField && widget.decoration?.hintText == 'Search all the bundles');
+        expect(findSearchBarTextField, findsOneWidget);
+        await tester.enterText(findSearchBarTextField, 'nord');
+
+        await tester.pumpAndSettle(const Duration(seconds: 3));
+        await takeScreenshot('3');
+
+        expect(
+            find.byWidgetPredicate(
+                (widget) => widget is Text && widget.data!.startsWith('Harricana: Le Royaume du Nord')),
+            findsOneWidget);
+
+        await tester.pageBack();
+
+        await tester.pumpAndSettle(const Duration(seconds: 2));
+
+        await takeScreenshot('4');
+      });
+    }
+  };
+
+  for (final test in tests.values) {
+    test();
+  }
 }

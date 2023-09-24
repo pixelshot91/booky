@@ -2,6 +2,7 @@ use pretty_assertions::assert_eq;
 use std::env;
 use std::process::Command;
 use std::time::Duration;
+
 struct Output {
     stdout: String,
     stderr: String,
@@ -41,11 +42,11 @@ fn main() {
             ],
             &[],
         )
-        .unwrap();
+            .unwrap();
         let devices: Vec<&str> = output.stdout.lines().collect();
         // 2 lines mean no devices
         assert_eq!(devices.len(), 2);
-
+        
         let mut command = Command::new("/home/julien/Android/Sdk/emulator/emulator");
         command.args(["-avd", &avd_name]);
 
@@ -58,7 +59,7 @@ fn main() {
             }
             Ok(mut child) => {
                 println!("Command is running");
-                std::thread::sleep(Duration::from_secs(20));
+                std::thread::sleep(Duration::from_secs(1));
                 let devices = launch_command(
                     &[
                         "/home/julien/Android/Sdk/platform-tools/adb",
@@ -67,20 +68,11 @@ fn main() {
                     ],
                     &[],
                 )
-                .unwrap()
-                .stdout;
+                    .unwrap()
+                    .stdout;
                 println!("devices = {}", devices);
 
-                launch_command(
-                    &[
-                        "adb",
-                        "push",
-                        "../../extra/mock_data/basic/",
-                        "/storage/emulated/0/Android/data/fr.pimoid.booky.debug/files/",
-                    ],
-                    &[],
-                )
-                .unwrap();
+                copy_files_to_devices();
 
                 launch_command(
                     &[
@@ -90,11 +82,11 @@ fn main() {
                         "--target=integration_test/extended_test.dart",
                         "--browser-name",
                         "android-chrome", // "--device-id",
-                                          // "emulator-5554",
+                        // "emulator-5554",
                     ],
                     &[("screenshot_dir", &avd_name)],
                 )
-                .unwrap();
+                    .unwrap();
 
                 println!("Killing");
                 child.kill().expect("command wasn't running");
@@ -103,4 +95,67 @@ fn main() {
             }
         }
     }
+}
+
+fn copy_files_to_devices() -> () {
+    for i in 1..10 {
+        println!("Try number {i} to push file to device");
+
+        // Just to check that the emulator is fully started
+        let res = launch_command(
+            &[
+                "adb",
+                "shell",
+                "ls /storage/emulated/0/Android/data/",
+            ],
+            &[],
+        );
+        if res.is_ok() {
+            launch_command(
+                &[
+                    "adb",
+                    "shell",
+                    "rm -rf /storage/emulated/0/Android/data/fr.pimoid.booky.debug/files/",
+                ],
+                &[],
+            );
+            launch_command(
+                &[
+                    "adb",
+                    "shell",
+                    "mkdir -p /storage/emulated/0/Android/data/fr.pimoid.booky.debug/",
+                ],
+                &[],
+            )
+                .unwrap();
+
+            launch_command(
+                &[
+                    "adb",
+                    "push",
+                    "../../extra/mock_data/basic/",
+                    "/storage/emulated/0/Android/data/fr.pimoid.booky.debug/files/",
+                ],
+                &[],
+            )
+                .unwrap();
+
+            let list = launch_command(
+                &[
+                    "adb",
+                    "shell",
+                    "ls /storage/emulated/0/Android/data/fr.pimoid.booky.debug/files",
+                ],
+                &[],
+            )
+                .unwrap()
+                .stdout;
+            println!("ls returned: {list}");
+            return ();
+        }
+
+        std::thread::sleep(Duration::from_secs(5));
+    }
+
+    panic!("Failed to copy after multiple tries")
 }

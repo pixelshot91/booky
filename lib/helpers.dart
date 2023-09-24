@@ -40,6 +40,7 @@ Widget recaseContextMenuBuilder(
 
 class LBCRadioButton extends StatelessWidget {
   const LBCRadioButton(this.text);
+
   final String text;
 
   @override
@@ -60,6 +61,7 @@ class LBCRadioButton extends StatelessWidget {
 
 class ImageWidget extends StatelessWidget {
   const ImageWidget(this.image);
+
   final File image;
 
   @override
@@ -75,6 +77,7 @@ class ImageWidget extends StatelessWidget {
 
 class TextWithTooltip extends StatelessWidget {
   const TextWithTooltip(this.text);
+
   final String text;
 
   @override
@@ -90,6 +93,7 @@ class TextWithTooltip extends StatelessWidget {
 
 class FutureWidget<T> extends StatelessWidget {
   const FutureWidget({required this.future, required this.builder});
+
   final Future<T> future;
   final Widget Function(T) builder;
 
@@ -101,6 +105,7 @@ class FutureWidget<T> extends StatelessWidget {
 
 class AsyncSnapshotWidget<T> extends StatelessWidget {
   const AsyncSnapshotWidget({required this.snap, required this.builder});
+
   final AsyncSnapshot<T> snap;
   final Widget Function(T data) builder;
 
@@ -171,30 +176,6 @@ extension IterableStringExt on Iterable<String> {
   String? biggest() => fold(null, (biggest, element) => element.length > (biggest?.length ?? 0) ? element : biggest);
 }
 
-class BookMetaDataManual {
-  String isbn;
-  String? title;
-  List<Author> authors;
-  String? blurb;
-  List<String> keywords;
-  int? priceCent;
-
-  BookMetaDataManual({
-    required this.isbn,
-    this.title,
-    required this.authors,
-    this.blurb,
-    required this.keywords,
-    required this.priceCent,
-  });
+extension StringExt on String {
+  bool containsIgnoringCase(String needle) => toLowerCase().contains(needle.toLowerCase());
 }
-
-/*
-extension BookMetadataExt on BookMetaData {
-  BookMetaData deepCopy() => BookMetaData(
-      title: '$title',
-      authors: List.from(authors),
-      blurb: '$blurb',
-      keywords: List.from(keywords),
-      marketPrice: Float32List.fromList(marketPrice));
-}*/

@@ -15,11 +15,14 @@ clean:
 serve *args='':
     flutter pub run flutter_rust_bridge:serve {{args}}
 
-take_autamted_screenshot:
+take_automated_screenshot:
     # 'flutter drive' seems to delete app data at the end of the run
     # So be sure to copy some mock data before every 'flutter drive'
+
+    # Make sur the file/ folder does not exist, otherwise adb push create files/basic/to_publish instead of files/to_publish
+    adb shell 'rm -r /storage/emulated/0/Android/data/fr.pimoid.booky.debug/files/'
     adb push extra/mock_data/basic/ /storage/emulated/0/Android/data/fr.pimoid.booky.debug/files/
-    flutter drive --driver=test_driver/screenshot_test.dart --target=integration_test/extended_test.dart
+    screenshot_dir=real_android_device flutter drive --driver=test_driver/screenshot_test.dart --target=integration_test/extended_test.dart
 
 test_screenshots +device_ids:
     echo {{device_ids}}
