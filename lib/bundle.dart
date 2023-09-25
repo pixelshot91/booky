@@ -23,18 +23,12 @@ class Bundle {
   File get metadataFile => File(path.join(directory.path, 'metadata.json'));
 
   Future<bool> overwriteMetadata(BundleMetaData md) async {
-    throw UnimplementedError('overwrite in Rust');
-    /*
-    final tmpFile = File('tmp.json');
-
     try {
-      await tmpFile.writeAsString(jsonEncode(md.toJson()));
-    } on FileSystemException catch (e) {
-      print(e);
+      api.setManualMetadataForBundle(bundlePath: directory.path, bundleMetadata: md);
+      return true;
+    } on FfiException {
       return false;
     }
-
-    return common.launchCommandLine('gio', ['move', tmpFile.path, metadataFile.path]);*/
   }
 
   Future<bool> removeAutoMetadata() async {

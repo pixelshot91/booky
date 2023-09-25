@@ -91,14 +91,14 @@ fn wire_get_manual_metadata_for_bundle_impl(
         },
     )
 }
-fn wire_set_merged_metadata_for_bundle_impl(
+fn wire_set_manual_metadata_for_bundle_impl(
     port_: MessagePort,
     bundle_path: impl Wire2Api<String> + UnwindSafe,
     bundle_metadata: impl Wire2Api<BundleMetaData> + UnwindSafe,
 ) {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap::<_, _, _, ()>(
         WrapInfo {
-            debug_name: "set_merged_metadata_for_bundle",
+            debug_name: "set_manual_metadata_for_bundle",
             port: Some(port_),
             mode: FfiCallMode::Normal,
         },
@@ -106,7 +106,7 @@ fn wire_set_merged_metadata_for_bundle_impl(
             let api_bundle_path = bundle_path.wire2api();
             let api_bundle_metadata = bundle_metadata.wire2api();
             move |task_callback| {
-                set_merged_metadata_for_bundle(api_bundle_path, api_bundle_metadata)
+                set_manual_metadata_for_bundle(api_bundle_path, api_bundle_metadata)
             }
         },
     )

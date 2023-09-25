@@ -822,7 +822,7 @@ class _MetadataWidgetState extends State<MetadataWidget> {
                     .map((isbn) => BookMetaData(isbn: isbn, authors: [], keywords: [], priceCent: null)));
               }
               try {
-                await api.setMergedMetadataForBundle(bundlePath: widget.directory.path, bundleMetadata: metadata);
+                await api.setManualMetadataForBundle(bundlePath: widget.directory.path, bundleMetadata: metadata);
               } on FfiException catch (e) {
                 print('Error while saving metadata. e = $e');
 

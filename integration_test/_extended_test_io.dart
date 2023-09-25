@@ -46,6 +46,21 @@ void addIsbn(final IntegrationTestWidgetsFlutterBinding binding) {
     // Build our app.
     app.main();
 
+    Future<void> tapPopMenu_ISBNDecoding() async {
+      final find7thBundle = find.byKey(const ValueKey(7));
+      expect(find7thBundle, findsOneWidget);
+
+      final popUpMenuButtonFinder = find.descendant(of: find7thBundle, matching: find.byType(PopupMenuButton<void>));
+      await tester.tap(popUpMenuButtonFinder.first);
+      await tester.pumpAndSettle(const Duration(seconds: 1));
+
+      final isbnDecodingFinder = find.text('ISBN decoding');
+
+      expect(isbnDecodingFinder, findsOneWidget);
+      await tester.tap(isbnDecodingFinder);
+      await tester.pumpAndSettle(const Duration(seconds: 1));
+    }
+
     // On Android, this is required prior to taking the screenshot.
     await binding.convertFlutterSurfaceToImage();
 
@@ -58,7 +73,7 @@ void addIsbn(final IntegrationTestWidgetsFlutterBinding binding) {
     print('bundles.length = ${bundles.length}');
     // expect(bundles.length, equals(8));
 
-    await tester.pumpAndSettle(const Duration(seconds: 3));
+    await tester.pumpAndSettle(const Duration(seconds: 1));
     expect(find.byType(GridView), findsOneWidget);
 
     await tester.dragUntilVisible(find.byKey(const ValueKey(7)), find.byType(GridView), const Offset(0, -500));
@@ -79,38 +94,52 @@ void addIsbn(final IntegrationTestWidgetsFlutterBinding binding) {
     expect(isbnDecodingFinder, findsOneWidget);
     await tester.tap(isbnDecodingFinder);
     await tester.pumpAndSettle(const Duration(seconds: 1));
+
     await ss.capture('ISBN_decoding');
+
+    const isbnToAdd = '2853130282';
+
+    expect(find.text(isbnToAdd), findsNothing);
 
     final textFieldFinder = find.byType(TextFormField);
     expect(textFieldFinder, findsOneWidget);
-    await tester.enterText(textFieldFinder, '2853130282');
+    await tester.enterText(textFieldFinder, isbnToAdd);
+
     await tester.pumpAndSettle(const Duration(seconds: 1));
     await ss.capture('isbn_field_is_filled');
     await tester.testTextInput.receiveAction(TextInputAction.done);
+
     await tester.pumpAndSettle(const Duration(seconds: 1));
     await ss.capture('isbn_is_submitted');
-/*
-      await tester.pumpAndSettle(const Duration(seconds: 3));
-      await takeScreenshot('2');
+    // controller is null
+    // expect(tester.widget<TextFormField>(textFieldFinder).controller?.text.isEmpty, isTrue);
+    expect(find.byWidgetPredicate((widget) => widget is SelectableText && widget.data == isbnToAdd), findsOneWidget);
 
-      final findSearchBarTextField = find.byWidgetPredicate(
-          (widget) => widget is TextField && widget.decoration?.hintText == 'Search all the bundles');
-      expect(findSearchBarTextField, findsOneWidget);
-      await tester.enterText(findSearchBarTextField, 'nord');
+    await tester.pageBack();
+    await tester.pumpAndSettle(const Duration(seconds: 1));
 
-      await tester.pumpAndSettle(const Duration(seconds: 3));
-      await takeScreenshot('3');
+    await ss.capture('back_to_home');
 
-      expect(
-          find.byWidgetPredicate(
-              (widget) => widget is Text && widget.data!.startsWith('Harricana: Le Royaume du Nord')),
-          findsOneWidget);
+    await tapPopMenu_ISBNDecoding();
 
-      await tester.pageBack();
+    await ss.capture('open_isbn_decoding_again');
+    expect(find.byWidgetPredicate((widget) => widget is SelectableText && widget.data == isbnToAdd), findsOneWidget);
 
-      await tester.pumpAndSettle(const Duration(seconds: 2));
+    final deleteIconFinder = find.byIcon(Icons.delete);
+    expect(deleteIconFinder, findsOneWidget);
+    await tester.tap(deleteIconFinder);
+    await tester.pumpAndSettle(const Duration(seconds: 1));
 
-      await takeScreenshot('4');*/
+    await ss.capture('isbn_deleted');
+    expect(find.text(isbnToAdd), findsNothing);
+
+    await tester.pageBack();
+    await tester.pumpAndSettle(const Duration(seconds: 1));
+
+    await ss.capture('back_to_home');
+    await tapPopMenu_ISBNDecoding();
+    expect(find.text(isbnToAdd), findsNothing);
+    await ss.capture('no_isbn_as_initial');
   });
 }
 

@@ -31,12 +31,12 @@ abstract class Native {
 
   FlutterRustBridgeTaskConstMeta get kGetManualMetadataForBundleConstMeta;
 
-  Future<void> setMergedMetadataForBundle(
+  Future<void> setManualMetadataForBundle(
       {required String bundlePath,
       required BundleMetaData bundleMetadata,
       dynamic hint});
 
-  FlutterRustBridgeTaskConstMeta get kSetMergedMetadataForBundleConstMeta;
+  FlutterRustBridgeTaskConstMeta get kSetManualMetadataForBundleConstMeta;
 
   Future<BundleMetaData> getMergedMetadataForBundle(
       {required String bundlePath, dynamic hint});

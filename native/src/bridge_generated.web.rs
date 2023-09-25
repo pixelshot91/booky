@@ -22,12 +22,12 @@ pub fn wire_get_manual_metadata_for_bundle(port_: MessagePort, bundle_path: Stri
 }
 
 #[wasm_bindgen]
-pub fn wire_set_merged_metadata_for_bundle(
+pub fn wire_set_manual_metadata_for_bundle(
     port_: MessagePort,
     bundle_path: String,
     bundle_metadata: JsValue,
 ) {
-    wire_set_merged_metadata_for_bundle_impl(port_, bundle_path, bundle_metadata)
+    wire_set_manual_metadata_for_bundle_impl(port_, bundle_path, bundle_metadata)
 }
 
 #[wasm_bindgen]

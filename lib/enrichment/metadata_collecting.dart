@@ -104,7 +104,7 @@ class _BooksMetadataCollectingWidgetState extends State<BooksMetadataCollectingW
                                           .multiply(100)
                                           .round();
                                     });
-                                    await api.setMergedMetadataForBundle(
+                                    await api.setManualMetadataForBundle(
                                         bundlePath: widget.step.bundle.directory.path, bundleMetadata: bundleMetadata);
                                     if (context.mounted) {
                                       Navigator.push(

@@ -291,25 +291,25 @@ class NativeWire implements FlutterRustBridgeWireBase {
       _wire_get_manual_metadata_for_bundlePtr
           .asFunction<void Function(int, ffi.Pointer<wire_uint_8_list>)>();
 
-  void wire_set_merged_metadata_for_bundle(
+  void wire_set_manual_metadata_for_bundle(
     int port_,
     ffi.Pointer<wire_uint_8_list> bundle_path,
     ffi.Pointer<wire_BundleMetaData> bundle_metadata,
   ) {
-    return _wire_set_merged_metadata_for_bundle(
+    return _wire_set_manual_metadata_for_bundle(
       port_,
       bundle_path,
       bundle_metadata,
     );
   }
 
-  late final _wire_set_merged_metadata_for_bundlePtr = _lookup<
+  late final _wire_set_manual_metadata_for_bundlePtr = _lookup<
           ffi.NativeFunction<
               ffi.Void Function(ffi.Int64, ffi.Pointer<wire_uint_8_list>,
                   ffi.Pointer<wire_BundleMetaData>)>>(
-      'wire_set_merged_metadata_for_bundle');
-  late final _wire_set_merged_metadata_for_bundle =
-      _wire_set_merged_metadata_for_bundlePtr.asFunction<
+      'wire_set_manual_metadata_for_bundle');
+  late final _wire_set_manual_metadata_for_bundle =
+      _wire_set_manual_metadata_for_bundlePtr.asFunction<
           void Function(int, ffi.Pointer<wire_uint_8_list>,
               ffi.Pointer<wire_BundleMetaData>)>();
 

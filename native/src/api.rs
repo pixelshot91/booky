@@ -254,7 +254,7 @@ pub fn get_manual_metadata_for_bundle(bundle_path: String) -> Result<BundleMetaD
     return Ok(manual_bundle_md);
 }
 
-pub fn set_merged_metadata_for_bundle(
+pub fn set_manual_metadata_for_bundle(
     bundle_path: String,
     bundle_metadata: BundleMetaData,
 ) -> Result<()> {

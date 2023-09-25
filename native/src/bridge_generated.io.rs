@@ -29,12 +29,12 @@ pub extern "C" fn wire_get_manual_metadata_for_bundle(
 }
 
 #[no_mangle]
-pub extern "C" fn wire_set_merged_metadata_for_bundle(
+pub extern "C" fn wire_set_manual_metadata_for_bundle(
     port_: i64,
     bundle_path: *mut wire_uint_8_list,
     bundle_metadata: *mut wire_BundleMetaData,
 ) {
-    wire_set_merged_metadata_for_bundle_impl(port_, bundle_path, bundle_metadata)
+    wire_set_manual_metadata_for_bundle_impl(port_, bundle_path, bundle_metadata)
 }
 
 #[no_mangle]
