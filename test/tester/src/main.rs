@@ -46,7 +46,7 @@ fn main() {
         let devices: Vec<&str> = output.stdout.lines().collect();
         // 2 lines mean no devices
         assert_eq!(devices.len(), 2);
-        
+
         let mut command = Command::new("/home/julien/Android/Sdk/emulator/emulator");
         command.args(["-avd", &avd_name]);
 
@@ -98,7 +98,7 @@ fn main() {
 }
 
 fn copy_files_to_devices() -> () {
-    for i in 1..10 {
+    for i in 1..20 {
         println!("Try number {i} to push file to device");
 
         // Just to check that the emulator is fully started
