@@ -34,18 +34,21 @@ class _ISBNDecodingWidgetState extends State<ISBNDecodingWidget> {
   @override
   void initState() {
     super.initState();
-    Future(() async {
-      final images = await widget.step.bundle.images;
-      images.forEach((image) {
-        decodedIsbns[image.path] = api.detectBarcodeInImage(imgPath: image.path);
+    if (Platform.isLinux) {
+      Future(() async {
+        final images = await widget.step.bundle.images;
+        images.forEach((image) {
+          decodedIsbns[image.path] = api.detectBarcodeInImage(imgPath: image.path);
+        });
       });
-    });
+    }
 
     selectedIsbns = Future(() async {
       final manualMetaData = await widget.step.bundle.getManualMetadata();
       return (manualMetaData.books.map((b) => b.isbn)).toSet().kt;
     });
     savedIsbns = selectedIsbns;
+    print('initState');
   }
 
   String? _isbn10Validator(String text) {
@@ -114,8 +117,9 @@ class _ISBNDecodingWidgetState extends State<ISBNDecodingWidget> {
                                           child: ImageWidget(imgPath),
                                         )),
                                     FutureWidget(
-                                        future: decodedIsbns[imgPath.path]!,
+                                        future: decodedIsbns[imgPath.path] ?? Future(() => null),
                                         builder: (results) {
+                                          if (results == null) return const Text('No result');
                                           return Column(
                                               children: results.results.map(
                                             (result) {
@@ -170,6 +174,28 @@ class _ISBNDecodingWidgetState extends State<ISBNDecodingWidget> {
                             validator: (s) => _isbnValidator(s!),
                             onFieldSubmitted: (newIsbn) {
                               if (_isbnValidator(newIsbn) != null) return;
+                              throw UnimplementedError('Chang ISBN');
+                              /*final md = widget.step.bundle.metadata;
+
+                              md.books = selectedIsbns.toList().asList().map((selectedIsbn) {
+                                final oldBook =
+                                    md.books?.singleWhereOrNull((book) => book.isbn == selectedIsbn);
+                                if (oldBook != null) return oldBook;
+                                return BookMetaDataManual.fromIsbn(isbn: selectedIsbn);
+                              }).toList();
+                              final res = await widget.step.bundle.overwriteMetadata(md);
+                              print('res = $res');
+                              if (res) {
+                                widget.step.bundle.autoMetadataFile.delete();
+                              }
+                              if (!mounted) return;
+                              if (res) {
+                                Navigator.pop(context);
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                                    content: Text('Error while trying to update metadata.json')));
+                              }*/
+
                               setState(() => selectedIsbns.add(newIsbn));
                             },
                             decoration: const InputDecoration(hintText: 'Type manually the ISBN here'),
@@ -186,37 +212,6 @@ class _ISBNDecodingWidgetState extends State<ISBNDecodingWidget> {
                                   SelectableText(isbn),
                                 ],
                               )),
-                          const SizedBox(height: 20),
-                          () {
-                            final isbnsDidNotChanged = (savedIsbns == selectedIsbns);
-                            return ElevatedButton(
-                                onPressed: isbnsDidNotChanged
-                                    ? null
-                                    : () async {
-                                        throw UnimplementedError('Chang ISBN');
-                                        /*final md = widget.step.bundle.metadata;
-
-                                        md.books = selectedIsbns.toList().asList().map((selectedIsbn) {
-                                          final oldBook =
-                                              md.books?.singleWhereOrNull((book) => book.isbn == selectedIsbn);
-                                          if (oldBook != null) return oldBook;
-                                          return BookMetaDataManual.fromIsbn(isbn: selectedIsbn);
-                                        }).toList();
-                                        final res = await widget.step.bundle.overwriteMetadata(md);
-                                        print('res = $res');
-                                        if (res) {
-                                          widget.step.bundle.autoMetadataFile.delete();
-                                        }
-                                        if (!mounted) return;
-                                        if (res) {
-                                          Navigator.pop(context);
-                                        } else {
-                                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                                              content: Text('Error while trying to update metadata.json')));
-                                        }*/
-                                      },
-                                child: const Text('Validate ISBNs'));
-                          }(),
                         ],
                       ),
                     ),

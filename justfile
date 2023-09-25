@@ -20,9 +20,10 @@ take_automated_screenshot:
     # So be sure to copy some mock data before every 'flutter drive'
 
     # Make sur the file/ folder does not exist, otherwise adb push create files/basic/to_publish instead of files/to_publish
-    adb shell 'rm -r /storage/emulated/0/Android/data/fr.pimoid.booky.debug/files/'
+    adb shell 'rm -rf /storage/emulated/0/Android/data/fr.pimoid.booky.debug/files/'
     adb push extra/mock_data/basic/ /storage/emulated/0/Android/data/fr.pimoid.booky.debug/files/
-    screenshot_dir=real_android_device flutter drive --driver=test_driver/screenshot_test.dart --target=integration_test/extended_test.dart
+    date=$(date +"%Y-%m-%d_%H-%M-%S") \
+    screenshot_dir=real_android_device_$date flutter drive --driver=test_driver/screenshot_test.dart --target=integration_test/extended_test.dart
 
 test_screenshots +device_ids:
     echo {{device_ids}}
