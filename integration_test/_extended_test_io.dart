@@ -16,12 +16,9 @@ void main() {
     'searchbar': searchBar,
     'add_isbn': addIsbn,
   };
-  addIsbn(binding);
-/*
   for (final test in tests.values) {
     test(binding);
   }
-*/
 }
 
 class Screenshotter {
@@ -144,9 +141,7 @@ void addIsbn(final IntegrationTestWidgetsFlutterBinding binding) {
 }
 
 void searchBar(final IntegrationTestWidgetsFlutterBinding binding) {
-  Future<void> takeScreenshot(String name) async {
-    await binding.takeScreenshot('searchbar/$name');
-  }
+  final ss = Screenshotter(binding, 'searchbar');
 
   testWidgets('test SearchBar', (WidgetTester tester) async {
     // Build our app.
@@ -157,39 +152,33 @@ void searchBar(final IntegrationTestWidgetsFlutterBinding binding) {
 
     // Pump a frame before taking the screenshot.
     await tester.pumpAndSettle();
-    await takeScreenshot('1');
+    await ss.capture('home');
 
-    final Finder f = find.byIcon(Icons.search);
-    expect(tester.elementList(f).length, equals(1));
-    await tester.tap(f.first);
+    final searchIconFinder = find.byIcon(Icons.search);
+    expect(searchIconFinder, findsOneWidget);
+    await tester.tap(searchIconFinder);
 
     await tester.pumpAndSettle(const Duration(seconds: 3));
-    await takeScreenshot('2');
+    await ss.capture('open_seach_bar');
 
     final findSearchBarTextField = find
         .byWidgetPredicate((widget) => widget is TextField && widget.decoration?.hintText == 'Search all the bundles');
     expect(findSearchBarTextField, findsOneWidget);
     await tester.enterText(findSearchBarTextField, 'nord');
 
-    await tester.pumpAndSettle(const Duration(seconds: 3));
-    await takeScreenshot('3');
+    await tester.pumpAndSettle(const Duration(seconds: 1));
 
+    await ss.capture('type_nord');
     expect(
         find.byWidgetPredicate((widget) => widget is Text && widget.data!.startsWith('Harricana: Le Royaume du Nord')),
         findsOneWidget);
 
     await tester.pageBack();
-
-    await tester.pumpAndSettle(const Duration(seconds: 2));
-
-    await takeScreenshot('4');
   });
 }
 
 void basicScreenshot(IntegrationTestWidgetsFlutterBinding binding) {
-  Future<void> takeScreenshot(String name) async {
-    await binding.takeScreenshot('basic_screenshot/$name');
-  }
+  final ss = Screenshotter(binding, 'basic_screenshot');
 
   testWidgets('verify screenshot', (WidgetTester tester) async {
     // Build our app.
@@ -200,25 +189,27 @@ void basicScreenshot(IntegrationTestWidgetsFlutterBinding binding) {
 
     // Pump a frame before taking the screenshot.
     await tester.pumpAndSettle();
-    await takeScreenshot('1');
+    await ss.capture('home');
 
     // Pump another frame before taking the screenshot.
     await tester.pumpAndSettle(const Duration(seconds: 2));
-    await takeScreenshot('2');
+    await ss.capture('2');
 
-    final Finder f = find.byIcon(Icons.send);
-    expect(tester.elementList(f).length, equals(8));
+    final sendIconFinder = find.byIcon(Icons.send);
+    // Not all bundle might be visible, but we can expect to at least see the first 4 of them
+    expect(tester
+        .elementList(sendIconFinder)
+        .length, greaterThan(4));
 
-    await tester.tap(f.first);
+    await tester.tap(sendIconFinder.first);
+    await tester.pumpAndSettle(const Duration(seconds: 1));
 
-    await tester.pumpAndSettle(const Duration(seconds: 2));
-
-    await takeScreenshot('3');
+    await ss.capture('MetadataCollecting');
 
     await tester.pageBack();
 
-    await tester.pumpAndSettle(const Duration(seconds: 2));
+    await tester.pumpAndSettle(const Duration(seconds: 1));
 
-    await takeScreenshot('4');
+    await ss.capture('back_to_home');
   });
 }
