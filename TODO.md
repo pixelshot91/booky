@@ -1,6 +1,5 @@
 # TODO
 
-
 * [ ] App-wide: Fix ScrollShadow showing shadow in direction perpendicular to scrolling
 * [ ] App-wide: Better handle nonexistent or incorrect metadata file instead of throwing an exception
 * [ ] Camera: LiveDetection: show confirmed barcode and pending barcodes in different color. Show a progressBar for the pending barcode
@@ -22,12 +21,12 @@
 * [ ] AdEditing: Disable 'Mark as published' if the title is empty
 * [ ] AdEditing: Save the ad as it was published
 * [ ] Search with Selenium in headless mode
-* [ ] Technical: Pin version in pubspec.yaml and Cargo.toml because some packages in both language do not respect SemVer
 * [ ] Test: Launch github action runner without opening graphical interface (use -no-boot-anim  -no-window)
 * [ ] Test: CI show false success when a step with continue-on-error fails
 
 # DONE
 
+* [x] Technical: Pin version in pubspec.yaml and Cargo.toml because some packages in both language do not respect SemVer
 * [x] Fix ScrollShadow only showing after first scrolling
 * [x] BundleSelection: Add search by ISBN, title, author
 * [x] Add CI that check Flutter and Rust code, and launch flutter test
