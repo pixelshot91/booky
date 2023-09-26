@@ -1,8 +1,6 @@
-import 'package:booky/bundle.dart';
 import 'package:booky/enrichment/ad_editing.dart';
 import 'package:booky/helpers.dart';
 import 'package:booky/widgets/scrollable_bundle_images.dart';
-import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:kt_dart/kt.dart';
@@ -14,6 +12,7 @@ class BooksMetadataCollectingWidget extends StatefulWidget {
   const BooksMetadataCollectingWidget({required this.step});
 
   final MetadataCollectingStep step;
+
   @override
   State<BooksMetadataCollectingWidget> createState() => _BooksMetadataCollectingWidgetState();
 }
@@ -26,7 +25,7 @@ class _Metadata {
 }
 
 class _BooksMetadataCollectingWidgetState extends State<BooksMetadataCollectingWidget> {
-  Map<String, _Metadata>? controllers;
+  KtMap<String, _Metadata>? controllers;
 
   @override
   void initState() {
@@ -34,17 +33,28 @@ class _BooksMetadataCollectingWidgetState extends State<BooksMetadataCollectingW
 
     Future(() async {
       final autoMd = await api.getAutoMetadataFromBundle(path: widget.step.bundle.autoMetadataFile.path);
-      final map = Map.fromEntries(autoMd.map((entry) => MapEntry(
-          entry.isbn,
-          _Metadata(
-              providerMetadatas:
-                  entry.metadatas.map((md) => MapEntry(md.provider, md.metadata)).let((e) => Map.fromEntries(e)),
-              bookControllerSet: _BookControllerSet()))));
+      final mergeMd = await api.getMergedMetadataForBundle(bundlePath: widget.step.bundle.directory.path);
+      final map = Map.fromEntries(autoMd.map((entry) {
+        final bookControllerSet = _BookControllerSet();
+        final mergeMDForBook = mergeMd.books.singleWhere((book) => book.isbn == entry.isbn);
+        bookControllerSet.titleTextFieldController.text = mergeMDForBook.title ?? '';
+        bookControllerSet.authorsTextFieldController.text = _authorsToString(mergeMDForBook.authors);
+        bookControllerSet.blurbTextFieldController.text = mergeMDForBook.blurb ?? '';
+        bookControllerSet.keywordsTextFieldController.text = _keywordsToString(mergeMDForBook.keywords);
+        bookControllerSet.priceTextFieldController.text = mergeMDForBook.priceCent?.divide(100).toString() ?? '';
+        return MapEntry(
+            entry.isbn,
+            _Metadata(
+                providerMetadatas:
+                    entry.metadatas.map((md) => MapEntry(md.provider, md.metadata)).let((e) => Map.fromEntries(e)),
+                bookControllerSet: bookControllerSet));
+      })).kt;
+
       if (mounted) {
         setState(() {
           // Use the order from metadata.json, and not the one coming from autoMd
           // (which is out of order because the json is a map so the Rust parser may not respect the order)
-          controllers = Map.fromEntries(widget.step.bundle.metadata.isbns!.map((e) => MapEntry(e, map[e]!)));
+          controllers = Map.fromEntries(mergeMd.books.map((b) => MapEntry(b.isbn, map[b.isbn]!))).kt;
         });
       }
     });
@@ -75,33 +85,36 @@ class _BooksMetadataCollectingWidgetState extends State<BooksMetadataCollectingW
                                       isbn: entry.key,
                                       metadatas: entry.value,
                                     ))
-                                .toList(),
+                                .toList()
+                                .dart,
                             Padding(
                               padding: const EdgeInsets.all(8.0),
                               child: ElevatedButton(
-                                  onPressed: () {
-                                    Navigator.push(
-                                        context,
-                                        MaterialPageRoute<void>(
-                                            builder: (context) => AdEditingWidget(
-                                                step: AdEditingStep(
+                                  onPressed: () async {
+                                    final bundleMetadata = await api.getMergedMetadataForBundle(
+                                        bundlePath: widget.step.bundle.directory.path);
+                                    bundleMetadata.books.forEach((book) {
+                                      final bookController = controllers[book.isbn]!.bookControllerSet;
+                                      book.title = bookController.titleTextFieldController.text;
+                                      book.authors = _stringToAuthors(bookController.authorsTextFieldController.text);
+                                      book.blurb = bookController.blurbTextFieldController.text;
+                                      book.keywords =
+                                          _stringToKeywords(bookController.keywordsTextFieldController.text);
+                                      book.priceCent = double.parse(bookController.priceTextFieldController.text)
+                                          .multiply(100)
+                                          .round();
+                                    });
+                                    await api.setManualMetadataForBundle(
+                                        bundlePath: widget.step.bundle.directory.path, bundleMetadata: bundleMetadata);
+                                    if (context.mounted) {
+                                      Navigator.push(
+                                          context,
+                                          MaterialPageRoute<void>(
+                                              builder: (context) => AdEditingWidget(
+                                                      step: AdEditingStep(
                                                     bundle: widget.step.bundle,
-                                                    metadata: controllers.entries.map((entry) {
-                                                      final bookControllerSet = entry.value.bookControllerSet;
-                                                      return BookMetaDataManual(
-                                                        isbn: entry.key,
-                                                        title: bookControllerSet.titleTextFieldController.text,
-                                                        authors: _stringToAuthors(
-                                                            bookControllerSet.authorsTextFieldController.text),
-                                                        blurb: bookControllerSet.blurbTextFieldController.text,
-                                                        keywords: _stringToKeywords(
-                                                            bookControllerSet.keywordsTextFieldController.text),
-                                                        priceCent: double.parse(
-                                                                bookControllerSet.priceTextFieldController.text)
-                                                            .multiply(100)
-                                                            .round(),
-                                                      );
-                                                    })))));
+                                                  ))));
+                                    }
                                   },
                                   child: const Text('Validate Metadatas')),
                             )
@@ -123,9 +136,11 @@ class _BookControllerSet {
 }
 
 String _keywordsToString(List<String> keywords) => keywords.join(', ');
+
 List<String> _stringToKeywords(String s) => s.split(', ').toList();
 
 String _authorsToString(List<Author> authors) => authors.map((a) => a.toText()).join('\n');
+
 List<Author> _stringToAuthors(String s) {
   if (s.isEmpty) return [];
   return s.split('\n').map((line) => Author(firstName: '', lastName: line)).toList();
@@ -142,13 +157,15 @@ class _BookMetadataCollectingWidget extends StatefulWidget {
 }
 
 class _BookMetadataCollectingWidgetState extends State<_BookMetadataCollectingWidget> {
-  @override
+  /*@override
   void initState() {
     super.initState();
     final manualMD = widget.metadatas.providerMetadatas.mergeAllProvider();
     final controllers = widget.metadatas.bookControllerSet;
-    controllers.titleTextFieldController.text = manualMD.title ?? '';
-    controllers.authorsTextFieldController.text = _authorsToString(manualMD.authors);
+    /*if (controllers.titleTextFieldController.text.isEmpty) {
+      controllers.titleTextFieldController.text = manualMD.title ?? '';
+    }*/
+    /*controllers.authorsTextFieldController.text = _authorsToString(manualMD.authors);
     controllers.blurbTextFieldController.text = manualMD.blurb ?? '';
     controllers.keywordsTextFieldController.text = _keywordsToString(manualMD.keywords);
     if (manualMD.marketPrice.isEmpty) {
@@ -156,8 +173,8 @@ class _BookMetadataCollectingWidgetState extends State<_BookMetadataCollectingWi
     } else {
       final minMarketPrice = manualMD.marketPrice.min;
       controllers.priceTextFieldController.text = minMarketPrice.round().toString();
-    }
-  }
+    }*/
+  }*/
 
   void _updateManualTitle(String newTitle) {
     setState(() => widget.metadatas.bookControllerSet.titleTextFieldController.text = newTitle);
@@ -307,6 +324,7 @@ const _noneText = Text('None', style: TextStyle(fontStyle: FontStyle.italic));
 
 class _SelectableTextAndUse extends StatelessWidget {
   const _SelectableTextAndUse(this.s, {required this.onUse});
+
   final String s;
   final void Function(String) onUse;
 

@@ -10,6 +10,7 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge.dart';
 import 'package:flutter_scroll_shadow/flutter_scroll_shadow.dart';
 import 'package:kt_dart/kt.dart';
 import 'package:path/path.dart' as path;
+import 'package:scroll_to_index/scroll_to_index.dart';
 import 'package:stream_transform/stream_transform.dart';
 
 import '../bundle.dart';
@@ -32,6 +33,131 @@ PopupMenuItem<void> _popUpMenuIconText(
           ],
         ));
 
+class CustomSearchHintDelegate extends SearchDelegate<String> {
+  CustomSearchHintDelegate({
+    required String hintText,
+    required this.bundles,
+    required this.bundlesScrollController,
+  }) : super(
+          searchFieldLabel: hintText,
+          keyboardType: TextInputType.text,
+          textInputAction: TextInputAction.search,
+        );
+  final Future<Iterable<Bundle>?> bundles;
+  AutoScrollController bundlesScrollController;
+
+  bool matchOnISBN = true, matchOnTitle = true, matchOnAuthor = true;
+
+  // Return null to display default back button
+  @override
+  Widget? buildLeading(BuildContext context) => null;
+
+  @override
+  PreferredSizeWidget buildBottom(BuildContext context) => PreferredSize(
+      preferredSize: const Size.fromHeight(50),
+      child: StatefulBuilder(builder: (BuildContext context, StateSetter setState) {
+        return Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Row(
+            children: [
+              FilterChip(
+                selected: matchOnISBN,
+                label: const Text('ISBN'),
+                onSelected: (value) {
+                  setState(() => matchOnISBN = value);
+                  query = query; // Force suggestions rebuild
+                },
+              ),
+              FilterChip(
+                selected: matchOnTitle,
+                label: const Text('Title'),
+                onSelected: (value) {
+                  setState(() => matchOnTitle = value);
+                  query = query; // Force suggestions rebuild
+                },
+              ),
+              FilterChip(
+                selected: matchOnAuthor,
+                label: const Text('Author'),
+                onSelected: (value) {
+                  setState(() => matchOnAuthor = value);
+                  query = query; // Force suggestions rebuild
+                },
+              ),
+            ],
+          ),
+        );
+      }));
+
+  @override
+  Widget buildSuggestions(BuildContext context) {
+    return FutureWidget(
+      future: bundles,
+      builder: (bundles) {
+        if (bundles == null) return const Text('Loading bundles');
+
+        final bundlesWithMD = bundles.mapIndexed((index, b) async {
+          final mergedMetadata = await b.getMergedMetadata();
+          return (index, mergedMetadata);
+        });
+        return FutureWidget(
+          future: Future.wait(bundlesWithMD),
+          builder: (bundlesWithMD) {
+            final bundlesMatchingISBN = matchOnISBN
+                ? bundlesWithMD.where((b) => b.$2.books.any((book) => book.isbn.contains(query)))
+                : const Iterable<(int, BundleMetaData)>.empty();
+            final bundlesMatchingTitle = matchOnTitle
+                ? bundlesWithMD.where((b) => b.$2.books.any((book) => book.title?.containsIgnoringCase(query) ?? false))
+                : const Iterable<(int, BundleMetaData)>.empty();
+            final bundlesMatchingAuthor = matchOnAuthor
+                ? bundlesWithMD.where((b) => b.$2.books.any((book) =>
+                    book.authors.any((author) => '${author.firstName} ${author.lastName}'.containsIgnoringCase(query))))
+                : const Iterable<(int, BundleMetaData)>.empty();
+            final bundleMatching =
+                bundlesMatchingISBN.followedBy(bundlesMatchingTitle).followedBy(bundlesMatchingAuthor);
+            return ListView.builder(
+              itemBuilder: (context, index) {
+                final b = bundleMatching.elementAt(index);
+                return ColoredBox(
+                  color: Colors.white,
+                  child: Padding(
+                    padding: const EdgeInsets.all(6.0),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            b.$2.books.firstOrNull?.title ?? 'None',
+                          ),
+                        ),
+                        TextButton(
+                            onPressed: () async {
+                              Navigator.of(context).pop();
+                              await bundlesScrollController.scrollToIndex(b.$1,
+                                  preferPosition: AutoScrollPosition.middle);
+                              await bundlesScrollController.highlight(b.$1);
+                            },
+                            child: const Text('See in list')),
+                      ],
+                    ),
+                  ),
+                );
+              },
+              itemCount: bundleMatching.length,
+            );
+          },
+        );
+      },
+    );
+  }
+
+  @override
+  Widget buildResults(BuildContext context) => const Text('results');
+
+  @override
+  List<Widget> buildActions(BuildContext context) =>
+      <Widget>[IconButton(onPressed: () {}, icon: const Icon(Icons.clear))];
+}
+
 class BundleSelection extends StatefulWidget {
   const BundleSelection();
 
@@ -44,11 +170,14 @@ class _BundleSelectionState extends State<BundleSelection> {
   int? compressedBundleNb;
   int? autoMdCollectedBundleNb;
 
-  final gridViewController = ScrollController();
+  late final AutoScrollController gridViewController;
 
   @override
   void initState() {
     super.initState();
+    gridViewController = AutoScrollController(
+        viewportBoundaryGetter: () => Rect.fromLTRB(0, 0, 0, MediaQuery.of(context).padding.bottom),
+        axis: Axis.vertical);
     Future(_compressImages);
   }
 
@@ -63,6 +192,17 @@ class _BundleSelectionState extends State<BundleSelection> {
       appBar: AppBar(
         title: const Text('Bundle Section'),
         actions: [
+          IconButton(
+              icon: const Icon(Icons.search),
+              onPressed: () {
+                showSearch(
+                    context: context,
+                    delegate: CustomSearchHintDelegate(
+                        hintText: 'Search all the bundles',
+                        bundles: _listBundles(),
+                        bundlesScrollController: gridViewController)
+                      ..showResults(context));
+              }),
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: () {
@@ -160,11 +300,11 @@ class _BundleSelectionState extends State<BundleSelection> {
         }
         return;
       }
-      final Set<String> isbns = bundle.metadata.isbns?.toSet() ?? {};
+      final List<String> isbns = (await bundle.getManualMetadata()).books.map((book) => book.isbn).toList();
 
       try {
         await api.getMetadataFromIsbns(
-          isbns: isbns.toList(),
+          isbns: isbns,
           path: bundle.autoMetadataFile.path,
         );
       } on FfiException catch (e) {
@@ -245,8 +385,6 @@ class _BundleSelectionState extends State<BundleSelection> {
           ProgressIndicator('Collecting autoMetadata', total: bundleNb, itemDone: autoMdCollectedBundleNb),
         Expanded(
           child: ScrollShadow(
-            // Controller are theoretically optional on vertically scrolling content, but on Linux without a controller, nothing is shown
-            controller: gridViewController,
             color: defaultScrollShadowColor,
             size: 30,
             child: GridView.extent(
@@ -255,7 +393,12 @@ class _BundleSelectionState extends State<BundleSelection> {
               maxCrossAxisExtent: 500,
               childAspectRatio: 2,
               children: bundles
-                  .map((bundle) => GestureDetector(
+                  .mapIndexed((index, bundle) => AutoScrollTag(
+                      key: ValueKey(index),
+                      controller: gridViewController,
+                      index: index,
+                      highlightColor: Colors.black.withOpacity(0.5),
+                      child: GestureDetector(
                         child: BundleWidget(
                           key: const PageStorageKey('BundleWidget'),
                           bundle,
@@ -269,7 +412,7 @@ class _BundleSelectionState extends State<BundleSelection> {
                                   builder: (context) =>
                                       BooksMetadataCollectingWidget(step: MetadataCollectingStep(bundle: bundle))));
                         },
-                      ))
+                      )))
                   .toList(),
             ),
           ),
@@ -321,7 +464,7 @@ class BundleWidget extends StatefulWidget {
 }
 
 class _BundleWidgetState extends State<BundleWidget> {
-  late Future<KtMutableMap<String, KtMutableMap<ProviderEnum, BookMetaDataFromProvider?>>> cachedAutoMetadata;
+  late Future<BundleMetaData> cachedMergedMd;
 
   @override
   void initState() {
@@ -336,55 +479,55 @@ class _BundleWidgetState extends State<BundleWidget> {
   }
 
   void _loadAutoMetadata() {
-    cachedAutoMetadata = api.getAutoMetadataFromBundle(path: widget.bundle.autoMetadataFile.path).then((value) {
-      return Map.fromEntries(value.map((e) {
-        final providerMdMap = Map.fromEntries(e.metadatas.map((e) => MapEntry(e.provider, e.metadata))).kt;
-        return MapEntry(e.isbn, providerMdMap);
-      })).kt;
-    });
+    cachedMergedMd = widget.bundle.getMergedMetadata();
+  }
+
+  Widget _buildTitleLine(BundleMetaData bundleMergedMD) {
+    final firstBook = bundleMergedMD.books.firstOrNull;
+    if (firstBook == null) return const Text('No book identified');
+    return Row(children: [
+      if (bundleMergedMD.books.length > 1) _NumberOfBookBadge(bundleMergedMD.books.length),
+      Expanded(
+          child: Column(
+        children: [
+          firstBook.title.ifIs(
+              notnull: (t) => TextWithTooltip(t),
+              nul: () => const Text(
+                    'No title found',
+                    style: TextStyle(fontStyle: FontStyle.italic),
+                  )),
+        ],
+      )),
+      bundleMergedMD.books
+          .map((b) => b.priceCent)
+          .whereNotNull()
+          .let((prices) => prices.isEmpty ? const Text('?') : Text('${prices.sum ~/ 100} €')),
+    ]);
   }
 
   @override
   Widget build(BuildContext context) => Card(
         child: Padding(
           padding: const EdgeInsets.all(4.0),
-          child: Column(
-            children: [
-              // Text(path.basename(widget.bundle.directory.path)),
-              FutureWidget(
-                  future: cachedAutoMetadata,
-                  builder: (autoMetadata) {
-                    final firstBook = autoMetadata.iter.firstOrNull;
-                    if (firstBook == null) return const Text('No book identified');
-                    final md = firstBook.value.dart.mergeAllProvider();
-                    final priceRange = md.marketPrice.toList();
-                    return Row(children: [
-                      if (autoMetadata.size > 1) _NumberOfBookBadge(autoMetadata.size),
-                      Expanded(
-                          child: md.title.ifIs(
-                              notnull: (t) => TextWithTooltip(t),
-                              nul: () => const Text(
-                                    'No title found',
-                                    style: TextStyle(fontStyle: FontStyle.italic),
-                                  ))),
-                      priceRange.isEmpty
-                          ? const Text('?')
-                          : Text('${priceRange.first.toInt()} - ${priceRange.last.toInt()} €'),
-                    ]);
-                  }),
-              Expanded(
-                child: Row(
-                  children: [
-                    FutureWidget(future: cachedAutoMetadata, builder: (md) => MetadataIcons(md)),
-                    Expanded(child: ScrollableBundleImages(widget.bundle, Axis.horizontal)),
-                    _ActionButtons(
-                        bundle: widget.bundle,
-                        refreshParent: widget.refreshParent,
-                        downloadMetadataForBundles: widget.downloadMetadataForBundles),
-                  ],
+          child: FutureWidget(
+            future: cachedMergedMd,
+            builder: (bundleMergedMD) => Column(
+              children: [
+                _buildTitleLine(bundleMergedMD),
+                Expanded(
+                  child: Row(
+                    children: [
+                      MetadataIcons(bundleMergedMD),
+                      Expanded(child: ScrollableBundleImages(widget.bundle, Axis.horizontal)),
+                      _ActionButtons(
+                          bundle: widget.bundle,
+                          refreshParent: widget.refreshParent,
+                          downloadMetadataForBundles: widget.downloadMetadataForBundles),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       );
@@ -446,7 +589,7 @@ class _ActionButtons extends StatelessWidget {
                 onPressed: () async {
                   final initialDirectoryLocation = bundle.directory;
                   final segments = path.split(initialDirectoryLocation.path);
-                  segments[segments.length - 2] = 'booky_deleted';
+                  segments[segments.length - 2] = 'deleted';
                   final finalDirectoryLocation = await initialDirectoryLocation.rename(path.joinAll(segments));
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -503,20 +646,20 @@ class _NumberOfBookBadge extends StatelessWidget {
 }
 
 class MetadataIcons extends StatelessWidget {
-  const MetadataIcons(this.metadata);
+  const MetadataIcons(this.bundleMergeMD);
 
-  final KtMutableMap<String, KtMutableMap<ProviderEnum, BookMetaDataFromProvider?>> metadata;
+  final BundleMetaData bundleMergeMD;
 
   @override
   Widget build(BuildContext context) {
-    if (metadata.size == 0) return const SizedBox.shrink();
+    if (bundleMergeMD.books.length == 0) return const SizedBox.shrink();
 
-    final mergedMd = metadata.mapValues((p0) => p0.value.dart.mergeAllProvider());
-    final allBooksHaveTitle = mergedMd.all((key, value) => (value.title?.length ?? 0) > 0);
-    final allBooksHaveAuthor = mergedMd.all((key, value) => (value.authors.length) >= 1);
-    final allBooksHaveBlurb = mergedMd.all((key, value) => (value.blurb?.length ?? 0) > 50);
-    final allBooksHaveKeywords = mergedMd.all((key, value) => (value.keywords.length) > 5);
-    final allBooksHavePrice = mergedMd.all((key, value) => (value.marketPrice.length) >= 1);
+    final books = bundleMergeMD.books;
+    final allBooksHaveTitle = books.every((b) => (b.title?.length ?? 0) > 0);
+    final allBooksHaveAuthor = books.every((b) => b.authors.length > 0);
+    final allBooksHaveBlurb = books.every((b) => (b.blurb?.length ?? 0) > 0);
+    final allBooksHaveKeywords = books.every((b) => b.keywords.length > 0);
+    final allBooksHavePrice = books.every((b) => b.priceCent != null);
 
     return Column(
       children: [

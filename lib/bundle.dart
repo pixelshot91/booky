@@ -1,14 +1,12 @@
-import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
 
-import 'package:booky/common.dart';
-import 'package:booky/helpers.dart';
 import 'package:collection/collection.dart';
+import 'package:flutter_rust_bridge/flutter_rust_bridge.dart';
+import 'package:kt_dart/collection.dart';
 import 'package:path/path.dart' as path;
 import 'package:stream_transform/stream_transform.dart';
 
-import 'bridge_definitions.dart';
+import '../ffi.dart';
 import 'common.dart' as common;
 
 class Bundle {
@@ -24,21 +22,13 @@ class Bundle {
 
   File get metadataFile => File(path.join(directory.path, 'metadata.json'));
 
-  Metadata get metadata {
-    return Metadata.fromJson(jsonDecode(metadataFile.readAsStringSync()) as Map<String, dynamic>);
-  }
-
-  Future<bool> overwriteMetadata(Metadata md) async {
-    final tmpFile = File('tmp.json');
-
+  Future<bool> overwriteMetadata(BundleMetaData md) async {
     try {
-      await tmpFile.writeAsString(jsonEncode(md.toJson()));
-    } on FileSystemException catch (e) {
-      print(e);
+      api.setManualMetadataForBundle(bundlePath: directory.path, bundleMetadata: md);
+      return true;
+    } on FfiException {
       return false;
     }
-
-    return common.launchCommandLine('gio', ['move', tmpFile.path, metadataFile.path]);
   }
 
   Future<bool> removeAutoMetadata() async {
@@ -52,18 +42,31 @@ class Bundle {
   }
 
   File get autoMetadataFile => File(path.join(directory.path, 'automatic_metadata.json'));
-}
 
-extension MapProviderEnumBookMetaDataFromProviderExt on Map<ProviderEnum, BookMetaDataFromProvider?> {
-  List<double> getPrices() =>
-      values.map((e) => e?.marketPrice.toList()).whereNotNull().expand((i) => i).toList()..sort();
-  BookMetaDataFromProvider mergeAllProvider() {
-    return BookMetaDataFromProvider(
-        title: entries.map((e) => e.value?.title).whereNotNull().biggest(),
-        authors: values.whereNotNull().map((md) => md.authors).biggest(),
-        blurb: values.map((e) => e?.blurb).whereNotNull().biggest(),
-        keywords: values.whereNotNull().map((e) => e.keywords).expand((e) => e).toList(),
-        marketPrice: Float32List.fromList(getPrices()));
+  Future<KtMutableMap<String, KtMutableMap<ProviderEnum, BookMetaDataFromProvider?>>> getAutoMetadata() async {
+    try {
+      final value = await api.getAutoMetadataFromBundle(path: autoMetadataFile.path);
+      return Map.fromEntries(value.map((e) {
+        final providerMdMap = Map.fromEntries(e.metadatas.map((e) => MapEntry(e.provider, e.metadata))).kt;
+        return MapEntry(e.isbn, providerMdMap);
+      })).kt;
+    } on FfiException {
+      return KtMutableMap.empty();
+    }
+  }
+
+  // Return the best information either manually submitted, manually verified, or automatically, for every book of the bundle
+  Future<BundleMetaData> getMergedMetadata() async {
+    try {
+      return await api.getMergedMetadataForBundle(bundlePath: directory.path);
+    } on FfiException catch (e) {
+      print('getMergedMetadata. FfiException. e = $e');
+      return BundleMetaData(books: []);
+    }
+  }
+
+  Future<BundleMetaData> getManualMetadata() async {
+    return api.getManualMetadataForBundle(bundlePath: directory.path);
   }
 }
 

@@ -42,6 +42,7 @@ dependencies:
   recase: ^4.1.0
   uuid: ^3.0.7
   path_provider: ^2.1.0
+  scroll_to_index: ^3.0.1
 
 dev_dependencies:
   flutter_test:
