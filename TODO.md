@@ -1,18 +1,18 @@
 # TODO
 
-* [ ] Fix ScrollShadow only showing after first scrolling
-* [ ] Better handle nonexistent or incorrect metadata file instead of throwing an exception
+
+* [ ] App-wide: Fix ScrollShadow showing shadow in direction perpendicular to scrolling
+* [ ] App-wide: Better handle nonexistent or incorrect metadata file instead of throwing an exception
 * [ ] Camera: LiveDetection: show confirmed barcode and pending barcodes in different color. Show a progressBar for the pending barcode
 * [ ] Camera: Fix pictures flickering or being shortly replaced by a spinner each time a picture is taken
 * [ ] Camera: Fix flashlight turning on and never off again
 * [ ] Camera: Camera is still in use when going back to BundleSelection, and even when going to the home screen
 * [ ] BundleSelection: Show already published bundles
-* [ ] BundleSelection: Make image load faster (at least on Linux) (use even smaller thumbnail, cache images) 
-* [ ] BundleSelection: Add search by ISBN, title, author
+* [ ] BundleSelection: Make image load faster (at least on Linux) (use even smaller thumbnail, cache images)
 * [ ] BundleSelection: Add filter by auto_metadata downloaded or not
 * [ ] BundleSelection: Add sort by date picture taken, date published, price
 * [ ] BundleSelection: Add ability to go back into Camera mode to add/delete picture/ISBN, change the weight/state
-* [ ] BundleSelection: BundleList fail to refresh after autoMetadata download
+* [ ] BundleSelection: BundleList does not refresh after autoMetadata download
 * [ ] BundleSelection: BUG: BundleList show autoMetadata from other bundle when some bundle are deleted
 * [ ] BundleSelection: Suggest bundle grouping by same author, title, keyword
 * [ ] ISBNDecoding: Better layout for phone
@@ -22,9 +22,15 @@
 * [ ] AdEditing: Disable 'Mark as published' if the title is empty
 * [ ] AdEditing: Save the ad as it was published
 * [ ] Search with Selenium in headless mode
+* [ ] Technical: Pin version in pubspec.yaml and Cargo.toml because some packages in both language do not respect SemVer
+* [ ] Test: Launch github action runner without opening graphical interface (use -no-boot-anim  -no-window)
+* [ ] Test: CI show false success when a step with continue-on-error fails
 
 # DONE
 
+* [x] Fix ScrollShadow only showing after first scrolling
+* [x] BundleSelection: Add search by ISBN, title, author
+* [x] Add CI that check Flutter and Rust code, and launch flutter test
 * [x] MetadataCollecting: Show images on the side with zoom on click
 * [x] Use a scroll indicator to show that more content is available by scrolling
 * [x] Camera: Add slider to change picture ratio
