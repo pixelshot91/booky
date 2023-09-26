@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:math';
 
+import 'package:booky/bridge_definitions.dart';
 import 'package:booky/common.dart';
 import 'package:booky/personal_info.dart' as personal_info;
 import 'package:collection/collection.dart';
@@ -10,13 +11,31 @@ import 'package:path/path.dart' as path;
 
 import '../copiable_text_field.dart';
 import '../draggable_files_widget.dart';
-import '../ffi.dart' if (dart.library.html) 'ffi_web.dart';
 import '../helpers.dart';
 import 'bundle_selection.dart';
 import 'enrichment.dart';
 
+class Ad {
+  final String title;
+  final String description;
+  final int priceCent;
+  final int weightGrams;
+  final ItemState itemState;
+  final List<String> imgsPath;
+
+  const Ad({
+    required this.title,
+    required this.description,
+    required this.priceCent,
+    required this.weightGrams,
+    required this.itemState,
+    required this.imgsPath,
+  });
+}
+
 class AdEditingWidget extends StatefulWidget {
   const AdEditingWidget({required this.step});
+
   final AdEditingStep step;
 
   @override
@@ -32,7 +51,7 @@ String vecFmt(Iterable<String> it) {
   return 'de ${vec[0]}';
 }
 
-String _bookFormat(BookMetaDataManual book, {bool withISBN = false}) {
+String _bookFormat(BookMetaData book, {bool withISBN = false}) {
   return '"${book.title}" ${vecFmt(book.authors.map((a) => a.toText()))}' + (withISBN ? ' (ISBN: ${book.isbn})' : '');
 }
 
@@ -44,30 +63,31 @@ class _AdEditingWidgetState extends State<AdEditingWidget> {
     super.initState();
 
     ad = Future(() async {
-      final metadataFromIsbn = widget.step.metadata;
+      final bundleMetaData = await widget.step.bundle.getMergedMetadata();
+      final books = bundleMetaData.books;
 
       var title = '';
-      if (metadataFromIsbn.length == 1) {
-        final onlyMetadata = metadataFromIsbn.single;
-        title = _bookFormat(onlyMetadata);
+      if (books.length == 1) {
+        final onlyBook = books.single;
+        title = _bookFormat(onlyBook);
       }
 
       var description = '';
 
-      final bookTitles = metadataFromIsbn.map((md) => _bookFormat(md, withISBN: true)).join('\n');
+      final bookTitles = books.map((md) => _bookFormat(md, withISBN: true)).join('\n');
       description += bookTitles + '\n\n';
 
-      _getDescription(metadataFromIsbn)?.let((d) => description += d + '\n\n');
+      _getDescription(books)?.let((d) => description += d + '\n\n');
 
       description += personal_info.customMessage;
 
-      final keywords = metadataFromIsbn.map((entry) => entry.keywords).expand((kw) => kw).toSet().join(', ');
+      final keywords = books.map((entry) => entry.keywords).expand((kw) => kw).toSet().join(', ');
       if (keywords.isNotEmpty) {
         description += '\n\nMots-clés:\n' + keywords;
       }
 
-      final totalPriceIncludingShipping = metadataFromIsbn.map((e) => e.priceCent ?? 0).sum;
-      final weightGramsWithWrapping = (widget.step.bundle.metadata.weightGrams! * 1.2).toInt();
+      final totalPriceIncludingShipping = books.map((e) => e.priceCent ?? 0).sum;
+      final weightGramsWithWrapping = (bundleMetaData.weightGrams! * 1.2).toInt();
       var totalPriceExcludingShipping =
           totalPriceIncludingShipping - _estimatedShippingCost(grams: weightGramsWithWrapping);
 
@@ -78,11 +98,12 @@ class _AdEditingWidgetState extends State<AdEditingWidget> {
           description: description,
           priceCent: totalPriceExcludingShipping,
           weightGrams: weightGramsWithWrapping,
+          itemState: bundleMetaData.itemState!,
           imgsPath: (await widget.step.bundle.compressedImages).map((e) => e.path).toList());
     });
   }
 
-  String? _getDescription(Iterable<BookMetaDataManual> metadataFromIsbn) {
+  String? _getDescription(Iterable<BookMetaData> metadataFromIsbn) {
     final booksWithBlurb = metadataFromIsbn.where((entry) => entry.blurb?.isNotEmpty == true);
     if (booksWithBlurb.length == 0) {
       return null;
@@ -118,95 +139,94 @@ class _AdEditingWidgetState extends State<AdEditingWidget> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    final metadata = widget.step.bundle.metadata;
-
-    return Scaffold(
-      appBar: AppBar(title: const Text('Ad editing')),
-      body: FutureWidget(
-        future: ad,
-        builder: (ad) => Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                CopyableTextField(TextFormField(
-                  controller: TextEditingController(text: ad.title),
-                  decoration: const InputDecoration(
-                    icon: Icon(Icons.title),
-                    labelText: 'Ad title',
+  Widget build(BuildContext context) => Scaffold(
+        appBar: AppBar(title: const Text('Ad editing')),
+        body: FutureWidget(
+          future: ad,
+          builder: (ad) => Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  CopyableTextField(TextFormField(
+                    controller: TextEditingController(text: ad.title),
+                    decoration: const InputDecoration(
+                      icon: Icon(Icons.title),
+                      labelText: 'Ad title',
+                    ),
+                    style: const TextStyle(fontSize: 30),
+                  )),
+                  _nonCopyableField(Icons.diamond, SizedBox(width: 300, child: _LBCStyledState(ad.itemState))),
+                  CopyableTextField(TextFormField(
+                    controller: TextEditingController(text: ad.description),
+                    maxLines: null,
+                    scrollPhysics: const NeverScrollableScrollPhysics(),
+                    decoration: const InputDecoration(
+                      icon: Icon(Icons.text_snippet),
+                      labelText: 'Ad description',
+                    ),
+                  )),
+                  CopyableTextField(TextFormField(
+                    controller: TextEditingController(text: ad.priceCent.divide(100).toString()),
+                    decoration: const InputDecoration(
+                      icon: Icon(Icons.euro),
+                      labelText: 'Price (without shipping cost)',
+                    ),
+                    style: const TextStyle(fontSize: 20),
+                  )),
+                  _nonCopyableField(
+                    Icons.scale,
+                    SizedBox(width: 300, child: _LBCStyledWeight(ad.weightGrams)),
                   ),
-                  style: const TextStyle(fontSize: 30),
-                )),
-                _nonCopyableField(Icons.diamond, SizedBox(width: 300, child: _LBCStyledState(metadata.itemState!))),
-                CopyableTextField(TextFormField(
-                  controller: TextEditingController(text: ad.description),
-                  maxLines: null,
-                  scrollPhysics: const NeverScrollableScrollPhysics(),
-                  decoration: const InputDecoration(
-                    icon: Icon(Icons.text_snippet),
-                    labelText: 'Ad description',
-                  ),
-                )),
-                CopyableTextField(TextFormField(
-                  controller: TextEditingController(text: ad.priceCent.divide(100).toString()),
-                  decoration: const InputDecoration(
-                    icon: Icon(Icons.euro),
-                    labelText: 'Price (without shipping cost)',
-                  ),
-                  style: const TextStyle(fontSize: 20),
-                )),
-                _nonCopyableField(
-                  Icons.scale,
-                  SizedBox(width: 300, child: _LBCStyledWeight(ad.weightGrams)),
-                ),
-                _nonCopyableField(
-                    Icons.collections,
-                    DraggableFilesWidget(
-                      uris: ad.imgsPath.map((path) => Uri.file(path)),
-                      child: Column(
-                        children: [
-                          Row(
-                            children:
-                                ad.imgsPath.map((img) => SizedBox(height: 200, child: ImageWidget(File(img)))).toList(),
-                          ),
-                          const Text('Drag and drop images')
-                        ],
-                      ),
-                    )),
-                Center(
-                  child: ElevatedButton(
-                      onPressed: () {
-                        final initialDirectory = widget.step.bundle.directory;
-                        final segments = path.split(initialDirectory.path);
-                        segments[segments.length - 2] = 'booky_done';
-                        final finalDirectory = Directory(path.joinAll(segments));
-                        initialDirectory.renameSync(finalDirectory.path);
-                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                          content: const Text('Moved'),
-                          action: SnackBarAction(
-                              label: 'Undo',
-                              onPressed: () async {
-                                await finalDirectory.rename(initialDirectory.path);
-                              }),
-                        ));
-                        Navigator.push(context, MaterialPageRoute<void>(builder: (context) => const BundleSelection()));
-                      },
-                      child: const Text('Mark as published')),
-                )
-              ]
-                  .map((e) => Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 4.0),
-                        child: e,
-                      ))
-                  .toList(),
+                  _nonCopyableField(
+                      Icons.collections,
+                      DraggableFilesWidget(
+                        uris: ad.imgsPath.map((path) => Uri.file(path)),
+                        child: Column(
+                          children: [
+                            Row(
+                              children: ad.imgsPath
+                                  .map((img) => SizedBox(height: 200, child: ImageWidget(File(img))))
+                                  .toList(),
+                            ),
+                            const Text('Drag and drop images')
+                          ],
+                        ),
+                      )),
+                  Center(
+                    child: ElevatedButton(
+                        onPressed: () {
+                          final initialDirectory = widget.step.bundle.directory;
+                          final segments = path.split(initialDirectory.path);
+                          // TODO: Use common.BookyDir
+                          segments[segments.length - 2] = 'published';
+                          final finalDirectory = Directory(path.joinAll(segments));
+                          initialDirectory.renameSync(finalDirectory.path);
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                            content: const Text('Moved'),
+                            action: SnackBarAction(
+                                label: 'Undo',
+                                onPressed: () async {
+                                  await finalDirectory.rename(initialDirectory.path);
+                                }),
+                          ));
+                          Navigator.push(
+                              context, MaterialPageRoute<void>(builder: (context) => const BundleSelection()));
+                        },
+                        child: const Text('Mark as published')),
+                  )
+                ]
+                    .map((e) => Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 4.0),
+                          child: e,
+                        ))
+                    .toList(),
+              ),
             ),
           ),
         ),
-      ),
-    );
-  }
+      );
 
   int _estimatedShippingCost({required int grams}) {
     final shippingCosts = [
@@ -222,40 +242,32 @@ class _AdEditingWidgetState extends State<AdEditingWidget> {
 
 class _ShippingCostIfWeightIsUnder {
   _ShippingCostIfWeightIsUnder({required this.maxWeightGram, required this.priceCent});
+
   final int maxWeightGram;
   final int priceCent;
 }
 
 class _WeightCategory<T> {
   const _WeightCategory({required this.maxWeight, required this.description});
+
   final int maxWeight;
   final T description;
 }
 
 class _LBCStyledState extends StatelessWidget {
   const _LBCStyledState(this.state);
+
   final ItemState state;
+
   @override
-  Widget build(BuildContext context) {
-    final text = () {
-      switch (state) {
-        case ItemState.brandNew:
-          return 'État neuf';
-        case ItemState.veryGood:
-          return 'Très bon état';
-        case ItemState.good:
-          return 'Bon état';
-        case ItemState.medium:
-          return 'État satisfaisant';
-      }
-    }();
-    return LBCRadioButton(text);
-  }
+  Widget build(BuildContext context) => LBCRadioButton(state.loc);
 }
 
 class _LBCStyledWeight extends StatelessWidget {
   const _LBCStyledWeight(this.weightGrams);
+
   final num weightGrams;
+
   @override
   Widget build(BuildContext context) {
     const weightCategories = [

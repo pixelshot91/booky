@@ -26,31 +26,27 @@ abstract class Native {
 
   FlutterRustBridgeTaskConstMeta get kGetAutoMetadataFromBundleConstMeta;
 
+  Future<BundleMetaData> getManualMetadataForBundle(
+      {required String bundlePath, dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta get kGetManualMetadataForBundleConstMeta;
+
+  Future<void> setManualMetadataForBundle(
+      {required String bundlePath,
+      required BundleMetaData bundleMetadata,
+      dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta get kSetManualMetadataForBundleConstMeta;
+
+  Future<BundleMetaData> getMergedMetadataForBundle(
+      {required String bundlePath, dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta get kGetMergedMetadataForBundleConstMeta;
+
   Future<BookMetaDataFromProvider?> getMetadataFromProvider(
       {required ProviderEnum provider, required String isbn, dynamic hint});
 
   FlutterRustBridgeTaskConstMeta get kGetMetadataFromProviderConstMeta;
-
-  Future<bool> publishAd(
-      {required Ad ad, required LbcCredential credential, dynamic hint});
-
-  FlutterRustBridgeTaskConstMeta get kPublishAdConstMeta;
-}
-
-class Ad {
-  final String title;
-  final String description;
-  final int priceCent;
-  final int weightGrams;
-  final List<String> imgsPath;
-
-  const Ad({
-    required this.title,
-    required this.description,
-    required this.priceCent,
-    required this.weightGrams,
-    required this.imgsPath,
-  });
 }
 
 class Author {
@@ -81,6 +77,24 @@ class BarcodeDetectResults {
   });
 }
 
+class BookMetaData {
+  String isbn;
+  String? title;
+  List<Author> authors;
+  String? blurb;
+  List<String> keywords;
+  int? priceCent;
+
+  BookMetaData({
+    required this.isbn,
+    this.title,
+    required this.authors,
+    this.blurb,
+    required this.keywords,
+    this.priceCent,
+  });
+}
+
 class BookMetaDataFromProvider {
   final String? title;
   final List<Author> authors;
@@ -97,6 +111,18 @@ class BookMetaDataFromProvider {
   });
 }
 
+class BundleMetaData {
+  int? weightGrams;
+  ItemState? itemState;
+  final List<BookMetaData> books;
+
+  BundleMetaData({
+    this.weightGrams,
+    this.itemState,
+    required this.books,
+  });
+}
+
 class ISBNMetadataPair {
   final String isbn;
   final List<ProviderMetadataPair> metadatas;
@@ -107,14 +133,11 @@ class ISBNMetadataPair {
   });
 }
 
-class LbcCredential {
-  final String lbcToken;
-  final String datadomeCookie;
-
-  const LbcCredential({
-    required this.lbcToken,
-    required this.datadomeCookie,
-  });
+enum ItemState {
+  BrandNew,
+  VeryGood,
+  Good,
+  Medium,
 }
 
 class Point {

@@ -20,10 +20,8 @@ use std::sync::Arc;
 
 // Section: imports
 
-use crate::common::Ad;
 use crate::common::Author;
 use crate::common::BookMetaDataFromProvider;
-use crate::common::LbcCredential;
 
 // Section: wire functions
 
@@ -77,6 +75,58 @@ fn wire_get_auto_metadata_from_bundle_impl(
         },
     )
 }
+fn wire_get_manual_metadata_for_bundle_impl(
+    port_: MessagePort,
+    bundle_path: impl Wire2Api<String> + UnwindSafe,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap::<_, _, _, BundleMetaData>(
+        WrapInfo {
+            debug_name: "get_manual_metadata_for_bundle",
+            port: Some(port_),
+            mode: FfiCallMode::Normal,
+        },
+        move || {
+            let api_bundle_path = bundle_path.wire2api();
+            move |task_callback| get_manual_metadata_for_bundle(api_bundle_path)
+        },
+    )
+}
+fn wire_set_manual_metadata_for_bundle_impl(
+    port_: MessagePort,
+    bundle_path: impl Wire2Api<String> + UnwindSafe,
+    bundle_metadata: impl Wire2Api<BundleMetaData> + UnwindSafe,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap::<_, _, _, ()>(
+        WrapInfo {
+            debug_name: "set_manual_metadata_for_bundle",
+            port: Some(port_),
+            mode: FfiCallMode::Normal,
+        },
+        move || {
+            let api_bundle_path = bundle_path.wire2api();
+            let api_bundle_metadata = bundle_metadata.wire2api();
+            move |task_callback| {
+                set_manual_metadata_for_bundle(api_bundle_path, api_bundle_metadata)
+            }
+        },
+    )
+}
+fn wire_get_merged_metadata_for_bundle_impl(
+    port_: MessagePort,
+    bundle_path: impl Wire2Api<String> + UnwindSafe,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap::<_, _, _, BundleMetaData>(
+        WrapInfo {
+            debug_name: "get_merged_metadata_for_bundle",
+            port: Some(port_),
+            mode: FfiCallMode::Normal,
+        },
+        move || {
+            let api_bundle_path = bundle_path.wire2api();
+            move |task_callback| get_merged_metadata_for_bundle(api_bundle_path)
+        },
+    )
+}
 fn wire_get_metadata_from_provider_impl(
     port_: MessagePort,
     provider: impl Wire2Api<ProviderEnum> + UnwindSafe,
@@ -92,24 +142,6 @@ fn wire_get_metadata_from_provider_impl(
             let api_provider = provider.wire2api();
             let api_isbn = isbn.wire2api();
             move |task_callback| Ok(get_metadata_from_provider(api_provider, api_isbn))
-        },
-    )
-}
-fn wire_publish_ad_impl(
-    port_: MessagePort,
-    ad: impl Wire2Api<Ad> + UnwindSafe,
-    credential: impl Wire2Api<LbcCredential> + UnwindSafe,
-) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap::<_, _, _, bool>(
-        WrapInfo {
-            debug_name: "publish_ad",
-            port: Some(port_),
-            mode: FfiCallMode::Normal,
-        },
-        move || {
-            let api_ad = ad.wire2api();
-            let api_credential = credential.wire2api();
-            move |task_callback| Ok(publish_ad(api_ad, api_credential))
         },
     )
 }
@@ -139,6 +171,17 @@ where
 impl Wire2Api<i32> for i32 {
     fn wire2api(self) -> i32 {
         self
+    }
+}
+impl Wire2Api<ItemState> for i32 {
+    fn wire2api(self) -> ItemState {
+        match self {
+            0 => ItemState::BrandNew,
+            1 => ItemState::VeryGood,
+            2 => ItemState::Good,
+            3 => ItemState::Medium,
+            _ => unreachable!("Invalid variant for ItemState: {}", self),
+        }
     }
 }
 
@@ -207,6 +250,26 @@ impl rust2dart::IntoIntoDart<BarcodeDetectResults> for BarcodeDetectResults {
     }
 }
 
+impl support::IntoDart for BookMetaData {
+    fn into_dart(self) -> support::DartAbi {
+        vec![
+            self.isbn.into_into_dart().into_dart(),
+            self.title.into_dart(),
+            self.authors.into_into_dart().into_dart(),
+            self.blurb.into_dart(),
+            self.keywords.into_into_dart().into_dart(),
+            self.price_cent.into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl support::IntoDartExceptPrimitive for BookMetaData {}
+impl rust2dart::IntoIntoDart<BookMetaData> for BookMetaData {
+    fn into_into_dart(self) -> Self {
+        self
+    }
+}
+
 impl support::IntoDart for BookMetaDataFromProvider {
     fn into_dart(self) -> support::DartAbi {
         vec![
@@ -226,6 +289,23 @@ impl rust2dart::IntoIntoDart<BookMetaDataFromProvider> for BookMetaDataFromProvi
     }
 }
 
+impl support::IntoDart for BundleMetaData {
+    fn into_dart(self) -> support::DartAbi {
+        vec![
+            self.weight_grams.into_dart(),
+            self.item_state.into_dart(),
+            self.books.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl support::IntoDartExceptPrimitive for BundleMetaData {}
+impl rust2dart::IntoIntoDart<BundleMetaData> for BundleMetaData {
+    fn into_into_dart(self) -> Self {
+        self
+    }
+}
+
 impl support::IntoDart for ISBNMetadataPair {
     fn into_dart(self) -> support::DartAbi {
         vec![
@@ -237,6 +317,24 @@ impl support::IntoDart for ISBNMetadataPair {
 }
 impl support::IntoDartExceptPrimitive for ISBNMetadataPair {}
 impl rust2dart::IntoIntoDart<ISBNMetadataPair> for ISBNMetadataPair {
+    fn into_into_dart(self) -> Self {
+        self
+    }
+}
+
+impl support::IntoDart for ItemState {
+    fn into_dart(self) -> support::DartAbi {
+        match self {
+            Self::BrandNew => 0,
+            Self::VeryGood => 1,
+            Self::Good => 2,
+            Self::Medium => 3,
+        }
+        .into_dart()
+    }
+}
+impl support::IntoDartExceptPrimitive for ItemState {}
+impl rust2dart::IntoIntoDart<ItemState> for ItemState {
     fn into_into_dart(self) -> Self {
         self
     }
