@@ -178,6 +178,7 @@ class _BundleSelectionState extends State<BundleSelection> {
   int? bundleNb;
   int? compressedBundleNb;
   int? autoMdCollectedBundleNb;
+  BundleType bundleType = BundleType.toPublish;
 
   late final AutoScrollController gridViewController;
 
@@ -292,6 +293,19 @@ class _BundleSelectionState extends State<BundleSelection> {
           return _bundleListWidget(bundles);
         },
       ),
+      bottomNavigationBar: BottomNavigationBar(
+          items: const [
+            BottomNavigationBarItem(icon: Icon(Icons.book_outlined), activeIcon: Icon(Icons.book), label: 'To publish'),
+            BottomNavigationBarItem(icon: Icon(Icons.shelves), label: 'Published'),
+            BottomNavigationBarItem(
+                icon: Icon(Icons.delete_outlined), activeIcon: Icon(Icons.delete), label: 'Deleted'),
+          ],
+          currentIndex: bundleType.index,
+          onTap: (index) {
+            setState(() {
+              bundleType = BundleType.values[index];
+            });
+          }),
     );
   }
 
