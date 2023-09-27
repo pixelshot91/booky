@@ -96,6 +96,14 @@ class CustomSearchHintDelegate extends SearchDelegate<String> {
       builder: (bundles) {
         if (bundles == null) return const Text('Loading bundles');
 
+        if (query.isEmpty) {
+          return Center(
+              child: Text(
+            '${bundles.length} bundles yet to be published',
+            style: const TextStyle(fontSize: 20, color: Colors.grey),
+          ));
+        }
+
         final bundlesWithMD = bundles.mapIndexed((index, b) async {
           final mergedMetadata = await b.getMergedMetadata();
           return (index, mergedMetadata);
