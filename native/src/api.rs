@@ -10,9 +10,9 @@ use std::vec;
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 
-use crate::{abebooks, babelio, booksprice, google_books, justbooks, leslibraires};
 use crate::client::Client;
-use crate::common;
+use crate::common::{self};
+use crate::{abebooks, babelio, booksprice, google_books, justbooks, leslibraires, fs_helper};
 
 #[derive(EnumIter, PartialEq, Eq, Hash, Debug, Deserialize, Serialize, Copy, Clone)]
 pub enum ProviderEnum {
@@ -45,8 +45,8 @@ pub fn detect_barcode_in_image(img_path: String) -> Result<BarcodeDetectResults>
     let output = std::process::Command::new(
         "/home/julien/Perso/LeBonCoin/chain_automatisation/booky/native/detect_barcode",
     )
-        .arg(format!("--in={}", img_path))
-        .output()?;
+    .arg(format!("--in={}", img_path))
+    .output()?;
 
     if !output.status.success() {
         println!("status: {}", output.status);
@@ -64,9 +64,17 @@ pub fn detect_barcode_in_image(img_path: String) -> Result<BarcodeDetectResults>
 
 #[cfg(test)]
 mod tests {
-    use crate::api::{get_merged_metadata_for_bundle, ProviderEnum};
+    use crate::{api::ProviderEnum, fs_helper::my_file_open};
 
     use super::{BarcodeDetectResult, BarcodeDetectResults, Point};
+
+    #[test]
+    fn test_fs() {
+        // let r = File::open("non_existent");
+        // let r = std::my_read_to_string("non_existent");
+        let r = my_file_open("non_existent");
+        println!("{:?}", r);
+    }
 
     #[test]
     fn test_sort_longest() {
@@ -167,7 +175,7 @@ pub struct ProviderMetadataPair {
 fn _get_auto_metadata_from_bundle(
     path: String,
 ) -> Result<HashMap<String, HashMap<ProviderEnum, Option<common::BookMetaDataFromProvider>>>> {
-    let mut file = File::open(path)?;
+    let mut file = fs_helper::my_file_open(path)?;
     let mut contents = String::new();
     file.read_to_string(&mut contents)?;
 
@@ -246,7 +254,7 @@ pub struct BookMetaData {
 const METADATA_FILE_NAME: &str = "metadata.json";
 
 pub fn get_manual_metadata_for_bundle(bundle_path: String) -> Result<BundleMetaData> {
-    let mut file = File::open(format!("{bundle_path}/{METADATA_FILE_NAME}"))?;
+    let mut file = fs_helper::my_file_open(format!("{bundle_path}/{METADATA_FILE_NAME}"))?;
     let mut contents = String::new();
     file.read_to_string(&mut contents).unwrap();
 
@@ -269,7 +277,7 @@ pub fn set_manual_metadata_for_bundle(
 pub fn get_merged_metadata_for_bundle(bundle_path: String) -> Result<BundleMetaData> {
     // get from metadata.json
     let path = format!("{bundle_path}/{METADATA_FILE_NAME}");
-    let mut file = File::open(&path)?;
+    let mut file = fs_helper::my_file_open(&path)?;
     let mut contents = String::new();
     file.read_to_string(&mut contents).unwrap();
 
@@ -350,8 +358,8 @@ fn replace_with_longest_string_if_none_or_empty<F1>(
         auto_mds: Option<&HashMap<ProviderEnum, Option<common::BookMetaDataFromProvider>>>,
         string_getter: F1,
     ) -> Option<String>
-        where
-            F1: Fn(&common::BookMetaDataFromProvider) -> &Option<String>,
+    where
+        F1: Fn(&common::BookMetaDataFromProvider) -> &Option<String>,
     {
         auto_mds?
             .values()

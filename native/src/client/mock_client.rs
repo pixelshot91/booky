@@ -1,3 +1,5 @@
+use crate::fs_helper;
+
 use super::{Client, Response};
 
 pub struct MockClient {
@@ -20,11 +22,11 @@ impl Client for MockClient {
         let response_cache_path = format!("{}/{}.json", self.dir, cache_file_path);
 
         let mut response: Response = serde_json::from_str(
-            &std::fs::read_to_string(&response_cache_path)
+            &fs_helper::my_read_to_string(&response_cache_path)
                 .expect(&format!("Can't find mock file {response_cache_path}")),
         )
         .unwrap();
-        response.body = std::fs::read_to_string(&html_cache_path)
+        response.body = fs_helper::my_read_to_string(&html_cache_path)
             .expect(&format!("Can't find mock file {html_cache_path}"));
         response
     }

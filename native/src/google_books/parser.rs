@@ -64,7 +64,7 @@ pub fn extract_metadata_from_self_link_response(html: &str) -> common::BookMetaD
 
 #[cfg(test)]
 mod tests {
-    use crate::common::BookMetaDataFromProvider;
+    use crate::{common::BookMetaDataFromProvider, fs_helper::my_read_to_string};
 
     use super::*;
 
@@ -73,8 +73,7 @@ mod tests {
     #[test]
     fn extract_self_link_from_file() {
         let html =
-            std::fs::read_to_string("src/google_books/test/9782744170812/isbn_response.html")
-                .unwrap();
+            my_read_to_string("src/google_books/test/9782744170812/isbn_response.html").unwrap();
         let self_link = extract_self_link_from_isbn_response(&html);
         assert_eq!(
             self_link,
@@ -84,9 +83,8 @@ mod tests {
 
     #[test]
     fn extract_metadata_from_file() {
-        let html =
-            std::fs::read_to_string("src/google_books/test/9782744170812/self_link_response.html")
-                .unwrap();
+        let html = my_read_to_string("src/google_books/test/9782744170812/self_link_response.html")
+            .unwrap();
         let metadata = extract_metadata_from_self_link_response(&html);
         assert_eq!(metadata, BookMetaDataFromProvider{
           title: Some("La cité de Dieu".to_string()),
@@ -99,8 +97,7 @@ mod tests {
     #[test]
     fn extract_self_link_from_file_2() {
         let html =
-            std::fs::read_to_string("src/google_books/test/9782266162777/isbn_response.html")
-                .unwrap();
+            my_read_to_string("src/google_books/test/9782266162777/isbn_response.html").unwrap();
         let self_link = extract_self_link_from_isbn_response(&html);
         assert_eq!(
             self_link,
@@ -110,9 +107,8 @@ mod tests {
 
     #[test]
     fn extract_metadata_from_file_2() {
-        let html =
-            std::fs::read_to_string("src/google_books/test/9782266162777/self_link_response.html")
-                .unwrap();
+        let html = my_read_to_string("src/google_books/test/9782266162777/self_link_response.html")
+            .unwrap();
         let metadata = extract_metadata_from_self_link_response(&html);
         assert_eq!(
             metadata,
