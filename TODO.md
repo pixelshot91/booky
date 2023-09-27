@@ -1,6 +1,5 @@
 # TODO
 
-* [ ] App-wide: Fix ScrollShadow showing shadow in direction perpendicular to scrolling
 * [ ] App-wide: Better handle nonexistent or incorrect metadata file instead of throwing an exception
 * [ ] Camera: LiveDetection: show confirmed barcode and pending barcodes in different color. Show a progressBar for the pending barcode
 * [ ] Camera: Fix pictures flickering or being shortly replaced by a spinner each time a picture is taken
@@ -26,6 +25,7 @@
 
 # DONE
 
+* [x] App-wide: Fix ScrollShadow showing shadow in direction perpendicular to scrolling
 * [x] Technical: Pin version in pubspec.yaml and Cargo.toml because some packages in both language do not respect SemVer
 * [x] Fix ScrollShadow only showing after first scrolling
 * [x] BundleSelection: Add search by ISBN, title, author
