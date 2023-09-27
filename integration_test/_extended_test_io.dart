@@ -43,6 +43,7 @@ void addIsbn(final IntegrationTestWidgetsFlutterBinding binding) {
     // Build our app.
     app.main();
 
+    // ignore: non_constant_identifier_names
     Future<void> tapPopMenu_ISBNDecoding() async {
       final find7thBundle = find.byKey(const ValueKey(7));
       expect(find7thBundle, findsOneWidget);
