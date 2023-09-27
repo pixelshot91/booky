@@ -87,14 +87,14 @@ fn parse_blurb(raw_blurb: &str) -> String {
 
 #[cfg(test)]
 mod tests {
-    use crate::common::Author;
+    use crate::{common::Author, fs_helper::my_read_to_string};
 
     use super::*;
     use pretty_assertions::assert_eq;
 
     #[test]
     fn extract_metadata_with_blurb() {
-        let html = std::fs::read_to_string("src/justbooks/test/9782953189018.html").unwrap();
+        let html = my_read_to_string("src/justbooks/test/9782953189018.html").unwrap();
         let md = extract_metadata(&html);
         assert_eq!(md, Some(BookMetaDataFromProvider {
             title: Some("La prière en sept chapitres par PADMASAMBHAVA".to_string()),
@@ -115,7 +115,7 @@ mod tests {
 
     #[test]
     fn extract_metadata_without_blurb() {
-        let html = std::fs::read_to_string("src/justbooks/test/9782298086294.html").unwrap();
+        let html = my_read_to_string("src/justbooks/test/9782298086294.html").unwrap();
         let md = extract_metadata(&html);
         assert_eq!(
             md,
@@ -131,7 +131,7 @@ mod tests {
 
     #[test]
     fn extract_metadata_with_html_blurb() {
-        let html = std::fs::read_to_string("src/justbooks/test/9782253051206.html").unwrap();
+        let html = my_read_to_string("src/justbooks/test/9782253051206.html").unwrap();
         let md = extract_metadata(&html);
         assert_eq!(
             md,
@@ -151,7 +151,7 @@ Amin Maalouf est l'auteur de Léon l'Africain, ouvrage traduit aujourd'hui dans 
 
     #[test]
     fn extract_metadata_with_two_authors() {
-        let html = std::fs::read_to_string("src/justbooks/test/9782290042359.html").unwrap();
+        let html = my_read_to_string("src/justbooks/test/9782290042359.html").unwrap();
         let md = extract_metadata(&html);
         assert_eq!(
             md,

@@ -9,3 +9,4 @@ mod config;
 mod google_books;
 mod justbooks;
 mod leslibraires;
+mod fs_helper;

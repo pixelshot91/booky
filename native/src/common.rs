@@ -37,3 +37,4 @@ pub struct Ad {
 pub fn url_to_path(url: &str) -> String {
     url.replace("/", "_slash_")
 }
+

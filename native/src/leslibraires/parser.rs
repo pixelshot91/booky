@@ -89,14 +89,14 @@ pub fn extract_metadata(isbn_search_result: &str) -> Option<common::BookMetaData
 mod tests {
     use std::vec;
 
-    use crate::common::Author;
+    use crate::{common::Author, fs_helper::my_read_to_string};
 
     use super::*;
     use pretty_assertions::assert_eq;
 
     #[test]
     fn test_extract_prices() {
-        let html = std::fs::read_to_string("src/leslibraires/test/9782286056636.html").unwrap();
+        let html = my_read_to_string("src/leslibraires/test/9782286056636.html").unwrap();
         let md = extract_metadata(&html);
         assert_eq!(
             md,
@@ -114,7 +114,7 @@ mod tests {
 
     #[test]
     fn test_extract_prices_and_blurb() {
-        let html = std::fs::read_to_string("src/leslibraires/test/9786202293969.html").unwrap();
+        let html = my_read_to_string("src/leslibraires/test/9786202293969.html").unwrap();
         let md = extract_metadata(&html);
         assert_eq!(
             md,

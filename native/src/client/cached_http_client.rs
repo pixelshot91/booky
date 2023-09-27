@@ -1,5 +1,7 @@
 use std::path::Path;
 
+use crate::fs_helper;
+
 use super::{Client, Response};
 
 pub struct CachedHttpClient {
@@ -30,12 +32,12 @@ impl Client for CachedHttpClient {
             cache_file_path
         );
 
-        let html = std::fs::read_to_string(&html_cache_path);
+        let html = fs_helper::my_read_to_string(&html_cache_path);
         match html {
             Ok(f) => {
                 println!("Read request from cache {}", &response_cache_path);
                 let mut response: Response = serde_json::from_str(
-                    &std::fs::read_to_string(&response_cache_path).expect(&format!(
+                    &fs_helper::my_read_to_string(&response_cache_path).expect(&format!(
                         "Body file exist but not response file. Body file is '{html_cache_path}'"
                     )),
                 )
@@ -58,7 +60,9 @@ impl Client for CachedHttpClient {
                 if status.is_server_error() {
                     println!("CachedHttpClient: Cerver error. StatusCode = {status}");
                 } else if status == 429 {
-                    println!("CachedHttpClient: Client error. Too many requests. StatusCode = {status}");
+                    println!(
+                        "CachedHttpClient: Client error. Too many requests. StatusCode = {status}"
+                    );
                 } else {
                     let dir = Path::new(&response_cache_path).parent().unwrap();
                     std::fs::create_dir_all(dir).unwrap();
