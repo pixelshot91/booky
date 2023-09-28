@@ -28,7 +28,10 @@ dependencies:
   super_drag_and_drop: ^0.6.0
   super_native_extensions: ^0.6.0
   kt_dart: ^1.1.0
-  camera: ^0.10.3+2
+  camera: 0.10.3+2
+  # There is a bug in camera_android > 0.10.8+4 where the take picture function is much slower 4 seconds instead of 1
+  # https://github.com/flutter/flutter/issues/84957
+  camera_android: 0.10.8+3
   permission_handler: ^10.2.0
   google_mlkit_commons: ^0.3.0
   google_mlkit_barcode_scanning: ^0.6.0
