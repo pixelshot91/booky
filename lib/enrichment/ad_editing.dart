@@ -2,7 +2,7 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:booky/bridge_definitions.dart';
-import 'package:booky/common.dart';
+import 'package:booky/common.dart' as common;
 import 'package:booky/personal_info.dart' as personal_info;
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
@@ -199,8 +199,7 @@ class _AdEditingWidgetState extends State<AdEditingWidget> {
                         onPressed: () {
                           final initialDirectory = widget.step.bundle.directory;
                           final segments = path.split(initialDirectory.path);
-                          // TODO: Use common.BookyDir
-                          segments[segments.length - 2] = 'published';
+                          segments[segments.length - 2] = common.BundleType.published.getDirName;
                           final finalDirectory = Directory(path.joinAll(segments));
                           initialDirectory.renameSync(finalDirectory.path);
                           ScaffoldMessenger.of(context).showSnackBar(SnackBar(

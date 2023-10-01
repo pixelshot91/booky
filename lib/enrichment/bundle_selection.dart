@@ -598,7 +598,7 @@ class _ActionButtons extends StatelessWidget {
                 onPressed: () async {
                   final initialDirectoryLocation = bundle.directory;
                   final segments = path.split(initialDirectoryLocation.path);
-                  segments[segments.length - 2] = 'deleted';
+                  segments[segments.length - 2] = common.BundleType.deleted.getDirName;
                   final destination = path.joinAll(segments);
                   try {
                     final finalDirectoryLocation = await initialDirectoryLocation.rename(destination);

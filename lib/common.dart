@@ -35,7 +35,7 @@ enum BundleType {
 }
 
 extension BundleTypeExt on BundleType {
-  String get getDir {
+  String get getDirName {
     switch (this) {
       case BundleType.toPublish:
         return 'to_publish';
@@ -52,7 +52,7 @@ class BookyDir {
 
   Directory root;
 
-  Directory getDir(BundleType bundleType) => root.joinDir(bundleType.getDir);
+  Directory getDir(BundleType bundleType) => root.joinDir(bundleType.getDirName);
 }
 
 extension DirectoryExt on Directory {
