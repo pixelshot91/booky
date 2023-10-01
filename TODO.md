@@ -1,11 +1,15 @@
 # TODO
 
+* [ ] App-wide: Use an animated splash screen
+* [ ] App-wide: Preserve the splash screen to hide the creation of the main dirs
 * [ ] App-wide: Better handle nonexistent or incorrect metadata file instead of throwing an exception
 * [ ] Camera: LiveDetection: show confirmed barcode and pending barcodes in different color. Show a progressBar for the pending barcode
+* [ ] Camera: Fix display of deleted picture (take a picture, delete it, take another picture, the first picture is shown)
+* [ ] Camera: Reduce latency when cropping picture
+* [ ] Camera: Add sound when deleting a picture
 * [ ] Camera: Fix pictures flickering or being shortly replaced by a spinner each time a picture is taken
 * [ ] Camera: Fix flashlight turning on and never off again
 * [ ] Camera: Camera is still in use when going back to BundleSelection, and even when going to the home screen
-* [ ] BundleSelection: Show already published bundles
 * [ ] BundleSelection: Make image load faster (at least on Linux) (use even smaller thumbnail, cache images)
 * [ ] BundleSelection: Add filter by auto_metadata downloaded or not
 * [ ] BundleSelection: Add sort by date picture taken, date published, price
@@ -25,6 +29,7 @@
 
 # DONE
 
+* [x] BundleSelection: Show already published bundles
 * [x] App-wide: Fix ScrollShadow showing shadow in direction perpendicular to scrolling
 * [x] Technical: Pin version in pubspec.yaml and Cargo.toml because some packages in both language do not respect SemVer
 * [x] Fix ScrollShadow only showing after first scrolling
