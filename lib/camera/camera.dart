@@ -54,7 +54,8 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
   // Prevent from cropping more than 80% of the image
   static const double maxCropRatio = 0.8;
 
-  Future<Directory> get getBundleDir async => (await common.bookyDir()).toPublish.joinDir(bundleName);
+  Future<Directory> get getBundleDir async =>
+      (await common.bookyDir()).getDir(BundleType.toPublish).joinDir(bundleName);
 
   Future<Bundle> get getBundle async => Bundle(await getBundleDir);
 

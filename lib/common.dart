@@ -25,19 +25,34 @@ Future<bool> launchCommandLine(String executable, List<String> arguments) async 
   return true;
 }
 
+enum BundleType {
+  // Contain the bundle create by the Camera
+  toPublish,
+  // Contain bundle after they have been published at the end of AdEditing
+  published,
+  // Contain bundles that have been deleted
+  deleted,
+}
+
+extension BundleTypeExt on BundleType {
+  String get getDir {
+    switch (this) {
+      case BundleType.toPublish:
+        return 'to_publish';
+      case BundleType.published:
+        return 'published';
+      case BundleType.deleted:
+        return 'deleted';
+    }
+  }
+}
+
 class BookyDir {
   BookyDir(this.root);
 
   Directory root;
 
-  // Contain the bundle create by the Camera
-  Directory get toPublish => root.joinDir('to_publish');
-
-  // Contain bundle after they have been published at the end of AdEditing
-  Directory get published => root.joinDir('published');
-
-  // Contain bundles that have been deleted
-  Directory get deleted => root.joinDir('deleted');
+  Directory getDir(BundleType bundleType) => root.joinDir(bundleType.getDir);
 }
 
 extension DirectoryExt on Directory {

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:booky/camera/camera.dart';
+import 'package:booky/common.dart';
 import 'package:booky/enrichment/isbn_decoding.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
@@ -328,9 +329,9 @@ class _BundleSelectionState extends State<BundleSelection> {
     });
   }
 
-  static Future<Iterable<Bundle>?> _listBundles() async {
+  Future<Iterable<Bundle>?> _listBundles() async {
     try {
-      final dirs = await (await common.bookyDir()).toPublish.list().whereType<Directory>().toList();
+      final dirs = await (await common.bookyDir()).getDir(bundleType).list().whereType<Directory>().toList();
       return dirs.sorted((d1, d2) => d1.path.compareTo(d2.path)).map((d) => Bundle(d));
     } catch (e) {
       if (e is PathNotFoundException || e is FileSystemException) {
@@ -598,18 +599,29 @@ class _ActionButtons extends StatelessWidget {
                   final initialDirectoryLocation = bundle.directory;
                   final segments = path.split(initialDirectoryLocation.path);
                   segments[segments.length - 2] = 'deleted';
-                  final finalDirectoryLocation = await initialDirectoryLocation.rename(path.joinAll(segments));
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                      content: const Text('Deleted'),
-                      action: SnackBarAction(
-                          label: 'Undo',
-                          onPressed: () async {
-                            await finalDirectoryLocation.rename(initialDirectoryLocation.path);
-                            refreshParent();
-                          }),
-                    ));
-                    refreshParent();
+                  final destination = path.joinAll(segments);
+                  try {
+                    final finalDirectoryLocation = await initialDirectoryLocation.rename(destination);
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                        content: const Text('Deleted'),
+                        action: SnackBarAction(
+                            label: 'Undo',
+                            onPressed: () async {
+                              await finalDirectoryLocation.rename(initialDirectoryLocation.path);
+                              refreshParent();
+                            }),
+                      ));
+                      refreshParent();
+                    }
+                  } on Exception catch (e) {
+                    if (context.mounted) {
+                      print(
+                          'Error. Could not delete bundle. try to rename from ${initialDirectoryLocation.path} to $destination e = $e');
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                        content: Text('Error. Could not delete bundle'),
+                      ));
+                    }
                   }
                 },
               ),
