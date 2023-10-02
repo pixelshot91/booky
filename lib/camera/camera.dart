@@ -717,18 +717,22 @@ class _BottomWidgetState extends State<BottomWidget> {
                       child: Image.file(File(imgFile.path)),
                       onVerticalDrag: () async {
                         final deletedImageNumber = _pathToNumber(imgFile.path);
-                        await imgFile.delete();
                         final images = await widget.bundle.images;
-                        for (final img in images) {
+                        await imgFile.delete();
+                        for (final img in images.skip(deletedImageNumber + 1)) {
                           final imgNumber = _pathToNumber(img.path);
-                          if (imgNumber > deletedImageNumber) {
-                            final newPath = _numberToImgPath(Directory(path.dirname(img.path)), imgNumber - 1);
-                            final renamedImage = await img.safeRename(newPath);
-                            // Clear the cache of the source and destination images
-                            FileImage(img).evict();
-                            FileImage(renamedImage).evict();
+                          final newPath = _numberToImgPath(Directory(path.dirname(img.path)), imgNumber - 1);
+                          await img.safeRename(newPath);
+                        }
+                        for (final img in images.skip(deletedImageNumber)) {
+                          // Clear the cache of all changed images (the one deleted and all the one after)
+                          final evictRes = await FileImage(img).evict();
+                          if (!evictRes && mounted) {
+                            ScaffoldMessenger.of(context)
+                                .showSnackBar(SnackBar(content: Text('Error while trying to evict image ${img.path}')));
                           }
                         }
+
                         setState(() {});
                       }),
                 ))
