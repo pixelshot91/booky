@@ -293,6 +293,7 @@ class _BundleSelectionState extends State<BundleSelection> {
               ),
             );
           }
+          if (bundles.isEmpty) return _showEmptyBundleList();
           return _bundleListWidget(bundles);
         },
       ),
@@ -445,6 +446,19 @@ class _BundleSelectionState extends State<BundleSelection> {
         ),
       ],
     );
+  }
+
+  Widget _showEmptyBundleList() {
+    final String text;
+    switch (bundleType) {
+      case BundleType.toPublish:
+        text = 'Tap the camera button to create new bundles';
+      case BundleType.published:
+        text = 'Published bundles will show here';
+      case BundleType.deleted:
+        text = 'Deleted bundles will show here';
+    }
+    return Center(child: Text(text, style: const TextStyle(fontSize: 30, color: Colors.grey)));
   }
 }
 
