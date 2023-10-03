@@ -113,14 +113,17 @@ class CustomSearchHintDelegate extends SearchDelegate<String> {
           future: Future.wait(bundlesWithMD),
           builder: (bundlesWithMD) {
             final bundlesMatchingISBN = matchOnISBN
-                ? bundlesWithMD.where((b) => b.$2.books.any((book) => book.isbn.contains(query)))
+                ? bundlesWithMD.where((b) => b.$2?.books.any((book) => book.isbn.contains(query)) ?? false)
                 : const Iterable<(int, BundleMetaData)>.empty();
             final bundlesMatchingTitle = matchOnTitle
-                ? bundlesWithMD.where((b) => b.$2.books.any((book) => book.title?.containsIgnoringCase(query) ?? false))
+                ? bundlesWithMD
+                    .where((b) => b.$2?.books.any((book) => book.title?.containsIgnoringCase(query) ?? false) ?? false)
                 : const Iterable<(int, BundleMetaData)>.empty();
             final bundlesMatchingAuthor = matchOnAuthor
-                ? bundlesWithMD.where((b) => b.$2.books.any((book) =>
-                    book.authors.any((author) => '${author.firstName} ${author.lastName}'.containsIgnoringCase(query))))
+                ? bundlesWithMD.where((b) =>
+                    b.$2?.books.any((book) => book.authors
+                        .any((author) => '${author.firstName} ${author.lastName}'.containsIgnoringCase(query))) ??
+                    false)
                 : const Iterable<(int, BundleMetaData)>.empty();
             final bundleMatching =
                 bundlesMatchingISBN.followedBy(bundlesMatchingTitle).followedBy(bundlesMatchingAuthor);
@@ -135,7 +138,7 @@ class CustomSearchHintDelegate extends SearchDelegate<String> {
                       children: [
                         Expanded(
                           child: Text(
-                            b.$2.books.firstOrNull?.title ?? 'None',
+                            b.$2?.books.firstOrNull?.title ?? 'None',
                           ),
                         ),
                         TextButton(
@@ -487,7 +490,7 @@ class BundleWidget extends StatefulWidget {
 }
 
 class _BundleWidgetState extends State<BundleWidget> {
-  late Future<BundleMetaData> cachedMergedMd;
+  late Future<BundleMetaData?> cachedMergedMd;
 
   @override
   void initState() {
@@ -505,7 +508,20 @@ class _BundleWidgetState extends State<BundleWidget> {
     cachedMergedMd = widget.bundle.getMergedMetadata();
   }
 
-  Widget _buildTitleLine(BundleMetaData bundleMergedMD) {
+  Widget _buildTitleLine(BundleMetaData? bundleMergedMD) {
+    if (bundleMergedMD == null) {
+      return const Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text('No metadata'),
+          SizedBox(width: 10),
+          Icon(
+            Icons.error,
+            color: Colors.red,
+          ),
+        ],
+      );
+    }
     final firstBook = bundleMergedMD.books.firstOrNull;
     if (firstBook == null) return const Text('No book identified');
     return Row(children: [
@@ -540,7 +556,7 @@ class _BundleWidgetState extends State<BundleWidget> {
                 Expanded(
                   child: Row(
                     children: [
-                      MetadataIcons(bundleMergedMD),
+                      if (bundleMergedMD != null) MetadataIcons(bundleMergedMD),
                       Expanded(child: ScrollableBundleImages(widget.bundle, Axis.horizontal)),
                       _ActionButtons(
                           bundle: widget.bundle,

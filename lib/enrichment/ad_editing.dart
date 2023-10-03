@@ -63,7 +63,14 @@ class _AdEditingWidgetState extends State<AdEditingWidget> {
     super.initState();
 
     ad = Future(() async {
+      final imgsPath = (await widget.step.bundle.compressedImages).map((e) => e.path).toList();
+
       final bundleMetaData = await widget.step.bundle.getMergedMetadata();
+      if (bundleMetaData == null) {
+        // TODO: Use better default value when no information is known on the bundle (use null instead of 0)
+        return Ad(
+            title: '', description: '', priceCent: 0, weightGrams: 0, itemState: ItemState.Medium, imgsPath: imgsPath);
+      }
       final books = bundleMetaData.books;
 
       var title = '';
@@ -99,7 +106,7 @@ class _AdEditingWidgetState extends State<AdEditingWidget> {
           priceCent: totalPriceExcludingShipping,
           weightGrams: weightGramsWithWrapping,
           itemState: bundleMetaData.itemState!,
-          imgsPath: (await widget.step.bundle.compressedImages).map((e) => e.path).toList());
+          imgsPath: imgsPath);
     });
   }
 
