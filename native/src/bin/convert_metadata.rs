@@ -25,7 +25,7 @@ struct OldMetadata {
     weight_grams: Option<i32>,
     #[serde(rename = "itemState")]
     item_state: Option<OldItemState>,
-    isbns: Vec<String>,
+    isbns: Option<Vec<String>>,
 }
 
 fn convert_item_state(old: OldItemState) -> native::api::ItemState {
@@ -51,6 +51,7 @@ fn convert_metadata(bundle_path: &str) -> Result<()> {
         item_state: old_md.item_state.map(convert_item_state),
         books: old_md
             .isbns
+            .unwrap_or_default()
             .iter()
             .map(|isbn| native::api::BookMetaData {
                 isbn: isbn.to_owned(),
