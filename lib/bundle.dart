@@ -56,12 +56,12 @@ class Bundle {
   }
 
   // Return the best information either manually submitted, manually verified, or automatically, for every book of the bundle
-  Future<BundleMetaData> getMergedMetadata() async {
+  Future<BundleMetaData?> getMergedMetadata() async {
     try {
       return await api.getMergedMetadataForBundle(bundlePath: directory.path);
     } on FfiException catch (e) {
       print('getMergedMetadata. FfiException. e = $e');
-      return BundleMetaData(books: []);
+      return null;
     }
   }
 

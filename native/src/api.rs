@@ -12,7 +12,7 @@ use strum_macros::EnumIter;
 
 use crate::client::Client;
 use crate::common::{self};
-use crate::{abebooks, babelio, booksprice, google_books, justbooks, leslibraires, fs_helper};
+use crate::{abebooks, babelio, booksprice, fs_helper, google_books, justbooks, leslibraires};
 
 #[derive(EnumIter, PartialEq, Eq, Hash, Debug, Deserialize, Serialize, Copy, Clone)]
 pub enum ProviderEnum {
@@ -286,57 +286,67 @@ pub fn get_merged_metadata_for_bundle(bundle_path: String) -> Result<BundleMetaD
 
     // Get MD from Provider
     let bundle_auto_md =
-        _get_auto_metadata_from_bundle(format!("{bundle_path}/automatic_metadata.json"))?;
+        _get_auto_metadata_from_bundle(format!("{bundle_path}/automatic_metadata.json"));
 
-    // For each missing MD of metadata.json use the best estimate from the providers
-    manual_bundle_md.books.iter_mut().for_each(|book| {
-        let auto_mds = bundle_auto_md.get(&book.isbn);
+    if let std::result::Result::Ok(bundle_auto_md) = bundle_auto_md {
+        // For each missing MD of metadata.json use the best estimate from the providers
+        manual_bundle_md.books.iter_mut().for_each(|book| {
+            let auto_mds = bundle_auto_md.get(&book.isbn);
 
-        replace_with_longest_string_if_none_or_empty(auto_mds, |auto| &auto.title, &mut book.title);
-        replace_with_longest_string_if_none_or_empty(auto_mds, |auto| &auto.blurb, &mut book.blurb);
+            replace_with_longest_string_if_none_or_empty(
+                auto_mds,
+                |auto| &auto.title,
+                &mut book.title,
+            );
+            replace_with_longest_string_if_none_or_empty(
+                auto_mds,
+                |auto| &auto.blurb,
+                &mut book.blurb,
+            );
 
-        // Take the authors from the provider which has the most authors
-        if book.authors.is_empty() {
-            let longest_authors = &auto_mds.and_then(|auto_mds| {
-                auto_mds
-                    .values()
-                    .filter_map(|auto_md| Some(&auto_md.as_ref()?.authors))
-                    .max_by(|authors1, authors2| authors1.len().cmp(&authors2.len()))
-            });
-            book.authors = longest_authors.unwrap_or(&vec![]).to_vec();
-        }
+            // Take the authors from the provider which has the most authors
+            if book.authors.is_empty() {
+                let longest_authors = &auto_mds.and_then(|auto_mds| {
+                    auto_mds
+                        .values()
+                        .filter_map(|auto_md| Some(&auto_md.as_ref()?.authors))
+                        .max_by(|authors1, authors2| authors1.len().cmp(&authors2.len()))
+                });
+                book.authors = longest_authors.unwrap_or(&vec![]).to_vec();
+            }
 
-        // Merge the keyword from all providers
-        if book.keywords.is_empty() {
-            book.keywords = auto_mds.map_or(vec![], |auto_md| {
-                let res: Vec<String> = auto_md
-                    .values()
-                    .filter_map(|auto_md| auto_md.as_ref())
-                    .map(|md| &md.keywords)
-                    .fold(vec![], |mut kwa, kwb| {
-                        kwa.extend(kwb.clone());
-                        kwa
-                    });
-                res
-            });
-        }
+            // Merge the keyword from all providers
+            if book.keywords.is_empty() {
+                book.keywords = auto_mds.map_or(vec![], |auto_md| {
+                    let res: Vec<String> = auto_md
+                        .values()
+                        .filter_map(|auto_md| auto_md.as_ref())
+                        .map(|md| &md.keywords)
+                        .fold(vec![], |mut kwa, kwb| {
+                            kwa.extend(kwb.clone());
+                            kwa
+                        });
+                    res
+                });
+            }
 
-        if book.price_cent.is_none() {
-            book.price_cent = auto_mds.and_then(|auto_md| {
-                auto_md
-                    .values()
-                    .filter_map(|auto_md| auto_md.as_ref())
-                    // get minimum price of each provider in cents
-                    .filter_map(|md| {
-                        md.market_price
-                            .iter()
-                            .map(|price_euro| (price_euro * 100.0).round() as i32)
-                            .min()
-                    })
-                    .min()
-            });
-        }
-    });
+            if book.price_cent.is_none() {
+                book.price_cent = auto_mds.and_then(|auto_md| {
+                    auto_md
+                        .values()
+                        .filter_map(|auto_md| auto_md.as_ref())
+                        // get minimum price of each provider in cents
+                        .filter_map(|md| {
+                            md.market_price
+                                .iter()
+                                .map(|price_euro| (price_euro * 100.0).round() as i32)
+                                .min()
+                        })
+                        .min()
+                });
+            }
+        });
+    }
 
     return Ok(manual_bundle_md);
 }
