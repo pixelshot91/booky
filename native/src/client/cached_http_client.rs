@@ -58,7 +58,7 @@ impl Client for CachedHttpClient {
                 };
                 // Do not store the result if the server is unavailable
                 if status.is_server_error() {
-                    println!("CachedHttpClient: Cerver error. StatusCode = {status}");
+                    println!("CachedHttpClient: Server error. StatusCode = {status}");
                 } else if status == 429 {
                     println!(
                         "CachedHttpClient: Client error. Too many requests. StatusCode = {status}"
