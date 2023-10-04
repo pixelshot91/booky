@@ -22,7 +22,7 @@ fn launch_command(cmd: &[&str], env: &[(&str, &str)]) -> Result<Output, std::pro
             stderr: String::from_utf8(process.stderr).unwrap(),
         });
     }
-    println!("copy_mock_data_process returned {}", process.status);
+    println!("cmd '{:?}' returned {}", cmd, process.status);
     println!("stdout: {}", String::from_utf8(process.stdout).unwrap());
     println!("stderr: {}", String::from_utf8(process.stderr).unwrap());
     Err(process.status)
