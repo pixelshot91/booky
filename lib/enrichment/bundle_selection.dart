@@ -114,17 +114,17 @@ class CustomSearchHintDelegate extends SearchDelegate<String> {
           builder: (bundlesWithMD) {
             final bundlesMatchingISBN = matchOnISBN
                 ? bundlesWithMD.where((b) => b.$2?.books.any((book) => book.isbn.contains(query)) ?? false)
-                : const Iterable<(int, BundleMetaData)>.empty();
+                : const Iterable<(int, BundleMetaData?)>.empty();
             final bundlesMatchingTitle = matchOnTitle
                 ? bundlesWithMD
                     .where((b) => b.$2?.books.any((book) => book.title?.containsIgnoringCase(query) ?? false) ?? false)
-                : const Iterable<(int, BundleMetaData)>.empty();
-            final bundlesMatchingAuthor = matchOnAuthor
+                : const Iterable<(int, BundleMetaData?)>.empty();
+            final Iterable<(int, BundleMetaData?)> bundlesMatchingAuthor = matchOnAuthor
                 ? bundlesWithMD.where((b) =>
                     b.$2?.books.any((book) => book.authors
                         .any((author) => '${author.firstName} ${author.lastName}'.containsIgnoringCase(query))) ??
                     false)
-                : const Iterable<(int, BundleMetaData)>.empty();
+                : const Iterable<(int, BundleMetaData?)>.empty();
             final bundleMatching =
                 bundlesMatchingISBN.followedBy(bundlesMatchingTitle).followedBy(bundlesMatchingAuthor);
             return ListView.builder(
