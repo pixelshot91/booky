@@ -68,8 +68,6 @@ Future<BookyDir> bookyDir() async {
   }
 
   return Future(() => BookyDir(Directory('/media/phone/storage/emulated/0/Android/data/fr.pimoid.booky/files')));
-  return Future(() => BookyDir(Directory(
-      '/run/user/1000/gvfs/mtp:host=SAMSUNG_SAMSUNG_Android_RFCRA1CG6KT/Internal storage/Android/data/fr.pimoid.booky/files')));
   return Future(
       () => BookyDir(Directory('/home/julien/Perso/LeBonCoin/chain_automatisation/saved_folder/after_migration')));
 }

@@ -77,7 +77,6 @@ mod tests {
     #[test]
     fn test_overwrite_metadata() -> Result<(), anyhow::Error> {
         let path = "/media/phone/storage/emulated/0/Android/data/fr.pimoid.booky/files/to_publish/2023-10-02T17_46_16.185969/";
-        // let path = "/home/julien/test_dir";
         crate::api::set_manual_metadata_for_bundle(
             path.to_owned(),
             super::BundleMetaData {

@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:kt_dart/kt.dart';
 import 'package:path/path.dart' as path;
 
+import '../bundle.dart';
 import '../copiable_text_field.dart';
 import '../draggable_files_widget.dart';
 import '../helpers.dart';
@@ -33,39 +34,59 @@ class Ad {
   });
 }
 
-class AdEditingWidget extends StatefulWidget {
+class AdEditingWidget extends StatelessWidget {
   const AdEditingWidget({required this.step});
 
   final AdEditingStep step;
 
+  String vecFmt(Iterable<String> it) {
+    final vec = it.toList();
+    if (vec.length == 0) return '';
+    if (vec.length == 1) return 'de ${vec[0]}';
+    if (vec.length == 2) return 'de ${vec[0]} et ${vec[1]}';
+    print('Warning: more than 2 authors, only show the first one');
+    return 'de ${vec[0]}';
+  }
+
+  String _bookFormat(BookMetaData book, {bool withISBN = false}) {
+    return '"${book.title}" ${vecFmt(book.authors.map((a) => a.toText()))}' + (withISBN ? ' (ISBN: ${book.isbn})' : '');
+  }
+
+  String? _getDescription(Iterable<BookMetaData> metadataFromIsbn) {
+    final booksWithBlurb = metadataFromIsbn.where((entry) => entry.blurb?.isNotEmpty == true);
+    if (booksWithBlurb.length == 0) {
+      return null;
+    } else if (booksWithBlurb.length == 1) {
+      final onlyBookWithBlurb = booksWithBlurb.single;
+      String titleAndAuthor = '';
+      // Even if only one book has a blurb, multiple book are in the same ad, so we need to specify which book this blurb is about
+      if (metadataFromIsbn.length > 1) {
+        titleAndAuthor = _bookFormat(onlyBookWithBlurb) + '\n';
+      }
+      return 'Résumé:\n' + titleAndAuthor + onlyBookWithBlurb.blurb!;
+    } else {
+      final blurbs = booksWithBlurb.map((entry) => _bookFormat(entry) + ':\n' + entry.blurb!).join('\n\n');
+      return 'Résumés:\n' + blurbs;
+    }
+  }
+
+  int _estimatedShippingCost({required int grams}) {
+    final shippingCosts = [
+      _ShippingCostIfWeightIsUnder(maxWeightGram: 500, priceCent: 349),
+      _ShippingCostIfWeightIsUnder(maxWeightGram: 1000, priceCent: 399),
+      _ShippingCostIfWeightIsUnder(maxWeightGram: 2000, priceCent: 499),
+      _ShippingCostIfWeightIsUnder(maxWeightGram: 5000, priceCent: 649),
+    ];
+    final shippingCost = shippingCosts.firstWhere((sc) => sc.maxWeightGram > grams);
+    return shippingCost.priceCent;
+  }
+
   @override
-  State<AdEditingWidget> createState() => _AdEditingWidgetState();
-}
+  Widget build(BuildContext context) {
+    final ad = Future(() async {
+      final imgsPath = (await step.bundle.compressedImages).map((e) => e.path).toList();
 
-String vecFmt(Iterable<String> it) {
-  final vec = it.toList();
-  if (vec.length == 0) return '';
-  if (vec.length == 1) return 'de ${vec[0]}';
-  if (vec.length == 2) return 'de ${vec[0]} et ${vec[1]}';
-  print('Warning: more than 2 authors, only show the first one');
-  return 'de ${vec[0]}';
-}
-
-String _bookFormat(BookMetaData book, {bool withISBN = false}) {
-  return '"${book.title}" ${vecFmt(book.authors.map((a) => a.toText()))}' + (withISBN ? ' (ISBN: ${book.isbn})' : '');
-}
-
-class _AdEditingWidgetState extends State<AdEditingWidget> {
-  late Future<Ad> ad;
-
-  @override
-  void initState() {
-    super.initState();
-
-    ad = Future(() async {
-      final imgsPath = (await widget.step.bundle.compressedImages).map((e) => e.path).toList();
-
-      final bundleMetaData = await widget.step.bundle.getMergedMetadata();
+      final bundleMetaData = await step.bundle.getMergedMetadata();
       if (bundleMetaData == null) {
         // TODO: Use better default value when no information is known on the bundle (use null instead of 0)
         return Ad(
@@ -108,25 +129,32 @@ class _AdEditingWidgetState extends State<AdEditingWidget> {
           itemState: bundleMetaData.itemState!,
           imgsPath: imgsPath);
     });
+    return Scaffold(
+        appBar: AppBar(title: const Text('Ad editing')),
+        body: FutureWidget(
+            future: ad,
+            builder: (ad) {
+              return AdEditingWidget2(step.bundle, ad);
+            }));
   }
+}
 
-  String? _getDescription(Iterable<BookMetaData> metadataFromIsbn) {
-    final booksWithBlurb = metadataFromIsbn.where((entry) => entry.blurb?.isNotEmpty == true);
-    if (booksWithBlurb.length == 0) {
-      return null;
-    } else if (booksWithBlurb.length == 1) {
-      final onlyBookWithBlurb = booksWithBlurb.single;
-      String titleAndAuthor = '';
-      // Even if only one book has a blurb, multiple book are in the same ad, so we need to specify which book this blurb is about
-      if (metadataFromIsbn.length > 1) {
-        titleAndAuthor = _bookFormat(onlyBookWithBlurb) + '\n';
-      }
-      return 'Résumé:\n' + titleAndAuthor + onlyBookWithBlurb.blurb!;
-    } else {
-      final blurbs = booksWithBlurb.map((entry) => _bookFormat(entry) + ':\n' + entry.blurb!).join('\n\n');
-      return 'Résumés:\n' + blurbs;
-    }
-  }
+class AdEditingWidget2 extends StatefulWidget {
+  const AdEditingWidget2(this.bundle, this.ad);
+
+  final Bundle bundle;
+  final Ad ad;
+
+  @override
+  State<AdEditingWidget2> createState() => _AdEditingWidget2State();
+}
+
+class _AdEditingWidget2State extends State<AdEditingWidget2> {
+  late Future<Ad> ad;
+
+  late final titleController = TextEditingController(text: widget.ad.title);
+  late final descriptionController = TextEditingController(text: widget.ad.description);
+  late final priceController = TextEditingController(text: widget.ad.priceCent.divide(100).toString());
 
   Widget _nonCopyableField(IconData icon, Widget child) {
     const iconColor = Color(0xff898989);
@@ -150,100 +178,103 @@ class _AdEditingWidgetState extends State<AdEditingWidget> {
         appBar: AppBar(title: const Text('Ad editing')),
         body: FutureWidget(
           future: ad,
-          builder: (ad) => Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  CopyableTextField(TextFormField(
-                    controller: TextEditingController(text: ad.title),
-                    decoration: const InputDecoration(
-                      icon: Icon(Icons.title),
-                      labelText: 'Ad title',
+          builder: (ad) {
+            return Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    CopyableTextField(TextFormField(
+                      controller: titleController,
+                      decoration: const InputDecoration(
+                        icon: Icon(Icons.title),
+                        labelText: 'Ad title',
+                      ),
+                      style: const TextStyle(fontSize: 30),
+                    )),
+                    _nonCopyableField(Icons.diamond, SizedBox(width: 300, child: _LBCStyledState(ad.itemState))),
+                    CopyableTextField(TextFormField(
+                      controller: descriptionController,
+                      maxLines: null,
+                      scrollPhysics: const NeverScrollableScrollPhysics(),
+                      decoration: const InputDecoration(
+                        icon: Icon(Icons.text_snippet),
+                        labelText: 'Ad description',
+                      ),
+                    )),
+                    CopyableTextField(TextFormField(
+                      controller: priceController,
+                      decoration: const InputDecoration(
+                        icon: Icon(Icons.euro),
+                        labelText: 'Price (without shipping cost)',
+                      ),
+                      style: const TextStyle(fontSize: 20),
+                    )),
+                    _nonCopyableField(
+                      Icons.scale,
+                      SizedBox(width: 300, child: _LBCStyledWeight(ad.weightGrams)),
                     ),
-                    style: const TextStyle(fontSize: 30),
-                  )),
-                  _nonCopyableField(Icons.diamond, SizedBox(width: 300, child: _LBCStyledState(ad.itemState))),
-                  CopyableTextField(TextFormField(
-                    controller: TextEditingController(text: ad.description),
-                    maxLines: null,
-                    scrollPhysics: const NeverScrollableScrollPhysics(),
-                    decoration: const InputDecoration(
-                      icon: Icon(Icons.text_snippet),
-                      labelText: 'Ad description',
-                    ),
-                  )),
-                  CopyableTextField(TextFormField(
-                    controller: TextEditingController(text: ad.priceCent.divide(100).toString()),
-                    decoration: const InputDecoration(
-                      icon: Icon(Icons.euro),
-                      labelText: 'Price (without shipping cost)',
-                    ),
-                    style: const TextStyle(fontSize: 20),
-                  )),
-                  _nonCopyableField(
-                    Icons.scale,
-                    SizedBox(width: 300, child: _LBCStyledWeight(ad.weightGrams)),
-                  ),
-                  _nonCopyableField(
-                      Icons.collections,
-                      DraggableFilesWidget(
-                        uris: ad.imgsPath.map((path) => Uri.file(path)),
-                        child: Column(
-                          children: [
-                            Row(
-                              children: ad.imgsPath
-                                  .map((img) => SizedBox(height: 200, child: ImageWidget(File(img))))
-                                  .toList(),
-                            ),
-                            const Text('Drag and drop images')
-                          ],
-                        ),
-                      )),
-                  Center(
-                    child: ElevatedButton(
-                        onPressed: () {
-                          final initialDirectory = widget.step.bundle.directory;
-                          final segments = path.split(initialDirectory.path);
-                          segments[segments.length - 2] = common.BundleType.published.getDirName;
-                          final finalDirectory = Directory(path.joinAll(segments));
-                          initialDirectory.renameSync(finalDirectory.path);
-                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                            content: const Text('Moved'),
-                            action: SnackBarAction(
-                                label: 'Undo',
-                                onPressed: () async {
-                                  await finalDirectory.rename(initialDirectory.path);
-                                }),
-                          ));
-                          Navigator.push(
-                              context, MaterialPageRoute<void>(builder: (context) => const BundleSelection()));
-                        },
-                        child: const Text('Mark as published')),
-                  )
-                ]
-                    .map((e) => Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 4.0),
-                          child: e,
-                        ))
-                    .toList(),
+                    _nonCopyableField(
+                        Icons.collections,
+                        DraggableFilesWidget(
+                          uris: ad.imgsPath.map((path) => Uri.file(path)),
+                          child: Column(
+                            children: [
+                              Row(
+                                children: ad.imgsPath
+                                    .map((img) => SizedBox(height: 200, child: ImageWidget(File(img))))
+                                    .toList(),
+                              ),
+                              const Text('Drag and drop images')
+                            ],
+                          ),
+                        )),
+                    Center(
+                      child: ElevatedButton(
+                          onPressed: () async {
+                            final ad = Ad(
+                                title: titleController.text,
+                                description: descriptionController.text,
+                                priceCent: int.parse(priceController.text),
+                                weightGrams: widget.ad.weightGrams,
+                                itemState: widget.ad.itemState,
+                                imgsPath: widget.ad.imgsPath);
+                            final manualMd = await widget.bundle.getManualMetadata();
+                            manualMd.ad = ad;
+                            widget.bundle.overwriteMetadata(manualMd);
+                            final initialDirectory = widget.bundle.directory;
+                            final segments = path.split(initialDirectory.path);
+                            segments[segments.length - 2] = common.BundleType.published.getDirName;
+                            final finalDirectory = Directory(path.joinAll(segments));
+                            await initialDirectory.rename(finalDirectory.path);
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                                content: const Text('Moved'),
+                                action: SnackBarAction(
+                                    label: 'Undo',
+                                    onPressed: () async {
+                                      await finalDirectory.rename(initialDirectory.path);
+                                    }),
+                              ));
+                              Navigator.push(
+                                  context, MaterialPageRoute<void>(builder: (context) => const BundleSelection()));
+                            }
+                          },
+                          child: const Text('Mark as published')),
+                    )
+                  ]
+                      .map((e) => Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 4.0),
+                            child: e,
+                          ))
+                      .toList(),
+                ),
               ),
-            ),
-          ),
+            );
+          },
         ),
       );
-
-  int _estimatedShippingCost({required int grams}) {
-    final shippingCosts = [
-      _ShippingCostIfWeightIsUnder(maxWeightGram: 500, priceCent: 349),
-      _ShippingCostIfWeightIsUnder(maxWeightGram: 1000, priceCent: 399),
-      _ShippingCostIfWeightIsUnder(maxWeightGram: 2000, priceCent: 499),
-      _ShippingCostIfWeightIsUnder(maxWeightGram: 5000, priceCent: 649),
-    ];
-    final shippingCost = shippingCosts.firstWhere((sc) => sc.maxWeightGram > grams);
-    return shippingCost.priceCent;
-  }
 }
 
 class _ShippingCostIfWeightIsUnder {
