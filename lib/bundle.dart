@@ -31,14 +31,13 @@ class Bundle {
     }
   }
 
-  Future<bool> removeAutoMetadata() async {
+  Future<void> removeAutoMetadata() async {
     if (!await autoMetadataFile.exists()) {
       print('Nothing to do');
-      return true;
+      return;
     }
     final destinationName = path.basename(autoMetadataFile.path) + '_backup_' + common.nowAsFileName();
-
-    return common.launchCommandLine('gio', ['rename', autoMetadataFile.path, destinationName]);
+    await File(autoMetadataFile.path).rename(destinationName);
   }
 
   File get autoMetadataFile => File(path.join(directory.path, 'automatic_metadata.json'));

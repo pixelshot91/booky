@@ -2,14 +2,12 @@ use crate::client::Client;
 use crate::common::{self};
 use crate::{abebooks, babelio, booksprice, fs_helper, google_books, justbooks, leslibraires};
 use anyhow::{Ok, Result};
-use chrono::prelude::*;
 use flutter_rust_bridge::frb;
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::{Read, Write};
-use std::path::Path;
 use std::vec;
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
@@ -162,63 +160,6 @@ pub fn get_metadata_from_isbns(isbns: Vec<String>, path: String) -> Result<()> {
     file.write_all(content.as_bytes())?;
     Ok(())
 }
-
-fn launch_command(cmd: &[&str], env: &[(&str, &str)]) -> Result<()> {
-    println!("Launching command: {:?}", cmd);
-    let c = cmd.split_first().unwrap();
-    let process = std::process::Command::new(c.0)
-        .envs(env.to_owned())
-        .args(c.1)
-        .output()
-        .expect("Failed to execute command");
-    if process.status.success() {
-        println!("cmd '{:?}' Success returned {}", cmd, process.status);
-        println!("stdout: {}", String::from_utf8(process.stdout).unwrap());
-        println!("stderr: {}", String::from_utf8(process.stderr).unwrap());
-        return Ok(());
-    }
-    println!("cmd '{:?}' returned {}", cmd, process.status);
-    println!("stdout: {}", String::from_utf8(process.stdout).unwrap());
-    println!("stderr: {}", String::from_utf8(process.stderr).unwrap());
-    Err(anyhow::anyhow!(""))
-}
-
-/* // Android smartphone do not authorized direct filesystem access
-// They must be access through MTP, wich forbid traditional commands like 'cp', or 'write'
-// This function circumvent the problem by first writing to a temporary file, then move it with 'gio move'
-fn write_to_mtpfs(path: &str, content: &str) -> Result<()> {
-    let ppath = Path::new(&path);
-
-    let file_exist = launch_command(&["gio", "cat", path], &[]);
-    // A file at the same path already exist
-    // Launching 'gio move <src> <dst that already exist>' will delete the destination, but fail the move src to dst
-    // So the first step is to rename dst
-    if file_exist.is_ok() {
-        let date = Local::now().format("%Y-%m-%d_%H_%M_%S").to_string();
-        let backup_name = format!(
-            "{}_backup_{}",
-            ppath.file_name().unwrap().to_str().unwrap().to_owned(),
-            date
-        );
-        launch_command(&["gio", "rename", path, &backup_name], &[])?;
-    }
-
-    //  Make sure the filename is unique so the function is thread-safe
-    let tmp_path = ppath.file_name().unwrap();
-    let mut file = File::create(tmp_path)?;
-
-    file.write_all(content.as_bytes())?;
-    // Writing to the phone does not work
-    // Instead a temporary file is created and immediately move with 'gio move'
-    launch_command(&["gio", "move", tmp_path.to_str().unwrap(), &path], &[])
-    // let output = std::process::Command::new("gio")
-    //     .args(["move", tmp_path.to_str().unwrap(), &path])
-    //     .output()?;
-    // println!("status: {}", output.status);
-    // println!("stdout: {:?}", &std::str::from_utf8(&output.stdout));
-    // println!("stderr: {:?}", &std::str::from_utf8(&output.stderr));
-    // Ok(())
-} */
 
 // FlutterRustBridge does not support returning HashMap, or template type (like MyPair<K, V>)
 // So a type for each pair is created
