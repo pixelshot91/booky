@@ -22,7 +22,7 @@ Recent version of android do not support mounting as USB Mass Storage anymore, b
 * `rm` works
 
 ## Mount with ADBfs-rootless
-[https://github.com/isieo/adbFS](https://github.com/isieo/adbFS)
+[https://github.com/spion/adbfs-rootless](https://github.com/spion/adbfs-rootless)
 
 * launch `./adbfs <mount point>`, no need to click anything on the phone
 * We can see all system file inside the phone
@@ -30,6 +30,7 @@ Recent version of android do not support mounting as USB Mass Storage anymore, b
 * `mv` works fast
 * `rm` works fast
 * Seem a bit slow at reading that go-mtpfs or pcmanfm
+* Is way slower for some command, for example a grep take 40s with adbfs, and only 0.4s with `adb shell`
 
 ## FTP server
 * FTP is not secure

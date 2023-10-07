@@ -66,7 +66,7 @@ pub fn detect_barcode_in_image(img_path: String) -> Result<BarcodeDetectResults>
 mod tests {
     use crate::{api::ProviderEnum, fs_helper::my_file_open};
 
-    use super::{BarcodeDetectResult, BarcodeDetectResults, Point};
+    use super::{BarcodeDetectResult, BarcodeDetectResults, ItemState, Point};
 
     #[test]
     fn test_fs() {
@@ -74,6 +74,20 @@ mod tests {
         // let r = std::my_read_to_string("non_existent");
         let r = my_file_open("non_existent");
         println!("{:?}", r);
+    }
+
+    #[test]
+    fn test_overwrite_metadata() -> Result<(), anyhow::Error> {
+        let path = "/media/phone/storage/emulated/0/Android/data/fr.pimoid.booky/files/to_publish/2023-10-02T17_46_16.185969/";
+        // let path = "/home/julien/test_dir";
+        crate::api::set_manual_metadata_for_bundle(
+            path.to_owned(),
+            super::BundleMetaData {
+                weight_grams: Some(0),
+                item_state: Some(ItemState::BrandNew),
+                books: vec![],
+            },
+        )
     }
 
     #[test]
@@ -143,7 +157,10 @@ pub fn get_metadata_from_isbns(isbns: Vec<String>, path: String) -> Result<()> {
         HashMap::from_iter(res);
 
     let content = &serde_json::to_string(&hashmap).expect("Unable to serialize data");
-    write_to_mtpfs(&path, &content)
+    //  Make sure the filename is unique so the function is thread-safe
+    let mut file = File::create(path)?;
+    file.write_all(content.as_bytes())?;
+    Ok(())
 }
 
 fn launch_command(cmd: &[&str], env: &[(&str, &str)]) -> Result<()> {
@@ -166,7 +183,7 @@ fn launch_command(cmd: &[&str], env: &[(&str, &str)]) -> Result<()> {
     Err(anyhow::anyhow!(""))
 }
 
-// Android smartphone do not authorized direct filesystem access
+/* // Android smartphone do not authorized direct filesystem access
 // They must be access through MTP, wich forbid traditional commands like 'cp', or 'write'
 // This function circumvent the problem by first writing to a temporary file, then move it with 'gio move'
 fn write_to_mtpfs(path: &str, content: &str) -> Result<()> {
@@ -201,7 +218,7 @@ fn write_to_mtpfs(path: &str, content: &str) -> Result<()> {
     // println!("stdout: {:?}", &std::str::from_utf8(&output.stdout));
     // println!("stderr: {:?}", &std::str::from_utf8(&output.stderr));
     // Ok(())
-}
+} */
 
 // FlutterRustBridge does not support returning HashMap, or template type (like MyPair<K, V>)
 // So a type for each pair is created
@@ -312,9 +329,14 @@ pub fn set_manual_metadata_for_bundle(
     bundle_metadata: BundleMetaData,
 ) -> Result<()> {
     let file_path = format!("{bundle_path}/{METADATA_FILE_NAME}");
+    /* let mut file = fs_helper::my_file_open(&file_path)?;
+    let content = serde_json::to_string(&bundle_metadata).unwrap();
+    file.write(content.as_bytes())?; */
     let content = serde_json::to_string(&bundle_metadata)?;
-    println!("writing to {file_path}, content is: {content}");
-    write_to_mtpfs(&file_path, &content)
+    std::fs::write(&file_path, content)?;
+
+    fs_helper::my_file_open(&file_path)?.sync_all()?;
+    Ok(())
 }
 
 // Retrieve a summary of all the information of a bundle
@@ -326,8 +348,10 @@ pub fn get_merged_metadata_for_bundle(bundle_path: String) -> Result<BundleMetaD
     let mut contents = String::new();
     file.read_to_string(&mut contents).unwrap();
 
-    let mut manual_bundle_md: BundleMetaData =
-        serde_json::from_str(&contents).expect(&format!("Unable to deserialize {}", path));
+    let mut manual_bundle_md: BundleMetaData = serde_json::from_str(&contents).expect(&format!(
+        "Unable to deserialize {}. content is {contents}.",
+        path
+    ));
 
     // Get MD from Provider
     let bundle_auto_md =
