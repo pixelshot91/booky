@@ -150,8 +150,6 @@ class AdEditingWidget2 extends StatefulWidget {
 }
 
 class _AdEditingWidget2State extends State<AdEditingWidget2> {
-  late Future<Ad> ad;
-
   late final titleController = TextEditingController(text: widget.ad.title);
   late final descriptionController = TextEditingController(text: widget.ad.description);
   late final priceController = TextEditingController(text: widget.ad.priceCent.divide(100).toString());
@@ -174,105 +172,96 @@ class _AdEditingWidget2State extends State<AdEditingWidget2> {
   }
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(title: const Text('Ad editing')),
-        body: FutureWidget(
-          future: ad,
-          builder: (ad) {
-            return Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    CopyableTextField(TextFormField(
-                      controller: titleController,
-                      decoration: const InputDecoration(
-                        icon: Icon(Icons.title),
-                        labelText: 'Ad title',
-                      ),
-                      style: const TextStyle(fontSize: 30),
-                    )),
-                    _nonCopyableField(Icons.diamond, SizedBox(width: 300, child: _LBCStyledState(ad.itemState))),
-                    CopyableTextField(TextFormField(
-                      controller: descriptionController,
-                      maxLines: null,
-                      scrollPhysics: const NeverScrollableScrollPhysics(),
-                      decoration: const InputDecoration(
-                        icon: Icon(Icons.text_snippet),
-                        labelText: 'Ad description',
-                      ),
-                    )),
-                    CopyableTextField(TextFormField(
-                      controller: priceController,
-                      decoration: const InputDecoration(
-                        icon: Icon(Icons.euro),
-                        labelText: 'Price (without shipping cost)',
-                      ),
-                      style: const TextStyle(fontSize: 20),
-                    )),
-                    _nonCopyableField(
-                      Icons.scale,
-                      SizedBox(width: 300, child: _LBCStyledWeight(ad.weightGrams)),
-                    ),
-                    _nonCopyableField(
-                        Icons.collections,
-                        DraggableFilesWidget(
-                          uris: ad.imgsPath.map((path) => Uri.file(path)),
-                          child: Column(
-                            children: [
-                              Row(
-                                children: ad.imgsPath
-                                    .map((img) => SizedBox(height: 200, child: ImageWidget(File(img))))
-                                    .toList(),
-                              ),
-                              const Text('Drag and drop images')
-                            ],
-                          ),
-                        )),
-                    Center(
-                      child: ElevatedButton(
-                          onPressed: () async {
-                            final ad = Ad(
-                                title: titleController.text,
-                                description: descriptionController.text,
-                                priceCent: int.parse(priceController.text),
-                                weightGrams: widget.ad.weightGrams,
-                                itemState: widget.ad.itemState,
-                                imgsPath: widget.ad.imgsPath);
-                            final manualMd = await widget.bundle.getManualMetadata();
-                            manualMd.ad = ad;
-                            widget.bundle.overwriteMetadata(manualMd);
-                            final initialDirectory = widget.bundle.directory;
-                            final segments = path.split(initialDirectory.path);
-                            segments[segments.length - 2] = common.BundleType.published.getDirName;
-                            final finalDirectory = Directory(path.joinAll(segments));
-                            await initialDirectory.rename(finalDirectory.path);
-                            if (mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                                content: const Text('Moved'),
-                                action: SnackBarAction(
-                                    label: 'Undo',
-                                    onPressed: () async {
-                                      await finalDirectory.rename(initialDirectory.path);
-                                    }),
-                              ));
-                              Navigator.push(
-                                  context, MaterialPageRoute<void>(builder: (context) => const BundleSelection()));
-                            }
-                          },
-                          child: const Text('Mark as published')),
-                    )
-                  ]
-                      .map((e) => Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 4.0),
-                            child: e,
-                          ))
-                      .toList(),
+  Widget build(BuildContext context) => Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              CopyableTextField(TextFormField(
+                controller: titleController,
+                decoration: const InputDecoration(
+                  icon: Icon(Icons.title),
+                  labelText: 'Ad title',
                 ),
+                style: const TextStyle(fontSize: 30),
+              )),
+              _nonCopyableField(Icons.diamond, SizedBox(width: 300, child: _LBCStyledState(widget.ad.itemState))),
+              CopyableTextField(TextFormField(
+                controller: descriptionController,
+                maxLines: null,
+                scrollPhysics: const NeverScrollableScrollPhysics(),
+                decoration: const InputDecoration(
+                  icon: Icon(Icons.text_snippet),
+                  labelText: 'Ad description',
+                ),
+              )),
+              CopyableTextField(TextFormField(
+                controller: priceController,
+                decoration: const InputDecoration(
+                  icon: Icon(Icons.euro),
+                  labelText: 'Price (without shipping cost)',
+                ),
+                style: const TextStyle(fontSize: 20),
+              )),
+              _nonCopyableField(
+                Icons.scale,
+                SizedBox(width: 300, child: _LBCStyledWeight(widget.ad.weightGrams)),
               ),
-            );
-          },
+              _nonCopyableField(
+                  Icons.collections,
+                  DraggableFilesWidget(
+                    uris: widget.ad.imgsPath.map((path) => Uri.file(path)),
+                    child: Column(
+                      children: [
+                        Row(
+                          children: widget.ad.imgsPath
+                              .map((img) => SizedBox(height: 200, child: ImageWidget(File(img))))
+                              .toList(),
+                        ),
+                        const Text('Drag and drop images')
+                      ],
+                    ),
+                  )),
+              Center(
+                child: ElevatedButton(
+                    onPressed: () async {
+                      final ad = Ad(
+                          title: titleController.text,
+                          description: descriptionController.text,
+                          priceCent: int.parse(priceController.text),
+                          weightGrams: widget.ad.weightGrams,
+                          itemState: widget.ad.itemState,
+                          imgsPath: widget.ad.imgsPath);
+                      final manualMd = await widget.bundle.getManualMetadata();
+                      // manualMd.ad = ad;
+                      widget.bundle.overwriteMetadata(manualMd);
+                      final initialDirectory = widget.bundle.directory;
+                      final segments = path.split(initialDirectory.path);
+                      segments[segments.length - 2] = common.BundleType.published.getDirName;
+                      final finalDirectory = Directory(path.joinAll(segments));
+                      await initialDirectory.rename(finalDirectory.path);
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                          content: const Text('Moved'),
+                          action: SnackBarAction(
+                              label: 'Undo',
+                              onPressed: () async {
+                                await finalDirectory.rename(initialDirectory.path);
+                              }),
+                        ));
+                        Navigator.push(context, MaterialPageRoute<void>(builder: (context) => const BundleSelection()));
+                      }
+                    },
+                    child: const Text('Mark as published')),
+              )
+            ]
+                .map((e) => Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 4.0),
+                      child: e,
+                    ))
+                .toList(),
+          ),
         ),
       );
 }
