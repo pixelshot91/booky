@@ -89,7 +89,7 @@ class _ISBNDecodingWidgetState extends State<ISBNDecodingWidget> {
                                                   ElevatedButton(
                                                       onPressed: isbns.contains(isbn)
                                                           ? null
-                                                          : () => setState(() => isbns.add(isbn)),
+                                                          : () async => await _addISBNAndSave(isbn),
                                                       child: Text(
                                                         isbn,
                                                         style: TextStyle(
@@ -128,27 +128,7 @@ class _ISBNDecodingWidgetState extends State<ISBNDecodingWidget> {
                           ],
                           autovalidateMode: AutovalidateMode.always,
                           validator: (s) => isbnValidator(s!),
-                          onFieldSubmitted: (newIsbn) async {
-                            // TODO: reject if the ISBN already exist
-                            if (isbnValidator(newIsbn) != null) return;
-
-                            final md = await widget.step.bundle.getManualMetadata();
-
-                            md.books.add(BookMetaData(isbn: newIsbn, authors: [], keywords: []));
-
-                            final res = await widget.step.bundle.overwriteMetadata(md);
-                            print('res = $res');
-                            if (res) {
-                              widget.step.bundle.autoMetadataFile.delete();
-                            } else {
-                              if (mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(content: Text('Error while trying to update metadata.json')));
-                              }
-                            }
-
-                            setState(() => isbns.add(newIsbn));
-                          },
+                          onFieldSubmitted: (newIsbn) async => await _addISBNAndSave(newIsbn),
                           decoration: const InputDecoration(hintText: 'Type manually the ISBN here'),
                         ),
                         const SizedBox(height: 20),
@@ -186,6 +166,30 @@ class _ISBNDecodingWidgetState extends State<ISBNDecodingWidget> {
         ),
       ),
     );
+  }
+
+  Future<void> _addISBNAndSave(String newIsbn) async {
+    if (isbnValidator(newIsbn) != null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text("Error: not a valid ISBN. isbn is '$newIsbn'")));
+      }
+    }
+
+    // TODO: reject if the ISBN already exist
+    final md = await widget.step.bundle.getManualMetadata();
+    md.books.add(BookMetaData(isbn: newIsbn, authors: [], keywords: []));
+
+    final res = await widget.step.bundle.overwriteMetadata(md);
+    print('res = $res');
+    if (res) {
+      widget.step.bundle.autoMetadataFile.delete();
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(const SnackBar(content: Text('Error while trying to update metadata.json')));
+      }
+    }
   }
 }
 
