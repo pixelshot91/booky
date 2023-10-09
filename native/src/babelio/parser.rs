@@ -29,20 +29,15 @@ pub fn extract_blurb(html: &str) -> Option<BlurbRes> {
         panic!("There should be one or zero element with onclick attribute in the d_bio element");
     }
     match on_click_element {
+        // No 'See more' button, so concat all the blurb fragments
         None => {
-            let dbio_second_to_last_child = d_bio
-                .children()
-                .rev()
-                .nth(1)
-                .expect("d_bio should have a second to last children (the style span)");
-            Some(BlurbRes::SmallBlurb(
-                dbio_second_to_last_child
-                    .value()
-                    .as_text()
-                    .unwrap()
-                    .to_string(),
-            ))
+            let blurb_fragments = d_bio.children().filter_map(|c| c.value().as_text());
+            let mut blurb = String::new();
+            blurb_fragments.for_each(|e| blurb.push_str(e));
+
+            Some(BlurbRes::SmallBlurb(blurb))
         }
+        // Return the 'See more' button link to access the full blurb
         Some(on_click_element) => {
             let on_click = on_click_element
                 .value()
@@ -165,6 +160,7 @@ pub fn parse_blurb(raw_blurb: &str) -> String {
 #[cfg(test)]
 mod tests {
     use crate::fs_helper::my_read_to_string;
+    use pretty_assertions::assert_eq;
 
     use super::*;
 
@@ -267,5 +263,19 @@ mod tests {
                 market_price: vec![],
             })
         );
+    }
+
+    #[test]
+    pub fn parse_small_blurb() {
+        let html = my_read_to_string("src/babelio/test/get_book_small_blurb.html").unwrap();
+        let id_obj = extract_blurb(&html);
+        assert_eq!(id_obj, Some(BlurbRes::SmallBlurb("\n\t\t\t\t\t\t\t\t\t\tAu cœur de la nuit, un wagon se détache d'un train-couchettes et s'arrête soudain. D'abord persuadés qu'il s'agit d'une panne, les occupants découvrent qu'ils sont perdus au milieu de nulle part. Abandonnés, oubliés par les secours, certains partent en éclaireurs et disparaissent. Leurs cadavres sont retrouvés, dans une ville déserte et en ruine. La terreur s'empare alors des survivants...".to_string())));
+    }
+
+    #[test]
+    pub fn parse_small_blurb_multipart() {
+        let html = my_read_to_string("src/babelio/test/get_small_blurb_multipart.html").unwrap();
+        let id_obj = extract_blurb(&html);
+        assert_eq!(id_obj, Some(BlurbRes::SmallBlurb("\n\t\t\t\t\t\t\t\t\t\tCinq destins, un seul choix.\nTris vit dans un monde post-apocalyptique où la société est divisée en cinq factions : les Audacieux, les Altruistes, les Sincères, les Érudits, les Fraternels.\nÀ 16 ans, elle doit choisir son appartenance pour le reste de sa vie. Cas rarissime, son test d'aptitudes n'est pas concluant.\nElle est divergente.\nCe secret peut la sauver...\nOu la tuer.\n\n\t\t\t\t\t\t\t\t\t".to_string())));
     }
 }
