@@ -19,13 +19,23 @@ pub async fn extract_price_from_isbn(
         isbn
     );
 
-    let cache_file_path = format!("{}/booksprice/{}.html", crate::config::CACHE_PATH, isbn);
-    if std::path::Path::new(&cache_file_path).exists() {
-        println!("Using cache");
-        extract_price_from_url(driver, &format!("file://{}", cache_file_path), None).await
+    let cache_file_path = std::path::Path::new(crate::config::CACHE_PATH)
+        .join("booksprice")
+        .join(format!("{isbn}.html"));
+    if cache_file_path.exists() {
+        println!("Using cache from {}", cache_file_path.display());
+        extract_price_from_url(
+            driver,
+            &format!(
+                "file://{}",
+                cache_file_path.canonicalize().unwrap().display()
+            ),
+            None,
+        )
+        .await
     } else {
         println!("using online selenium");
-        extract_price_from_url(driver, &url, Some(cache_file_path)).await
+        extract_price_from_url(driver, &url, Some(&cache_file_path)).await
     }
 }
 
@@ -38,7 +48,7 @@ pub async fn extract_price_from_isbn(
 async fn extract_price_from_url(
     c: WebDriver,
     url: &str,
-    cache_file_path: Option<String>,
+    cache_file_path: Option<&std::path::Path>,
 ) -> Result<Vec<f32>, WebDriverError> {
     c.goto(&url).await?;
 
@@ -57,7 +67,7 @@ async fn extract_price_from_url(
     if let Some(cache_file_path) = cache_file_path {
         std::fs::create_dir_all(std::path::Path::new(&cache_file_path).parent().unwrap()).unwrap();
         let write_res = std::fs::write(&cache_file_path, &source_file);
-        write_res.expect(format!("Can't write to file {}", cache_file_path).as_str());
+        write_res.expect(format!("Can't write to file {}", cache_file_path.display()).as_str());
     }
 
     let entries = c
