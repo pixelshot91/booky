@@ -62,30 +62,9 @@ pub fn detect_barcode_in_image(img_path: String) -> Result<BarcodeDetectResults>
 
 #[cfg(test)]
 mod tests {
-    use crate::{api::ProviderEnum, fs_helper::my_file_open};
+    use crate::api::ProviderEnum;
 
-    use super::{BarcodeDetectResult, BarcodeDetectResults, ItemState, Point};
-
-    #[test]
-    fn test_fs() {
-        // let r = File::open("non_existent");
-        // let r = std::my_read_to_string("non_existent");
-        let r = my_file_open("non_existent");
-        println!("{:?}", r);
-    }
-
-    #[test]
-    fn test_overwrite_metadata() -> Result<(), anyhow::Error> {
-        let path = "/media/phone/storage/emulated/0/Android/data/fr.pimoid.booky/files/to_publish/2023-10-02T17_46_16.185969/";
-        crate::api::set_manual_metadata_for_bundle(
-            path.to_owned(),
-            super::BundleMetaData {
-                weight_grams: Some(0),
-                item_state: Some(ItemState::BrandNew),
-                books: vec![],
-            },
-        )
-    }
+    use super::{BarcodeDetectResult, BarcodeDetectResults, Point};
 
     #[test]
     fn test_sort_longest() {
