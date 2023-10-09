@@ -4,10 +4,6 @@ import 'package:booky/ffi.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart' as path_provider;
 
-/// All ISBN (EAN-13) should start with 978
-/// Use to prevent false barcode decoding
-const isbnPrefix = '978';
-
 extension IterableFutureMapEntryExt<K, V> on Iterable<Future<MapEntry<K, V>>> {
   Future<Map<K, V>> toMap() async => Map.fromEntries(await Future.wait(this));
 }

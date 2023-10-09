@@ -5,6 +5,7 @@ import 'dart:ui' as ui;
 import 'package:audioplayers/audioplayers.dart';
 import 'package:booky/common.dart';
 import 'package:booky/image_helper.dart';
+import 'package:booky/isbn_helper.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -558,7 +559,7 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
   }
 
   List<String> _getValidRegisteredBarcodes() => _registeredBarcodes.entries
-      .where((entry) => entry.key.startsWith(common.isbnPrefix) && entry.value is SureDetection)
+      .where((entry) => isbnValidator(entry.key) == null && entry.value is SureDetection)
       .map((e) => e.key)
       .toList();
 }
