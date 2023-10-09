@@ -35,7 +35,8 @@ class Bundle {
       print('Nothing to do');
       return true;
     }
-    final destinationName = path.basename(autoMetadataFile.path) + '_backup_' + common.nowAsFileName();
+    final destinationName =
+        path.withoutExtension(autoMetadataFile.path) + '_backup_' + common.nowAsFileName() + '.json';
     await File(autoMetadataFile.path).rename(destinationName);
     return true;
   }
