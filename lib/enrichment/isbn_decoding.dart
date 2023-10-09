@@ -89,7 +89,7 @@ class _ISBNDecodingWidgetState extends State<ISBNDecodingWidget> {
                                                   ElevatedButton(
                                                       onPressed: isbns.contains(isbn)
                                                           ? null
-                                                          : () async => await _addISBNAndSave(isbn),
+                                                          : () async => await _addISBNAndSave(isbn, isbns),
                                                       child: Text(
                                                         isbn,
                                                         style: TextStyle(
@@ -128,7 +128,7 @@ class _ISBNDecodingWidgetState extends State<ISBNDecodingWidget> {
                           ],
                           autovalidateMode: AutovalidateMode.always,
                           validator: (s) => isbnValidator(s!),
-                          onFieldSubmitted: (newIsbn) async => await _addISBNAndSave(newIsbn),
+                          onFieldSubmitted: (newIsbn) async => await _addISBNAndSave(newIsbn, isbns),
                           decoration: const InputDecoration(hintText: 'Type manually the ISBN here'),
                         ),
                         const SizedBox(height: 20),
@@ -168,7 +168,7 @@ class _ISBNDecodingWidgetState extends State<ISBNDecodingWidget> {
     );
   }
 
-  Future<void> _addISBNAndSave(String newIsbn) async {
+  Future<void> _addISBNAndSave(String newIsbn, KtMutableSet<String> isbns) async {
     if (isbnValidator(newIsbn) != null) {
       if (mounted) {
         ScaffoldMessenger.of(context)
@@ -183,7 +183,12 @@ class _ISBNDecodingWidgetState extends State<ISBNDecodingWidget> {
     final res = await widget.step.bundle.overwriteMetadata(md);
     print('res = $res');
     if (res) {
-      widget.step.bundle.autoMetadataFile.delete();
+      try {
+        await widget.step.bundle.autoMetadataFile.delete();
+      } on PathNotFoundException {
+        // autoMetadata file may not exist
+      }
+      setState(() => isbns.add(newIsbn));
     } else {
       if (mounted) {
         ScaffoldMessenger.of(context)
