@@ -3,6 +3,9 @@
 * [ ] App-wide: Use an animated splash screen
 * [ ] App-wide: Preserve the splash screen to hide the creation of the main dirs
 * [ ] App-wide: Better handle nonexistent or incorrect metadata file instead of throwing an exception
+* [ ] Device Mounting: mount the phone from the app
+* [ ] Device Mounting: Trigger a refresh when a new Android device is connected
+* [ ] Device Mounting: Mount only the right folder to be sure not to mess with other app data, or even Android (look into libfuse --subdir option)
 * [ ] Camera: LiveDetection: show confirmed barcode and pending barcodes in different color. Show a progressBar for the pending barcode
 * [ ] Camera: Reduce latency when cropping picture
 * [ ] Camera: Add sound when deleting a picture
@@ -10,11 +13,10 @@
 * [ ] Camera: Fix flashlight turning on and never off again
 * [ ] Camera: Camera is still in use when going back to BundleSelection, and even when going to the home screen
 * [ ] BundleSelection: Make image load faster (at least on Linux) (use even smaller thumbnail, cache images)
-* [ ] BundleSelection: Speed up search bar on Linux: getMergedMetadata seems to be slowed by the maximum Rust thread limit
 * [ ] BundleSelection: Add filter by auto_metadata downloaded or not
 * [ ] BundleSelection: Add sort by date picture taken, date published, price
 * [ ] BundleSelection: Add ability to go back into Camera mode to add/delete picture/ISBN, change the weight/state
-* [ ] BundleSelection: BundleList does not refresh after autoMetadata download
+* [ ] BundleSelection: BundleList does not refresh after autoMetadata download nor MetadataCollecting manual validation
 * [ ] BundleSelection: BUG: BundleList show autoMetadata from other bundle when some bundle are deleted
 * [ ] BundleSelection: Suggest bundle grouping by same author, title, keyword
 * [ ] ISBNDecoding: Better layout for phone
@@ -23,12 +25,15 @@
 * [ ] MetadataCollecting: Show a visual indication that the title is too long (105 characters for LeBonCoin)
 * [ ] AdEditing: Disable 'Mark as published' if the title is empty
 * [ ] AdEditing: Save the ad as it was published
+* [ ] AdEditing: Fix drag-and-drop crash on Android
 * [ ] Search with Selenium in headless mode
 * [ ] Test: Launch github action runner without opening graphical interface (use -no-boot-anim  -no-window)
 * [ ] Test: CI show false success when a step with continue-on-error fails
+* [ ] Test: CI save screenshots as artifact and compare them with the one in extra/screenshots/ to check for regression
 
 # DONE
 
+* [x] BundleSelection: Speed up search bar on Linux: getMergedMetadata seems to be slowed by the maximum Rust thread limit
 * [x] BundleSelection: Speed up search bar on Linux: getMergedMetadata is called for all bundle only once
 * [x] Camera: Fix display of cached deleted picture (take a picture, delete it, take another picture, the first picture is shown)
 * [x] BundleSelection: Show already published bundles
