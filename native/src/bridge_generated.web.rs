@@ -31,6 +31,11 @@ pub fn wire_set_manual_metadata_for_bundle(
 }
 
 #[wasm_bindgen]
+pub fn wire_get_merged_metadata_for_all_bundles(port_: MessagePort, bundles_dir: String) {
+    wire_get_merged_metadata_for_all_bundles_impl(port_, bundles_dir)
+}
+
+#[wasm_bindgen]
 pub fn wire_get_merged_metadata_for_bundle(port_: MessagePort, bundle_path: String) {
     wire_get_merged_metadata_for_bundle_impl(port_, bundle_path)
 }

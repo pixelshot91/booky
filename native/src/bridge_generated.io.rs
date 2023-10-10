@@ -38,6 +38,14 @@ pub extern "C" fn wire_set_manual_metadata_for_bundle(
 }
 
 #[no_mangle]
+pub extern "C" fn wire_get_merged_metadata_for_all_bundles(
+    port_: i64,
+    bundles_dir: *mut wire_uint_8_list,
+) {
+    wire_get_merged_metadata_for_all_bundles_impl(port_, bundles_dir)
+}
+
+#[no_mangle]
 pub extern "C" fn wire_get_merged_metadata_for_bundle(
     port_: i64,
     bundle_path: *mut wire_uint_8_list,

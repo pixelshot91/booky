@@ -1,8 +1,7 @@
-use crate::client::Client;
-use crate::common::{self};
-use crate::{abebooks, babelio, booksprice, fs_helper, google_books, justbooks, leslibraires};
 use anyhow::{Ok, Result};
 use flutter_rust_bridge::frb;
+use futures::future::join_all;
+use futures::StreamExt;
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -11,6 +10,10 @@ use std::io::{Read, Write};
 use std::vec;
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
+
+use crate::{abebooks, babelio, booksprice, fs_helper, google_books, justbooks, leslibraires};
+use crate::client::Client;
+use crate::common::{self};
 
 #[derive(EnumIter, PartialEq, Eq, Hash, Debug, Deserialize, Serialize, Copy, Clone)]
 pub enum ProviderEnum {
@@ -43,8 +46,8 @@ pub fn detect_barcode_in_image(img_path: String) -> Result<BarcodeDetectResults>
     let output = std::process::Command::new(
         "/home/julien/Perso/LeBonCoin/chain_automatisation/booky/native/detect_barcode",
     )
-    .arg(format!("--in={}", img_path))
-    .output()?;
+        .arg(format!("--in={}", img_path))
+        .output()?;
 
     if !output.status.success() {
         println!("status: {}", output.status);
@@ -248,19 +251,42 @@ pub fn set_manual_metadata_for_bundle(
     bundle_metadata: BundleMetaData,
 ) -> Result<()> {
     let file_path = format!("{bundle_path}/{METADATA_FILE_NAME}");
-    /* let mut file = fs_helper::my_file_open(&file_path)?;
-    let content = serde_json::to_string(&bundle_metadata).unwrap();
-    file.write(content.as_bytes())?; */
     let content = serde_json::to_string(&bundle_metadata)?;
     std::fs::write(&file_path, content)?;
 
+    // On mtpfs new file are not accessible for opening. This is necessary to make this new file accessible
     fs_helper::my_file_open(&file_path)?.sync_all()?;
     Ok(())
+}
+
+/// Use tokio async to get all the data faster than just calling many times [`get_merged_metadata_for_bundle`]
+pub fn get_merged_metadata_for_all_bundles(bundles_dir: String) -> Result<Vec<BundleMetaData>> {
+    tokio::runtime::Builder::new_multi_thread()
+        .enable_all()
+        .build()
+        .unwrap()
+        .block_on(async {
+            let read_dir = std::fs::read_dir(bundles_dir)?;
+            let mds_future = read_dir.map(|dir| async {
+                let bundle_path = dir.unwrap().path().to_str().unwrap().to_owned();
+                // Using spawn_blocking is fine to use with synchronous IO
+                // It avoid to rewrite get_manual_metadata_for_bundle with async
+                tokio::task::spawn_blocking(|| {
+                    let md = crate::api::get_merged_metadata_for_bundle(bundle_path).unwrap();
+                    md
+                })
+                    .await
+                    .unwrap()
+            });
+            let res = join_all(mds_future).await;
+            Ok(res)
+        })
 }
 
 // Retrieve a summary of all the information of a bundle
 // If a book metadata is not available, try to use a metadata from a Provider
 pub fn get_merged_metadata_for_bundle(bundle_path: String) -> Result<BundleMetaData> {
+    println!("get_merged_metadata_for_bundle {bundle_path}");
     // get from metadata.json
     let path = format!("{bundle_path}/{METADATA_FILE_NAME}");
     let mut file = fs_helper::my_file_open(&path)?;
@@ -356,8 +382,8 @@ fn replace_with_longest_string_if_none_or_empty<F1>(
         auto_mds: Option<&HashMap<ProviderEnum, Option<common::BookMetaDataFromProvider>>>,
         string_getter: F1,
     ) -> Option<String>
-    where
-        F1: Fn(&common::BookMetaDataFromProvider) -> &Option<String>,
+        where
+            F1: Fn(&common::BookMetaDataFromProvider) -> &Option<String>,
     {
         auto_mds?
             .values()

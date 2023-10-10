@@ -119,6 +119,25 @@ class NativeImpl implements Native {
         argNames: ["bundlePath", "bundleMetadata"],
       );
 
+  Future<List<BundleMetaData>> getMergedMetadataForAllBundles(
+      {required String bundlesDir, dynamic hint}) {
+    var arg0 = _platform.api2wire_String(bundlesDir);
+    return _platform.executeNormal(FlutterRustBridgeTask(
+      callFfi: (port_) =>
+          _platform.inner.wire_get_merged_metadata_for_all_bundles(port_, arg0),
+      parseSuccessData: _wire2api_list_bundle_meta_data,
+      constMeta: kGetMergedMetadataForAllBundlesConstMeta,
+      argValues: [bundlesDir],
+      hint: hint,
+    ));
+  }
+
+  FlutterRustBridgeTaskConstMeta get kGetMergedMetadataForAllBundlesConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "get_merged_metadata_for_all_bundles",
+        argNames: ["bundlesDir"],
+      );
+
   Future<BundleMetaData> getMergedMetadataForBundle(
       {required String bundlePath, dynamic hint}) {
     var arg0 = _platform.api2wire_String(bundlePath);
@@ -287,6 +306,10 @@ class NativeImpl implements Native {
 
   List<BookMetaData> _wire2api_list_book_meta_data(dynamic raw) {
     return (raw as List<dynamic>).map(_wire2api_book_meta_data).toList();
+  }
+
+  List<BundleMetaData> _wire2api_list_bundle_meta_data(dynamic raw) {
+    return (raw as List<dynamic>).map(_wire2api_bundle_meta_data).toList();
   }
 
   List<ISBNMetadataPair> _wire2api_list_isbn_metadata_pair(dynamic raw) {

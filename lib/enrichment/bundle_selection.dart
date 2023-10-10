@@ -37,14 +37,15 @@ PopupMenuItem<void> _popUpMenuIconText(
 class CustomSearchHintDelegate extends SearchDelegate<String> {
   CustomSearchHintDelegate({
     required String hintText,
-    required this.bundles,
+    required this.bundlesWithMD,
     required this.bundlesScrollController,
   }) : super(
           searchFieldLabel: hintText,
           keyboardType: TextInputType.text,
           textInputAction: TextInputAction.search,
         );
-  final Future<Iterable<Bundle>?> bundles;
+  final Future<List<(int, BundleMetaData?)>?> bundlesWithMD;
+
   AutoScrollController bundlesScrollController;
 
   bool matchOnISBN = true, matchOnTitle = true, matchOnAuthor = true;
@@ -91,76 +92,64 @@ class CustomSearchHintDelegate extends SearchDelegate<String> {
       }));
 
   @override
-  Widget buildSuggestions(BuildContext context) {
-    return FutureWidget(
-      future: bundles,
-      builder: (bundles) {
-        if (bundles == null) return const Text('Loading bundles');
+  Widget buildSuggestions(BuildContext context) => FutureWidget(
+        future: bundlesWithMD,
+        builder: (bundlesWithMD) {
+          if (bundlesWithMD == null) return const Text('Error while fetching bundles');
 
-        if (query.isEmpty) {
-          return Center(
-              child: Text(
-            '${bundles.length} bundles yet to be published',
-            style: const TextStyle(fontSize: 20, color: Colors.grey),
-          ));
-        }
+          if (query.isEmpty) {
+            return Center(
+                child: Text(
+              '${bundlesWithMD.length} bundles yet to be published',
+              style: const TextStyle(fontSize: 20, color: Colors.grey),
+            ));
+          }
 
-        final bundlesWithMD = bundles.mapIndexed((index, b) async {
-          final mergedMetadata = await b.getMergedMetadata();
-          return (index, mergedMetadata);
-        });
-        return FutureWidget(
-          future: Future.wait(bundlesWithMD),
-          builder: (bundlesWithMD) {
-            final bundlesMatchingISBN = matchOnISBN
-                ? bundlesWithMD.where((b) => b.$2?.books.any((book) => book.isbn.contains(query)) ?? false)
-                : const Iterable<(int, BundleMetaData?)>.empty();
-            final bundlesMatchingTitle = matchOnTitle
-                ? bundlesWithMD
-                    .where((b) => b.$2?.books.any((book) => book.title?.containsIgnoringCase(query) ?? false) ?? false)
-                : const Iterable<(int, BundleMetaData?)>.empty();
-            final Iterable<(int, BundleMetaData?)> bundlesMatchingAuthor = matchOnAuthor
-                ? bundlesWithMD.where((b) =>
-                    b.$2?.books.any((book) => book.authors
-                        .any((author) => '${author.firstName} ${author.lastName}'.containsIgnoringCase(query))) ??
-                    false)
-                : const Iterable<(int, BundleMetaData?)>.empty();
-            final bundleMatching =
-                bundlesMatchingISBN.followedBy(bundlesMatchingTitle).followedBy(bundlesMatchingAuthor);
-            return ListView.builder(
-              itemBuilder: (context, index) {
-                final b = bundleMatching.elementAt(index);
-                return ColoredBox(
-                  color: Colors.white,
-                  child: Padding(
-                    padding: const EdgeInsets.all(6.0),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            b.$2?.books.firstOrNull?.title ?? 'None',
-                          ),
+          final bundlesMatchingISBN = matchOnISBN
+              ? bundlesWithMD.where((b) => b.$2?.books.any((book) => book.isbn.contains(query)) ?? false)
+              : const Iterable<(int, BundleMetaData?)>.empty();
+          final bundlesMatchingTitle = matchOnTitle
+              ? bundlesWithMD
+                  .where((b) => b.$2?.books.any((book) => book.title?.containsIgnoringCase(query) ?? false) ?? false)
+              : const Iterable<(int, BundleMetaData?)>.empty();
+          final Iterable<(int, BundleMetaData?)> bundlesMatchingAuthor = matchOnAuthor
+              ? bundlesWithMD.where((b) =>
+                  b.$2?.books.any((book) => book.authors
+                      .any((author) => '${author.firstName} ${author.lastName}'.containsIgnoringCase(query))) ??
+                  false)
+              : const Iterable<(int, BundleMetaData?)>.empty();
+          final bundleMatching = bundlesMatchingISBN.followedBy(bundlesMatchingTitle).followedBy(bundlesMatchingAuthor);
+          return ListView.builder(
+            itemBuilder: (context, index) {
+              final b = bundleMatching.elementAt(index);
+              return ColoredBox(
+                color: Colors.white,
+                child: Padding(
+                  padding: const EdgeInsets.all(6.0),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          b.$2?.books.firstOrNull?.title ?? 'None',
                         ),
-                        TextButton(
-                            onPressed: () async {
-                              Navigator.of(context).pop();
-                              await bundlesScrollController.scrollToIndex(b.$1,
-                                  preferPosition: AutoScrollPosition.middle);
-                              await bundlesScrollController.highlight(b.$1);
-                            },
-                            child: const Text('See in list')),
-                      ],
-                    ),
+                      ),
+                      TextButton(
+                          onPressed: () async {
+                            Navigator.of(context).pop();
+                            await bundlesScrollController.scrollToIndex(b.$1,
+                                preferPosition: AutoScrollPosition.middle);
+                            await bundlesScrollController.highlight(b.$1);
+                          },
+                          child: const Text('See in list')),
+                    ],
                   ),
-                );
-              },
-              itemCount: bundleMatching.length,
-            );
-          },
-        );
-      },
-    );
-  }
+                ),
+              );
+            },
+            itemCount: bundleMatching.length,
+          );
+        },
+      );
 
   @override
   Widget buildResults(BuildContext context) => const Text('results');
@@ -208,11 +197,17 @@ class _BundleSelectionState extends State<BundleSelection> {
           IconButton(
               icon: const Icon(Icons.search),
               onPressed: () {
+                // Process all the bundleMD once when the searchbar open
+                final bundlesWithMD = Future<List<(int, BundleMetaData?)>?>(() async {
+                  final bundlesDir = (await common.bookyDir()).getDir(bundleType);
+                  final mds = await api.getMergedMetadataForAllBundles(bundlesDir: bundlesDir.path);
+                  return mds.mapIndexed((index, element) => (index, element)).toList();
+                });
                 showSearch(
                     context: context,
                     delegate: CustomSearchHintDelegate(
                         hintText: 'Search all the bundles',
-                        bundles: _listBundles(),
+                        bundlesWithMD: bundlesWithMD,
                         bundlesScrollController: gridViewController)
                       ..showResults(context));
               }),

@@ -10,6 +10,7 @@
 * [ ] Camera: Fix flashlight turning on and never off again
 * [ ] Camera: Camera is still in use when going back to BundleSelection, and even when going to the home screen
 * [ ] BundleSelection: Make image load faster (at least on Linux) (use even smaller thumbnail, cache images)
+* [ ] BundleSelection: Speed up search bar on Linux: getMergedMetadata seems to be slowed by the maximum Rust thread limit
 * [ ] BundleSelection: Add filter by auto_metadata downloaded or not
 * [ ] BundleSelection: Add sort by date picture taken, date published, price
 * [ ] BundleSelection: Add ability to go back into Camera mode to add/delete picture/ISBN, change the weight/state
@@ -28,6 +29,7 @@
 
 # DONE
 
+* [x] BundleSelection: Speed up search bar on Linux: getMergedMetadata is called for all bundle only once
 * [x] Camera: Fix display of cached deleted picture (take a picture, delete it, take another picture, the first picture is shown)
 * [x] BundleSelection: Show already published bundles
 * [x] App-wide: Fix ScrollShadow showing shadow in direction perpendicular to scrolling

@@ -128,6 +128,9 @@ class NativeWasmModule implements WasmModule {
   external dynamic /* void */ wire_set_manual_metadata_for_bundle(
       NativePortType port_, String bundle_path, List<dynamic> bundle_metadata);
 
+  external dynamic /* void */ wire_get_merged_metadata_for_all_bundles(
+      NativePortType port_, String bundles_dir);
+
   external dynamic /* void */ wire_get_merged_metadata_for_bundle(
       NativePortType port_, String bundle_path);
 
@@ -159,6 +162,10 @@ class NativeWire extends FlutterRustBridgeWasmWireBase<NativeWasmModule> {
           String bundle_path, List<dynamic> bundle_metadata) =>
       wasmModule.wire_set_manual_metadata_for_bundle(
           port_, bundle_path, bundle_metadata);
+
+  void wire_get_merged_metadata_for_all_bundles(
+          NativePortType port_, String bundles_dir) =>
+      wasmModule.wire_get_merged_metadata_for_all_bundles(port_, bundles_dir);
 
   void wire_get_merged_metadata_for_bundle(
           NativePortType port_, String bundle_path) =>

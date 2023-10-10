@@ -111,6 +111,22 @@ fn wire_set_manual_metadata_for_bundle_impl(
         },
     )
 }
+fn wire_get_merged_metadata_for_all_bundles_impl(
+    port_: MessagePort,
+    bundles_dir: impl Wire2Api<String> + UnwindSafe,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap::<_, _, _, Vec<BundleMetaData>>(
+        WrapInfo {
+            debug_name: "get_merged_metadata_for_all_bundles",
+            port: Some(port_),
+            mode: FfiCallMode::Normal,
+        },
+        move || {
+            let api_bundles_dir = bundles_dir.wire2api();
+            move |task_callback| get_merged_metadata_for_all_bundles(api_bundles_dir)
+        },
+    )
+}
 fn wire_get_merged_metadata_for_bundle_impl(
     port_: MessagePort,
     bundle_path: impl Wire2Api<String> + UnwindSafe,
