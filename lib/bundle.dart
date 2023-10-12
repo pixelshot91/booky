@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:collection/collection.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge.dart';
-import 'package:kt_dart/collection.dart';
 import 'package:path/path.dart' as path;
 import 'package:stream_transform/stream_transform.dart';
 
@@ -36,24 +35,13 @@ class Bundle {
       print('Nothing to do');
       return true;
     }
-    final destinationName = path.basename(autoMetadataFile.path) + '_backup_' + common.nowAsFileName();
-
-    return common.launchCommandLine('gio', ['rename', autoMetadataFile.path, destinationName]);
+    final destinationName =
+        path.withoutExtension(autoMetadataFile.path) + '_backup_' + common.nowAsFileName() + '.json';
+    await File(autoMetadataFile.path).rename(destinationName);
+    return true;
   }
 
   File get autoMetadataFile => File(path.join(directory.path, 'automatic_metadata.json'));
-
-  Future<KtMutableMap<String, KtMutableMap<ProviderEnum, BookMetaDataFromProvider?>>> getAutoMetadata() async {
-    try {
-      final value = await api.getAutoMetadataFromBundle(path: autoMetadataFile.path);
-      return Map.fromEntries(value.map((e) {
-        final providerMdMap = Map.fromEntries(e.metadatas.map((e) => MapEntry(e.provider, e.metadata))).kt;
-        return MapEntry(e.isbn, providerMdMap);
-      })).kt;
-    } on FfiException {
-      return KtMutableMap.empty();
-    }
-  }
 
   // Return the best information either manually submitted, manually verified, or automatically, for every book of the bundle
   Future<BundleMetaData?> getMergedMetadata() async {

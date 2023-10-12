@@ -8,28 +8,29 @@ import 'bridge_definitions.dart';
 final defaultScrollShadowColor = Colors.black.withOpacity(0.8);
 
 /// Add buttons to the context menu to quickly change the text case
-Widget recaseContextMenuBuilder(
-  BuildContext context,
-  EditableTextState editableTextState,
-) {
+Widget recaseContextMenuBuilder(BuildContext context,
+    EditableTextState editableTextState,) {
   final items = editableTextState.contextMenuButtonItems;
 
   items.addAll([
     ContextMenuButtonItem(
         label: 'Sentence case',
-        onPressed: () => editableTextState.userUpdateTextEditingValue(
-            TextEditingValue(text: editableTextState.textEditingValue.text.sentenceCase),
-            SelectionChangedCause.toolbar)),
+        onPressed: () =>
+            editableTextState.userUpdateTextEditingValue(
+                TextEditingValue(text: editableTextState.textEditingValue.text.sentenceCase),
+                SelectionChangedCause.toolbar)),
     ContextMenuButtonItem(
         label: 'lower case',
-        onPressed: () => editableTextState.userUpdateTextEditingValue(
-            TextEditingValue(text: editableTextState.textEditingValue.text.toLowerCase()),
-            SelectionChangedCause.toolbar)),
+        onPressed: () =>
+            editableTextState.userUpdateTextEditingValue(
+                TextEditingValue(text: editableTextState.textEditingValue.text.toLowerCase()),
+                SelectionChangedCause.toolbar)),
     ContextMenuButtonItem(
         label: 'UPPER CASE',
-        onPressed: () => editableTextState.userUpdateTextEditingValue(
-            TextEditingValue(text: editableTextState.textEditingValue.text.toUpperCase()),
-            SelectionChangedCause.toolbar)),
+        onPressed: () =>
+            editableTextState.userUpdateTextEditingValue(
+                TextEditingValue(text: editableTextState.textEditingValue.text.toUpperCase()),
+                SelectionChangedCause.toolbar)),
   ]);
 
   return AdaptiveTextSelectionToolbar.buttonItems(
@@ -116,8 +117,10 @@ class AsyncSnapshotWidget<T> extends StatelessWidget {
         return const Center(child: CircularProgressIndicator());
       case ConnectionState.done:
         if (snap.hasError) {
+          final msg = snap.error.toString() + '\n' + snap.stackTrace.toString();
+          print('AsyncSnapshotWidget error: $msg');
           return Tooltip(
-            message: snap.error.toString(),
+            message: msg,
             child: const Icon(
               Icons.error,
               color: Colors.red,

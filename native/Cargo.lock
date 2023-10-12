@@ -1008,6 +1008,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "base64 0.21.4",
+ "chrono",
  "color-eyre",
  "flutter_rust_bridge",
  "futures",

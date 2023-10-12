@@ -1,3 +1,6 @@
+use crate::client::Client;
+use crate::common::{self};
+use crate::{abebooks, babelio, booksprice, fs_helper, google_books, justbooks, leslibraires};
 use anyhow::{Ok, Result};
 use flutter_rust_bridge::frb;
 use itertools::Itertools;
@@ -5,14 +8,9 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::{Read, Write};
-use std::path::Path;
 use std::vec;
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
-
-use crate::client::Client;
-use crate::common::{self};
-use crate::{abebooks, babelio, booksprice, fs_helper, google_books, justbooks, leslibraires};
 
 #[derive(EnumIter, PartialEq, Eq, Hash, Debug, Deserialize, Serialize, Copy, Clone)]
 pub enum ProviderEnum {
@@ -64,17 +62,9 @@ pub fn detect_barcode_in_image(img_path: String) -> Result<BarcodeDetectResults>
 
 #[cfg(test)]
 mod tests {
-    use crate::{api::ProviderEnum, fs_helper::my_file_open};
+    use crate::api::ProviderEnum;
 
     use super::{BarcodeDetectResult, BarcodeDetectResults, Point};
-
-    #[test]
-    fn test_fs() {
-        // let r = File::open("non_existent");
-        // let r = std::my_read_to_string("non_existent");
-        let r = my_file_open("non_existent");
-        println!("{:?}", r);
-    }
 
     #[test]
     fn test_sort_longest() {
@@ -142,19 +132,10 @@ pub fn get_metadata_from_isbns(isbns: Vec<String>, path: String) -> Result<()> {
     let hashmap: HashMap<&String, HashMap<ProviderEnum, Option<common::BookMetaDataFromProvider>>> =
         HashMap::from_iter(res);
 
+    let content = &serde_json::to_string(&hashmap).expect("Unable to serialize data");
     //  Make sure the filename is unique so the function is thread-safe
-    let tmp_path = Path::new(&path).file_name().unwrap();
-    let mut file = File::create(tmp_path)?;
-    file.write_all(
-        serde_json::to_string(&hashmap)
-            .expect("Unable to serialize data")
-            .as_bytes(),
-    )?;
-    // Writing to the phone does not work
-    // Instead a temporary file is created and immediately move with 'gio move'
-    std::process::Command::new("gio")
-        .args(["move", tmp_path.to_str().unwrap(), &path])
-        .output()?;
+    let mut file = File::create(path)?;
+    file.write_all(content.as_bytes())?;
     Ok(())
 }
 
@@ -267,8 +248,13 @@ pub fn set_manual_metadata_for_bundle(
     bundle_metadata: BundleMetaData,
 ) -> Result<()> {
     let file_path = format!("{bundle_path}/{METADATA_FILE_NAME}");
-    let contents = serde_json::to_string(&bundle_metadata)?;
-    std::fs::write(file_path, contents)?;
+    /* let mut file = fs_helper::my_file_open(&file_path)?;
+    let content = serde_json::to_string(&bundle_metadata).unwrap();
+    file.write(content.as_bytes())?; */
+    let content = serde_json::to_string(&bundle_metadata)?;
+    std::fs::write(&file_path, content)?;
+
+    fs_helper::my_file_open(&file_path)?.sync_all()?;
     Ok(())
 }
 
@@ -281,8 +267,10 @@ pub fn get_merged_metadata_for_bundle(bundle_path: String) -> Result<BundleMetaD
     let mut contents = String::new();
     file.read_to_string(&mut contents).unwrap();
 
-    let mut manual_bundle_md: BundleMetaData =
-        serde_json::from_str(&contents).expect(&format!("Unable to deserialize {}", path));
+    let mut manual_bundle_md: BundleMetaData = serde_json::from_str(&contents).expect(&format!(
+        "Unable to deserialize {}. content is {contents}.",
+        path
+    ));
 
     // Get MD from Provider
     let bundle_auto_md =
