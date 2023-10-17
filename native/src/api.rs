@@ -1,7 +1,6 @@
 use anyhow::{Ok, Result};
 use flutter_rust_bridge::frb;
 use futures::future::join_all;
-use futures::StreamExt;
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -260,7 +259,7 @@ pub fn set_manual_metadata_for_bundle(
 }
 
 /// Use tokio async to get all the data faster than just calling many times [`get_merged_metadata_for_bundle`]
-pub fn get_merged_metadata_for_all_bundles(bundles_dir: String) -> Result<Vec<BundleMetaData>> {
+pub fn get_merged_metadata_for_all_bundles(bundles_dir: String) -> Result<Vec<Option<BundleMetaData>>> {
     tokio::runtime::Builder::new_multi_thread()
         .enable_all()
         .build()
@@ -272,8 +271,8 @@ pub fn get_merged_metadata_for_all_bundles(bundles_dir: String) -> Result<Vec<Bu
                 // Using spawn_blocking is fine to use with synchronous IO
                 // It avoid to rewrite get_manual_metadata_for_bundle with async
                 tokio::task::spawn_blocking(|| {
-                    let md = crate::api::get_merged_metadata_for_bundle(bundle_path).unwrap();
-                    md
+                    let md = crate::api::get_merged_metadata_for_bundle(bundle_path);
+                    md.ok()
                 })
                     .await
                     .unwrap()
@@ -286,7 +285,6 @@ pub fn get_merged_metadata_for_all_bundles(bundles_dir: String) -> Result<Vec<Bu
 // Retrieve a summary of all the information of a bundle
 // If a book metadata is not available, try to use a metadata from a Provider
 pub fn get_merged_metadata_for_bundle(bundle_path: String) -> Result<BundleMetaData> {
-    println!("get_merged_metadata_for_bundle {bundle_path}");
     // get from metadata.json
     let path = format!("{bundle_path}/{METADATA_FILE_NAME}");
     let mut file = fs_helper::my_file_open(&path)?;

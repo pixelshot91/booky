@@ -38,7 +38,8 @@ abstract class Native {
 
   FlutterRustBridgeTaskConstMeta get kSetManualMetadataForBundleConstMeta;
 
-  Future<List<BundleMetaData>> getMergedMetadataForAllBundles(
+  /// Use tokio async to get all the data faster than just calling many times [`get_merged_metadata_for_bundle`]
+  Future<List<BundleMetaData?>> getMergedMetadataForAllBundles(
       {required String bundlesDir, dynamic hint});
 
   FlutterRustBridgeTaskConstMeta get kGetMergedMetadataForAllBundlesConstMeta;

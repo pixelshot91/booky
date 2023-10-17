@@ -115,7 +115,7 @@ fn wire_get_merged_metadata_for_all_bundles_impl(
     port_: MessagePort,
     bundles_dir: impl Wire2Api<String> + UnwindSafe,
 ) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap::<_, _, _, Vec<BundleMetaData>>(
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap::<_, _, _, Vec<Option<BundleMetaData>>>(
         WrapInfo {
             debug_name: "get_merged_metadata_for_all_bundles",
             port: Some(port_),
