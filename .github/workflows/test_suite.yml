@@ -12,7 +12,23 @@ on:
     branches: [ "main" ]
 
 jobs:
+  pre_job:
+    runs-on: self-hosted
+    # Map a step output to a job output
+    outputs:
+      should_skip: ${{ steps.skip_check.outputs.should_skip }}
+    steps:
+      - id: skip_check
+        uses: fkirc/skip-duplicate-actions@v5
+        with:
+          paths_filter: |
+            rust:
+              paths: 'native/**'
+          paths_ignore: '["README.md", "TODO.md", "doc/**"]'
   rust_test:
+    needs: pre_job
+    # Do not run if no files in native/ have been changed since last job run
+    if: needs.pre_job.outputs.should_skip != 'true' || !fromJSON(needs.pre_job.outputs.paths_result).rust.should_skip
     runs-on: self-hosted
     defaults:
       run:
@@ -25,6 +41,8 @@ jobs:
         run: cargo test
 
   build_flutter:
+    needs: pre_job
+    if: needs.pre_job.outputs.should_skip != 'true'
     runs-on: self-hosted
 
     steps:
