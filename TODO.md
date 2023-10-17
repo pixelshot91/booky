@@ -28,6 +28,7 @@
 * [ ] AdEditing: Fix drag-and-drop crash on Android
 * [ ] Search with Selenium in headless mode
 * [ ] Test: Launch github action runner without opening graphical interface (use -no-boot-anim  -no-window)
+* [ ] Test: CI: Prevent running the CI twice: on pull-request, then on push. See https://github.com/marketplace/actions/skip-duplicate-actions
 * [ ] Test: CI show false success when a step with continue-on-error fails
 * [ ] Test: CI save screenshots as artifact and compare them with the one in extra/screenshots/ to check for regression
 
