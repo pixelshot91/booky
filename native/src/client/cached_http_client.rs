@@ -56,21 +56,15 @@ impl Client for CachedHttpClient {
                     status,
                     url,
                 };
-                // Do not store the result if the server is unavailable
-                if status.is_server_error() {
-                    println!("CachedHttpClient: Server error. StatusCode = {status}");
-                } else if status == 429 {
-                    println!(
-                        "CachedHttpClient: Client error. Too many requests. StatusCode = {status}"
-                    );
-                } else {
+                if status.as_u16() == 200 || status.as_u16() == 404 {
                     let dir = Path::new(&response_cache_path).parent().unwrap();
                     std::fs::create_dir_all(dir).unwrap();
                     std::fs::write(&html_cache_path, &r.body).unwrap();
                     std::fs::write(&response_cache_path, serde_json::to_string(&r).unwrap())
                         .unwrap();
+                } else { // Do not cache response if the error is temporary: E.g. the server is unavailable or we reached query limit
+                    println!("CachedHttpClient: error. StatusCode = {status}");
                 }
-
                 r
             }
         }
