@@ -1,14 +1,13 @@
 import 'dart:async';
 import 'dart:io';
-import 'dart:ui' as ui;
 
 import 'package:audioplayers/audioplayers.dart';
 import 'package:booky/common.dart';
 import 'package:booky/image_helper.dart';
 import 'package:booky/isbn_helper.dart';
 import 'package:camera/camera.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge.dart';
 import 'package:google_mlkit_barcode_scanning/google_mlkit_barcode_scanning.dart';
 import 'package:image/image.dart' as img;
@@ -33,12 +32,12 @@ class CameraWidget extends StatefulWidget {
 }
 
 class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver, TickerProviderStateMixin {
-  CameraController? controller;
+  CameraController? _controller;
   late String bundleName;
 
   final BarcodeScanner _barcodeScanner = BarcodeScanner(formats: [BarcodeFormat.ean13]);
   bool _isBusy = false;
-  bool _canProcessBarcode = true;
+  bool _canProcess = true;
   CustomPaint? _customPaint;
   final Map<String, BarcodeDetection> _registeredBarcodes = {};
 
@@ -82,14 +81,14 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    _canProcessBarcode = false;
+    _canProcess = false;
     _barcodeScanner.close();
     super.dispose();
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    final CameraController? cameraController = controller;
+    final CameraController? cameraController = _controller;
 
     // App state changed before we got the chance to initialize.
     if (cameraController == null || !cameraController.value.isInitialized) {
@@ -184,10 +183,11 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
                       Navigator.pop(context);
                     }
                   },
-                  onBarcodeDetectStart: () => controller!.startImageStream(_processCameraImage),
+                  onBarcodeDetectStart: () => _controller!.startImageStream(_processCameraImage),
                   onBarcodeDetectStop: () async {
-                    controller!.addListener(_listener);
-                    await controller!.stopImageStream();
+                    print('XXX onBarcodeDetectStop');
+                    // controller!.addListener(_listener);
+                    await _controller!.stopImageStream();
                   },
                   isbns: _getValidRegisteredBarcodes(),
                 ),
@@ -204,8 +204,8 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
   // Only then should we remove the _customPaint
   void _listener() async {
     // No new frame are added into the pipeline
-    if (controller!.value.isStreamingImages == false) {
-      controller!.removeListener(_listener);
+    if (_controller!.value.isStreamingImages == false) {
+      _controller!.removeListener(_listener);
 
       if (_isBusy) {
         imageProcessingCompleter = Completer();
@@ -223,7 +223,7 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
 
   /// Display the preview from the camera (or a message if the preview is not available).
   Widget _cameraPreviewWidget() {
-    final CameraController? cameraController = controller;
+    final CameraController? cameraController = _controller;
 
     if (cameraController == null || !cameraController.value.isInitialized) {
       return const Text(
@@ -330,11 +330,11 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
   }
 
   void _onViewFinderTap(TapDownDetails details, BoxConstraints constraints) {
-    if (controller == null) {
+    if (_controller == null) {
       return;
     }
 
-    final CameraController cameraController = controller!;
+    final CameraController cameraController = _controller!;
 
     final Offset offset = Offset(
       details.localPosition.dx / constraints.maxWidth,
@@ -345,35 +345,37 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
   }
 
   Future<void> _onNewCameraSelected(CameraDescription cameraDescription) async {
-    final CameraController? oldController = controller;
+    final CameraController? oldController = _controller;
     if (oldController != null) {
       // `controller` needs to be set to null before getting disposed,
       // to avoid a race condition when we use the controller that is being
       // disposed. This happens when camera permission dialog shows up,
       // which triggers `didChangeAppLifecycleState`, which disposes and
       // re-creates the controller.
-      controller = null;
+      _controller = null;
       await oldController.dispose();
     }
     final CameraController cameraController = CameraController(
       cameraDescription,
-      ResolutionPreset.max,
+      ResolutionPreset.high,
+      enableAudio: false,
+      imageFormatGroup: Platform.isAndroid ? ImageFormatGroup.nv21 : ImageFormatGroup.bgra8888,
       // If the imageFormatGroup is specified, the stream processing does not work anymore
       // It seems that the default format for still picture is jpeg, bu the default format for streaming is not
       // imageFormatGroup: ImageFormatGroup.jpeg,
     );
 
-    controller = cameraController;
+    _controller = cameraController;
 
     // If the controller is updated then update the UI.
-    cameraController.addListener(() {
+/*    cameraController.addListener(() {
       if (mounted) {
         setState(() {});
       }
       if (cameraController.value.hasError) {
         showInSnackBar('Camera error ${cameraController.value.errorDescription}');
       }
-    });
+    });*/
 
     try {
       await cameraController.initialize();
@@ -414,7 +416,8 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
   }
 
   Future<void> _processCameraImage(CameraImage image) async {
-    final WriteBuffer allBytes = WriteBuffer();
+    print('XXX _processCameraImage BEGIN');
+    /*final WriteBuffer allBytes = WriteBuffer();
     for (final Plane plane in image.planes) {
       allBytes.putUint8List(plane.bytes);
     }
@@ -446,12 +449,110 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
       planeData: planeData,
     );
 
-    final inputImage = InputImage.fromBytes(bytes: bytes, inputImageData: inputImageData);
+    final inputImage = InputImage.fromBytes(bytes: bytes, inputImageData: inputImageData);*/
+    final inputImage = _inputImageFromCameraImage(image);
+    if (inputImage == null) return;
 
-    _extractBarcodeFromImage(inputImage);
+    _processImage(inputImage);
   }
 
-  Future<void> _extractBarcodeFromImage(InputImage inputImage) async {
+  InputImage? _inputImageFromCameraImage(CameraImage image) {
+    if (_controller == null) return null;
+
+    // get image rotation
+    // it is used in android to convert the InputImage from Dart to Java: https://github.com/flutter-ml/google_ml_kit_flutter/blob/master/packages/google_mlkit_commons/android/src/main/java/com/google_mlkit_commons/InputImageConverter.java
+    // `rotation` is not used in iOS to convert the InputImage from Dart to Obj-C: https://github.com/flutter-ml/google_ml_kit_flutter/blob/master/packages/google_mlkit_commons/ios/Classes/MLKVisionImage%2BFlutterPlugin.m
+    // in both platforms `rotation` and `camera.lensDirection` can be used to compensate `x` and `y` coordinates on a canvas: https://github.com/flutter-ml/google_ml_kit_flutter/blob/master/packages/example/lib/vision_detector_views/painters/coordinates_translator.dart
+    final camera = _controller!.description;
+    final sensorOrientation = camera.sensorOrientation;
+    print(
+        'lensDirection: ${camera.lensDirection}, sensorOrientation: $sensorOrientation, ${_controller?.value.deviceOrientation} ${_controller?.value.lockedCaptureOrientation} ${_controller?.value.isCaptureOrientationLocked}');
+    InputImageRotation? rotation;
+    if (Platform.isIOS) {
+      rotation = InputImageRotationValue.fromRawValue(sensorOrientation);
+    } else if (Platform.isAndroid) {
+      final _orientations = {
+        DeviceOrientation.portraitUp: 0,
+        DeviceOrientation.landscapeLeft: 90,
+        DeviceOrientation.portraitDown: 180,
+        DeviceOrientation.landscapeRight: 270,
+      };
+      var rotationCompensation = _orientations[_controller!.value.deviceOrientation];
+      if (rotationCompensation == null) return null;
+      if (camera.lensDirection == CameraLensDirection.front) {
+        // front-facing
+        rotationCompensation = (sensorOrientation + rotationCompensation) % 360;
+      } else {
+        // back-facing
+        rotationCompensation = (sensorOrientation - rotationCompensation + 360) % 360;
+      }
+      rotation = InputImageRotationValue.fromRawValue(rotationCompensation);
+      // print('rotationCompensation: $rotationCompensation');
+    }
+    if (rotation == null) return null;
+    // print('final rotation: $rotation');
+
+    // get image format
+    final format = InputImageFormatValue.fromRawValue(image.format.raw as int);
+    // validate format depending on platform
+    // only supported formats:
+    // * nv21 for Android
+    // * bgra8888 for iOS
+    if (format == null ||
+        (Platform.isAndroid && format != InputImageFormat.nv21) ||
+        (Platform.isIOS && format != InputImageFormat.bgra8888)) return null;
+
+    // since format is constraint to nv21 or bgra8888, both only have one plane
+    if (image.planes.length != 1) return null;
+    final plane = image.planes.first;
+
+    // compose InputImage using bytes
+    return InputImage.fromBytes(
+      bytes: plane.bytes,
+      metadata: InputImageMetadata(
+        size: Size(image.width.toDouble(), image.height.toDouble()),
+        rotation: rotation, // used only in Android
+        format: format, // used only in iOS
+        bytesPerRow: plane.bytesPerRow, // used only in iOS
+      ),
+    );
+  }
+
+  Future<void> _processImage(InputImage inputImage) async {
+    print('_processImage BEGIN');
+    if (!_canProcess) return;
+    if (_isBusy) return;
+    _isBusy = true;
+    /*setState(() {
+      _text = '';
+    });*/
+    final barcodes = await _barcodeScanner.processImage(inputImage);
+
+    if (inputImage.metadata?.size != null && inputImage.metadata?.rotation != null) {
+      final painter = BarcodeDetectorPainter(
+        barcodes,
+        inputImage.metadata!.size,
+        inputImage.metadata!.rotation,
+        CameraLensDirection.back,
+      );
+      _customPaint = CustomPaint(painter: painter);
+    } else {
+      String text = 'Barcodes found: ${barcodes.length}\n\n';
+      for (final barcode in barcodes) {
+        text += 'Barcode: ${barcode.rawValue}\n\n';
+      }
+      // _text = text;
+      // TODO: set _customPaint to draw boundingRect on top of image
+      _customPaint = null;
+    }
+    _isBusy = false;
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
+/*
+  Future<void> _processImage(InputImage inputImage) async {
     if (_isBusy) return;
     _isBusy = true;
     if (_canProcessBarcode) {
@@ -474,6 +575,7 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
 
     _isBusy = false;
   }
+*/
 
   Iterable<String> _filterBarcode(Iterable<Barcode> barcodes) => barcodes
       .where((barcode) => barcode.type == BarcodeType.isbn)
@@ -522,8 +624,8 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
 
   Future<void> onCaptureOrientationLockButtonPressed() async {
     try {
-      if (controller != null) {
-        final CameraController cameraController = controller!;
+      if (_controller != null) {
+        final CameraController cameraController = _controller!;
         if (cameraController.value.isCaptureOrientationLocked) {
           await cameraController.unlockCaptureOrientation();
           showInSnackBar('Capture orientation unlocked');
@@ -539,7 +641,7 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
   }
 
   Future<XFile?> takePicture() async {
-    final CameraController? cameraController = controller;
+    final CameraController? cameraController = _controller;
     if (cameraController == null || !cameraController.value.isInitialized) {
       showInSnackBar('Error: select a camera first.');
       return null;
