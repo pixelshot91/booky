@@ -18,9 +18,11 @@
 * [ ] BundleSelection: Add ability to go back into Camera mode to add/delete picture/ISBN, change the weight/state
 * [ ] BundleSelection: BundleList does not refresh after autoMetadata download nor MetadataCollecting manual validation
 * [ ] BundleSelection: BUG: BundleList show autoMetadata from other bundle when some bundle are deleted
+* [ ] BundleSelection: Progress bar for 'Download metadata for all bundles' does not reach the end (Probably a race condition)
 * [ ] BundleSelection: Suggest bundle grouping by same author, title, keyword
 * [ ] ISBNDecoding: Better layout for phone
 * [ ] ISBNDecoding: Delete an image
+* [ ] ISBN: Add character 'X' in ISBN keyboard
 * [ ] MetadataCollecting: Disable 'Validate Metadatas' button if price field is empty
 * [ ] MetadataCollecting: Show a visual indication that the title is too long (105 characters for LeBonCoin)
 * [ ] AdEditing: Disable 'Mark as published' if the title is empty
