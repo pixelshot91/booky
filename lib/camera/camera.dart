@@ -23,15 +23,13 @@ import 'barcode_detector_painter.dart';
 import 'draggable_widget.dart';
 
 class CameraWidget extends StatefulWidget {
-  const CameraWidget({Key? key}) : super(key: key);
+  const CameraWidget({this.bundleDirToEdit});
+
+  // Null means create a new bundle
+  final Directory? bundleDirToEdit;
 
   @override
   State<CameraWidget> createState() => _CameraWidgetState();
-}
-
-void _logError(String code, String? message) {
-  // ignore: avoid_print
-  print('Error: $code${message == null ? '' : '\nError Message: $message'}');
 }
 
 class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver, TickerProviderStateMixin {
@@ -56,7 +54,7 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
   static const double maxCropRatio = 0.8;
 
   Future<Directory> get getBundleDir async =>
-      (await common.bookyDir()).getDir(BundleType.toPublish).joinDir(bundleName);
+      widget.bundleDirToEdit ?? (await common.bookyDir()).getDir(BundleType.toPublish).joinDir(bundleName);
 
   Future<Bundle> get getBundle async => Bundle(await getBundleDir);
 
@@ -174,11 +172,17 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
                 builder: (bundle) => BottomWidget(
                   bundle: bundle,
                   onSubmit: () {
-                    setState(() {
-                      _generateNewFolderPath();
-                      _registeredBarcodes.clear();
-                    });
-                    Navigator.pop(context);
+                    /// The bundle has been edited, go back to BundleSelection
+                    if (widget.bundleDirToEdit != null) {
+                      Navigator.pop(context);
+                      Navigator.pop(context);
+                    } else {
+                      setState(() {
+                        _generateNewFolderPath();
+                        _registeredBarcodes.clear();
+                      });
+                      Navigator.pop(context);
+                    }
                   },
                   onBarcodeDetectStart: () => controller!.startImageStream(_processCameraImage),
                   onBarcodeDetectStop: () async {
@@ -209,9 +213,11 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
         await imageProcessingCompleter!.future;
         imageProcessingCompleter = null;
       }
-      setState(() {
-        _customPaint = null;
-      });
+      /*if (mounted) {
+        setState(() {
+          _customPaint = null;
+        });
+      }*/
     }
   }
 
@@ -562,6 +568,11 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
       .where((entry) => isbnValidator(entry.key) == null && entry.value is SureDetection)
       .map((e) => e.key)
       .toList();
+
+  void _logError(String code, String? message) {
+    // ignore: avoid_print
+    print('Error: $code${message == null ? '' : '\nError Message: $message'}');
+  }
 }
 
 class CenteredTrackShape extends RoundedRectSliderTrackShape {
