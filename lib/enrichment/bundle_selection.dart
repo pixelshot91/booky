@@ -23,7 +23,7 @@ import 'enrichment.dart';
 import 'metadata_collecting.dart';
 
 PopupMenuItem<void> _popUpMenuIconText(
-    {required IconData icon, required String label, required void Function() onPressed}) =>
+        {required IconData icon, required String label, required void Function() onPressed}) =>
     PopupMenuItem<void>(
         onTap: onPressed,
         child: Row(
@@ -40,65 +40,61 @@ class CustomSearchHintDelegate extends SearchDelegate<String> {
     required this.bundlesWithMD,
     required this.bundlesScrollController,
   }) : super(
-    searchFieldLabel: hintText,
-    keyboardType: TextInputType.text,
-    textInputAction: TextInputAction.search,
-  );
+          searchFieldLabel: hintText,
+          keyboardType: TextInputType.text,
+          textInputAction: TextInputAction.search,
+        );
   final Future<List<(int, BundleMetaData?)>?> bundlesWithMD;
 
   AutoScrollController bundlesScrollController;
 
-  bool matchOnISBN = true,
-      matchOnTitle = true,
-      matchOnAuthor = true;
+  bool matchOnISBN = true, matchOnTitle = true, matchOnAuthor = true;
 
   // Return null to display default back button
   @override
   Widget? buildLeading(BuildContext context) => null;
 
   @override
-  PreferredSizeWidget buildBottom(BuildContext context) =>
-      PreferredSize(
-          preferredSize: const Size.fromHeight(50),
-          child: StatefulBuilder(builder: (BuildContext context, StateSetter setState) {
-            return Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Row(
-                children: [
-                  FilterChip(
-                    selected: matchOnISBN,
-                    label: const Text('ISBN'),
-                    onSelected: (value) {
-                      setState(() => matchOnISBN = value);
-                      query = query; // Force suggestions rebuild
-                    },
-                  ),
-                  FilterChip(
-                    selected: matchOnTitle,
-                    label: const Text('Title'),
-                    onSelected: (value) {
-                      setState(() => matchOnTitle = value);
-                      query = query; // Force suggestions rebuild
-                    },
-                  ),
-                  FilterChip(
-                    selected: matchOnAuthor,
-                    label: const Text('Author'),
-                    onSelected: (value) {
-                      setState(() => matchOnAuthor = value);
-                      query = query; // Force suggestions rebuild
-                    },
-                  ),
-                ],
+  PreferredSizeWidget buildBottom(BuildContext context) => PreferredSize(
+      preferredSize: const Size.fromHeight(50),
+      child: StatefulBuilder(builder: (BuildContext context, StateSetter setState) {
+        return Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Row(
+            children: [
+              FilterChip(
+                selected: matchOnISBN,
+                label: const Text('ISBN'),
+                onSelected: (value) {
+                  setState(() => matchOnISBN = value);
+                  query = query; // Force suggestions rebuild
+                },
               ),
-            );
-          }));
+              FilterChip(
+                selected: matchOnTitle,
+                label: const Text('Title'),
+                onSelected: (value) {
+                  setState(() => matchOnTitle = value);
+                  query = query; // Force suggestions rebuild
+                },
+              ),
+              FilterChip(
+                selected: matchOnAuthor,
+                label: const Text('Author'),
+                onSelected: (value) {
+                  setState(() => matchOnAuthor = value);
+                  query = query; // Force suggestions rebuild
+                },
+              ),
+            ],
+          ),
+        );
+      }));
 
   @override
   Widget buildSuggestions(BuildContext context) => _buildSuggestions(context);
 
-  Widget _buildSuggestions(BuildContext context) =>
-      FutureWidget(
+  Widget _buildSuggestions(BuildContext context) => FutureWidget(
         future: bundlesWithMD,
         builder: (bundlesWithMD) {
           if (bundlesWithMD == null) return const Text('Error while fetching bundles');
@@ -106,9 +102,9 @@ class CustomSearchHintDelegate extends SearchDelegate<String> {
           if (query.isEmpty) {
             return Center(
                 child: Text(
-                  '${bundlesWithMD.length} bundles yet to be published',
-                  style: const TextStyle(fontSize: 20, color: Colors.grey),
-                ));
+              '${bundlesWithMD.length} bundles yet to be published',
+              style: const TextStyle(fontSize: 20, color: Colors.grey),
+            ));
           }
 
           final bundlesMatchingISBN = matchOnISBN
@@ -116,14 +112,13 @@ class CustomSearchHintDelegate extends SearchDelegate<String> {
               : const Iterable<(int, BundleMetaData?)>.empty();
           final bundlesMatchingTitle = matchOnTitle
               ? bundlesWithMD
-              .where((b) => b.$2?.books.any((book) => book.title?.containsIgnoringCase(query) ?? false) ?? false)
+                  .where((b) => b.$2?.books.any((book) => book.title?.containsIgnoringCase(query) ?? false) ?? false)
               : const Iterable<(int, BundleMetaData?)>.empty();
           final Iterable<(int, BundleMetaData?)> bundlesMatchingAuthor = matchOnAuthor
               ? bundlesWithMD.where((b) =>
-          b.$2?.books.any((book) =>
-              book.authors
-                  .any((author) => '${author.firstName} ${author.lastName}'.containsIgnoringCase(query))) ??
-              false)
+                  b.$2?.books.any((book) => book.authors
+                      .any((author) => '${author.firstName} ${author.lastName}'.containsIgnoringCase(query))) ??
+                  false)
               : const Iterable<(int, BundleMetaData?)>.empty();
           final bundleMatching = bundlesMatchingISBN.followedBy(bundlesMatchingTitle).followedBy(bundlesMatchingAuthor);
           return ListView.builder(
@@ -185,11 +180,7 @@ class _BundleSelectionState extends State<BundleSelection> {
   void initState() {
     super.initState();
     gridViewController = AutoScrollController(
-        viewportBoundaryGetter: () =>
-            Rect.fromLTRB(0, 0, 0, MediaQuery
-                .of(context)
-                .padding
-                .bottom),
+        viewportBoundaryGetter: () => Rect.fromLTRB(0, 0, 0, MediaQuery.of(context).padding.bottom),
         axis: Axis.vertical);
     Future(_compressImages);
   }
@@ -342,8 +333,7 @@ class _BundleSelectionState extends State<BundleSelection> {
         );
       } on FfiException catch (e) {
         print(
-            'FfiException thrown during getMetadataFromIsbns with isbns=${isbns.toList()}, path=${bundle
-                .autoMetadataFile.path}');
+            'FfiException thrown during getMetadataFromIsbns with isbns=${isbns.toList()}, path=${bundle.autoMetadataFile.path}');
         print('exception is $e');
       }
       if (mounted) {
@@ -427,8 +417,7 @@ class _BundleSelectionState extends State<BundleSelection> {
               maxCrossAxisExtent: 500,
               childAspectRatio: 2,
               children: bundles
-                  .mapIndexed((index, bundle) =>
-                  AutoScrollTag(
+                  .mapIndexed((index, bundle) => AutoScrollTag(
                       key: ValueKey(index),
                       controller: gridViewController,
                       index: index,
@@ -484,8 +473,7 @@ class ProgressIndicator extends StatelessWidget {
       padding: const EdgeInsets.all(8.0),
       child: total.ifIs(
           nul: () => const LinearProgressIndicator(),
-          notnull: (total) =>
-              Row(
+          notnull: (total) => Row(
                 children: [
                   Text(description),
                   Expanded(
@@ -539,6 +527,10 @@ class _BundleWidgetState extends State<BundleWidget> {
           Text('No metadata'),
           SizedBox(width: 10),
           Icon(
+            Icons.edit_note,
+            color: Colors.red,
+          ),
+          Icon(
             Icons.error,
             color: Colors.red,
           ),
@@ -551,16 +543,15 @@ class _BundleWidgetState extends State<BundleWidget> {
       if (bundleMergedMD.books.length > 1) _NumberOfBookBadge(bundleMergedMD.books.length),
       Expanded(
           child: Column(
-            children: [
-              firstBook.title.ifIs(
-                  notnull: (t) => TextWithTooltip(t),
-                  nul: () =>
-                  const Text(
+        children: [
+          firstBook.title.ifIs(
+              notnull: (t) => TextWithTooltip(t),
+              nul: () => const Text(
                     'No title found',
                     style: TextStyle(fontStyle: FontStyle.italic),
                   )),
-            ],
-          )),
+        ],
+      )),
       bundleMergedMD.books
           .map((b) => b.priceCent)
           .whereNotNull()
@@ -569,30 +560,28 @@ class _BundleWidgetState extends State<BundleWidget> {
   }
 
   @override
-  Widget build(BuildContext context) =>
-      Card(
+  Widget build(BuildContext context) => Card(
         child: Padding(
           padding: const EdgeInsets.all(4.0),
           child: FutureWidget(
             future: cachedMergedMd,
-            builder: (bundleMergedMD) =>
-                Column(
-                  children: [
-                    _buildTitleLine(bundleMergedMD),
-                    Expanded(
-                      child: Row(
-                        children: [
-                          if (bundleMergedMD != null) MetadataIcons(bundleMergedMD),
-                          Expanded(child: ScrollableBundleImages(widget.bundle, Axis.horizontal)),
-                          _ActionButtons(
-                              bundle: widget.bundle,
-                              refreshParent: widget.refreshParent,
-                              downloadMetadataForBundles: widget.downloadMetadataForBundles),
-                        ],
-                      ),
-                    ),
-                  ],
+            builder: (bundleMergedMD) => Column(
+              children: [
+                _buildTitleLine(bundleMergedMD),
+                Expanded(
+                  child: Row(
+                    children: [
+                      if (bundleMergedMD != null) MetadataIcons(bundleMergedMD),
+                      Expanded(child: ScrollableBundleImages(widget.bundle, Axis.horizontal)),
+                      _ActionButtons(
+                          bundle: widget.bundle,
+                          refreshParent: widget.refreshParent,
+                          downloadMetadataForBundles: widget.downloadMetadataForBundles),
+                    ],
+                  ),
                 ),
+              ],
+            ),
           ),
         ),
       );
@@ -606,13 +595,11 @@ class _ActionButtons extends StatelessWidget {
   final void Function(Iterable<Bundle> bundles) downloadMetadataForBundles;
 
   @override
-  Widget build(BuildContext context) =>
-      Column(
+  Widget build(BuildContext context) => Column(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           PopupMenuButton<void>(
-            itemBuilder: (context) =>
-            [
+            itemBuilder: (context) => [
               if (Platform.isLinux)
                 _popUpMenuIconText(
                   icon: Icons.open_in_new,
@@ -624,11 +611,10 @@ class _ActionButtons extends StatelessWidget {
                 label: 'ISBN decoding',
                 onPressed: () {
                   // Pushing a new route here synchronously does nothing as the PopUpMenuButton called a Navigator.pop immediately after to close the PopUpMenu
-                  Future(() =>
-                      Navigator.push(
-                          context,
-                          MaterialPageRoute<void>(
-                              builder: (context) => ISBNDecodingWidget(step: ISBNDecodingStep(bundle: bundle)))));
+                  Future(() => Navigator.push(
+                      context,
+                      MaterialPageRoute<void>(
+                          builder: (context) => ISBNDecodingWidget(step: ISBNDecodingStep(bundle: bundle)))));
                 },
               ),
               _popUpMenuIconText(
@@ -676,8 +662,7 @@ class _ActionButtons extends StatelessWidget {
                   } on Exception catch (e) {
                     if (context.mounted) {
                       print(
-                          'Error. Could not delete bundle. try to rename from ${initialDirectoryLocation
-                              .path} to $destination e = $e');
+                          'Error. Could not delete bundle. try to rename from ${initialDirectoryLocation.path} to $destination e = $e');
                       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                         content: Text('Error. Could not delete bundle'),
                       ));
@@ -688,12 +673,10 @@ class _ActionButtons extends StatelessWidget {
             ],
           ),
           IconButton(
-            onPressed: () =>
-                Navigator.push(
-                    context,
-                    MaterialPageRoute<void>(
-                        builder: (context) =>
-                            BooksMetadataCollectingWidget(step: MetadataCollectingStep(bundle: bundle)))),
+            onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute<void>(
+                    builder: (context) => BooksMetadataCollectingWidget(step: MetadataCollectingStep(bundle: bundle)))),
             icon: const Icon(Icons.send),
             iconSize: 30,
           ),
