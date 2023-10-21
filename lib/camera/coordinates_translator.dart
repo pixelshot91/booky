@@ -1,3 +1,6 @@
+/// Copied from GoogleMLKit barcode example
+/// https://github.com/flutter-ml/google_ml_kit_flutter/blob/f37b45369d86b7f6ce045da39891fb23e0145dda/packages/example/lib/vision_detector_views/painters/coordinates_translator.dart
+
 import 'dart:io';
 import 'dart:ui';
 
