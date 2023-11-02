@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:audioplayers/audioplayers.dart';
 import 'package:booky/common.dart';
 import 'package:booky/isbn_helper.dart';
 import 'package:camera/camera.dart';
@@ -16,6 +17,7 @@ import '../ffi.dart';
 import '../helpers.dart';
 import 'barcode_detection.dart';
 import 'camera_preview_widget.dart';
+import 'draggable_widget.dart';
 
 class CameraWidget extends StatefulWidget {
   const CameraWidget({this.bundleDirToEdit});
@@ -31,7 +33,6 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
   CameraDescription? cameraDescription;
 
   CameraController? _controller;
-  bool _liveDetection = false;
 
   late String bundleName;
 
@@ -153,7 +154,7 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
                     child: Center(
                       child: CameraPreviewWidget(
                         controller: _controller,
-                        liveDetection: _liveDetection,
+                        barcodeScanner: _barcodeScanner,
                         onImageTaken: (img.Image croppedImage) async {
                           await (await getBundleDir).create(recursive: true);
                           final firstUnusedImagePath = await _getFirstUnusedName(await getBundleDir);
@@ -174,7 +175,18 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
                             setState(() {});
                           }
                         },
-                        barcodeScanner: _barcodeScanner,
+                        onBarcodeLiveDetected: (List<Barcode> barcodes) {
+                          _filterBarcode(barcodes).forEach((barcodeString) {
+                            _registeredBarcodes.update(
+                                barcodeString,
+                                (oldDetection) => oldDetection.increaseCounter(() {
+                                      setState(() {});
+                                      AudioPlayer()
+                                          .play(AssetSource('sounds/success.mp3'), mode: PlayerMode.lowLatency);
+                                    }),
+                                ifAbsent: () => UnsureDetection());
+                          });
+                        },
                       ),
                     ),
                   ),
@@ -185,39 +197,13 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
           Expanded(
             child: Padding(
               padding: const EdgeInsets.all(5.0),
-              child: BottomWidget(
-                key: const ValueKey('BottomWidgetKey'),
-                onSubmit: () {
-                  /// The bundle has been edited, go back to BundleSelection
-                  if (widget.bundleDirToEdit != null) {
-                    Navigator.pop(context);
-                    Navigator.pop(context);
-                  } else {
-                    setState(() {
-                      _generateNewFolderPath();
-                      _registeredBarcodes.clear();
-                    });
-                    Navigator.pop(context);
-                  }
-                },
-                onBarcodeDetectStart: () {
-                  print('CameraWidget onBarcodeDetectStart');
-                  setState(() => _liveDetection = true);
-                },
-                onBarcodeDetectStop: () {
-                  print('CameraWidget onBarcodeDetectStop');
-
-                  // setState(() => _liveDetection = false);
-                },
-                // onBarcodeDetectStop: () => setState(() => _liveDetection = false),
-                isbns: _getValidRegisteredBarcodes(),
-              ) /*FutureWidget(
+              child: FutureWidget(
                 future: getBundle,
                 builder: (bundle) => BottomWidget(
                   key: const ValueKey('BottomWidgetKey'),
                   bundle: bundle,
                   onSubmit: () {
-                    /// The bundle has been edited, go back to BundleSelection
+                    /// The bundle has been edited, close pop-up and go back to BundleSelection
                     if (widget.bundleDirToEdit != null) {
                       Navigator.pop(context);
                       Navigator.pop(context);
@@ -229,20 +215,11 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
                       Navigator.pop(context);
                     }
                   },
-                  onBarcodeDetectStart: () {
-                    print('CameraWidget onBarcodeDetectStart');
-                    setState(() => _liveDetection = true);
-                  },
-                  onBarcodeDetectStop: () {
-                    print('CameraWidget onBarcodeDetectStop');
 
-                    // setState(() => _liveDetection = false);
-                  },
                   // onBarcodeDetectStop: () => setState(() => _liveDetection = false),
                   isbns: _getValidRegisteredBarcodes(),
                 ),
-              )*/
-              ,
+              ),
             ),
           ),
         ],
@@ -420,17 +397,13 @@ String _numberToImgPath(Directory bundlePath, int index) {
 class BottomWidget extends StatefulWidget {
   const BottomWidget({
     required super.key,
-    // required this.bundle,
+    required this.bundle,
     required this.onSubmit,
-    required this.onBarcodeDetectStart,
-    required this.onBarcodeDetectStop,
     required this.isbns,
   });
 
-  // final Bundle bundle;
+  final Bundle bundle;
   final void Function() onSubmit;
-  final void Function() onBarcodeDetectStart;
-  final void Function() onBarcodeDetectStop;
   final List<String> isbns;
 
   @override
@@ -449,7 +422,7 @@ class _BottomWidgetState extends State<BottomWidget> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        /*Expanded(
+        Expanded(
             child: FutureWidget(future: () async {
           try {
             return await widget.bundle.images;
@@ -461,45 +434,18 @@ class _BottomWidgetState extends State<BottomWidget> {
             return const Center(child: Text('Tap the camera preview to take a picture'));
           }
           return _thumbnailWidget(images);
-        })),*/
+        })),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: <Widget>[
-            _barcodeDetectionButton(),
-            // _addMetadataButton(context: context, directory: widget.bundle.directory, onSubmit: widget.onSubmit),
+            _addMetadataButton(context: context, directory: widget.bundle.directory, onSubmit: widget.onSubmit),
           ],
         ),
       ],
     );
   }
 
-  Widget _barcodeDetectionButton() {
-    return GestureDetector(
-      key: const ValueKey('_barcodeDetectionButtonGestureDetector'),
-      onTapDown: (_) {
-        print('onTapDown');
-        widget.onBarcodeDetectStart();
-      },
-      onTapUp: (_) {
-        print('onTapUp');
-        widget.onBarcodeDetectStop();
-      },
-      onTapCancel: () {
-        print('onTapCancel');
-        widget.onBarcodeDetectStop();
-      },
-      child: AbsorbPointer(
-        child: OutlinedButton.icon(
-          icon: const Icon(Icons.select_all_rounded),
-          onPressed: () {},
-          label: const Text('Live barcode detection'),
-        ),
-      ),
-    );
-  }
-
   /// Display the thumbnail of the captured image or video.
-/*
   Widget _thumbnailWidget(Iterable<FileSystemEntity> images) {
     // FIXME: The drag from DraggableWidget and SingleChildScrollView might conflict with one another
     return SingleChildScrollView(
@@ -540,7 +486,6 @@ class _BottomWidgetState extends State<BottomWidget> {
       ),
     );
   }
-*/
 
   int _pathToNumber(String fullPath) {
     return int.parse(path.basenameWithoutExtension(fullPath));

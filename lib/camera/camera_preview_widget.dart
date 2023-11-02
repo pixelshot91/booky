@@ -9,23 +9,26 @@ import 'package:image/image.dart' as img;
 
 import '../image_helper.dart';
 import 'barcode_detector_painter.dart';
+import 'barcode_live_detection_button.dart';
 import 'centered_track_shape.dart';
 
 /// Display the preview from the camera (or a message if the preview is not available).
 class CameraPreviewWidget extends StatefulWidget {
-  const CameraPreviewWidget({required this.controller,
-    required this.liveDetection,
+  const CameraPreviewWidget({
+    required this.controller,
     required this.onImageTaken,
-    required this.barcodeScanner});
+    required this.barcodeScanner,
+    required this.onBarcodeLiveDetected,
+  });
 
   final CameraController? controller;
-  final bool liveDetection;
   final BarcodeScanner barcodeScanner;
+
+  final void Function(img.Image croppedImage) onImageTaken;
+  final void Function(List<Barcode> barcodes) onBarcodeLiveDetected;
 
   @override
   State<CameraPreviewWidget> createState() => _CameraPreviewWidgetState();
-
-  final void Function(img.Image croppedImage) onImageTaken;
 }
 
 class _CameraPreviewWidgetState extends State<CameraPreviewWidget> {
@@ -40,6 +43,7 @@ class _CameraPreviewWidgetState extends State<CameraPreviewWidget> {
   bool _isBusy = false;
   bool _canProcess = true;
   CustomPaint? _customPaint;
+  bool _liveDetection = false;
 
   @override
   void dispose() {
@@ -53,10 +57,11 @@ class _CameraPreviewWidgetState extends State<CameraPreviewWidget> {
     print('CameraPreviewWidget didUpdateWidget');
 
     // TODO: maybe liveDetection changed
-    if (oldWidget.liveDetection != widget.liveDetection) {
-      print('CameraPreviewWidget didUpdateWidget liveDetectionChanged old ${oldWidget.liveDetection}, new ${widget
-          .liveDetection}');
-    }
+    // if (oldWidget.liveDetection != widget.liveDetection) {
+    //   print(
+    //       'CameraPreviewWidget didUpdateWidget liveDetectionChanged old ${oldWidget.liveDetection}, new ${widget
+    //           .liveDetection}');
+    // }
     if (false) {
       widget.controller!.startImageStream(_processCameraImage);
       widget.controller!.stopImageStream();
@@ -84,19 +89,18 @@ class _CameraPreviewWidgetState extends State<CameraPreviewWidget> {
               child: CameraPreview(
                 cameraController,
                 child: LayoutBuilder(
-                  builder: (context, boxConstraints) =>
-                      GestureDetector(
-                        onTapDown: (TapDownDetails details) async => _onViewFinderTap(details, boxConstraints),
-                        child: AbsorbPointer(
-                          child: Stack(
-                            fit: StackFit.passthrough,
-                            children: [
-                              _viewFinderCropIndicator(),
-                              if (_customPaint != null) _customPaint!,
-                            ],
-                          ),
-                        ),
+                  builder: (context, boxConstraints) => GestureDetector(
+                    onTapDown: (TapDownDetails details) async => _onViewFinderTap(details, boxConstraints),
+                    child: AbsorbPointer(
+                      child: Stack(
+                        fit: StackFit.passthrough,
+                        children: [
+                          _viewFinderCropIndicator(),
+                          if (_customPaint != null) _customPaint!,
+                        ],
                       ),
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -119,6 +123,22 @@ class _CameraPreviewWidgetState extends State<CameraPreviewWidget> {
                     onPressed: _cropValue == 0 ? null : () => setState(() => _cropValue = 0),
                     icon: const Icon(Icons.undo)),
               ],
+            ),
+            BarcodeLiveDetectionButton(
+              onBarcodeDetectStart: () {
+                print('BarcodeLiveDetectionButton onBarcodeDetectStart');
+                setState(() => _liveDetection = true);
+                widget.controller!.startImageStream(_processCameraImage);
+              },
+              onBarcodeDetectStop: () async {
+                print('CameraWidget onBarcodeDetectStop');
+                setState(() => _liveDetection = false);
+                await widget.controller!.stopImageStream();
+                await Future<void>.delayed(const Duration(seconds: 1));
+                setState(() {
+                  _customPaint = null;
+                });
+              },
             ),
           ],
         ),
@@ -243,10 +263,8 @@ class _CameraPreviewWidgetState extends State<CameraPreviewWidget> {
     // in both platforms `rotation` and `camera.lensDirection` can be used to compensate `x` and `y` coordinates on a canvas: https://github.com/flutter-ml/google_ml_kit_flutter/blob/master/packages/example/lib/vision_detector_views/painters/coordinates_translator.dart
     final camera = controller.description;
     final sensorOrientation = camera.sensorOrientation;
-    print(
-        'lensDirection: ${camera.lensDirection}, sensorOrientation: $sensorOrientation, ${controller.value
-            .deviceOrientation} ${controller.value.lockedCaptureOrientation} ${controller.value
-            .isCaptureOrientationLocked}');
+/*    print(
+        'lensDirection: ${camera.lensDirection}, sensorOrientation: $sensorOrientation, ${controller.value.deviceOrientation} ${controller.value.lockedCaptureOrientation} ${controller.value.isCaptureOrientationLocked}');*/
     InputImageRotation? rotation;
     if (Platform.isIOS) {
       rotation = InputImageRotationValue.fromRawValue(sensorOrientation);
@@ -303,6 +321,8 @@ class _CameraPreviewWidgetState extends State<CameraPreviewWidget> {
     if (_isBusy) return;
     _isBusy = true;
     final barcodes = await widget.barcodeScanner.processImage(inputImage);
+
+    widget.onBarcodeLiveDetected(barcodes);
 
     final inputImageMetadata = inputImage.metadata!;
 
