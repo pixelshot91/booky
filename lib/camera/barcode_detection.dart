@@ -1,46 +1,46 @@
-import 'package:audioplayers/audioplayers.dart';
-
 sealed class BarcodeDetection {
   /// The minimum number of time the barcode stream decoder must see a barcode to consider it valid.
   /// Use the prevent false barcode decoding to show up (due to glare, poor image quality)
   static const minBarcodeOccurrence = 20;
 
-  BarcodeDetection increaseCounter();
-  BarcodeDetection makeSure();
+  BarcodeDetection increaseCounter(void Function() onSureTransition);
+
+  BarcodeDetection makeSure(void Function() onSureTransition);
 }
 
 class UnsureDetection implements BarcodeDetection {
   UnsureDetection() : occurrence = 1;
+
   UnsureDetection._(this.occurrence);
+
   int occurrence;
 
   @override
-  BarcodeDetection increaseCounter() {
+  BarcodeDetection increaseCounter(void Function() onSureTransition) {
     if (occurrence < BarcodeDetection.minBarcodeOccurrence - 1) {
       return UnsureDetection._(occurrence + 1);
     } else {
       print('UnsureDetection increaseCounter -> SureDetection');
+      onSureTransition();
       return SureDetection();
     }
   }
 
   @override
-  BarcodeDetection makeSure() => SureDetection();
+  BarcodeDetection makeSure(void Function() onSureTransition) {
+    onSureTransition();
+    return SureDetection();
+  }
 }
 
 class SureDetection implements BarcodeDetection {
-  SureDetection() {
-    print('SureDetection ctor');
-    AudioPlayer().play(AssetSource('sounds/success.mp3'), mode: PlayerMode.lowLatency);
-  }
-
   @override
-  BarcodeDetection increaseCounter() {
+  BarcodeDetection increaseCounter(void Function() onSureTransition) {
     return this;
   }
 
   @override
-  BarcodeDetection makeSure() {
+  BarcodeDetection makeSure(void Function() onSureTransition) {
     return this;
   }
 }

@@ -3,15 +3,16 @@
 * [ ] App-wide: Use an animated splash screen
 * [ ] App-wide: Preserve the splash screen to hide the creation of the main dirs
 * [ ] App-wide: Better handle nonexistent or incorrect metadata file instead of throwing an exception
+* [ ] Device Mounting: On Linux, on app start-up, the app create the directory even if the phone is not mounted
 * [ ] Device Mounting: mount the phone from the app
 * [ ] Device Mounting: Trigger a refresh when a new Android device is connected
 * [ ] Device Mounting: Mount only the right folder to be sure not to mess with other app data, or even Android (look into libfuse --subdir option)
 * [ ] Camera: LiveDetection: show confirmed barcode and pending barcodes in different color. Show a progressBar for the pending barcode
 * [ ] Camera: Reduce latency when cropping picture
 * [ ] Camera: Add sound when deleting a picture
-* [ ] Camera: Fix pictures flickering or being shortly replaced by a spinner each time a picture is taken
 * [ ] Camera: Fix flashlight turning on and never off again
 * [ ] Camera: Camera is still in use when going back to BundleSelection, and even when going to the home screen
+* [ ] BundleSelection: Fix 'See in list' regression where the focus bundle is not the correct one
 * [ ] BundleSelection: Make image load faster (at least on Linux) (use even smaller thumbnail, cache images)
 * [ ] BundleSelection: Add filter by auto_metadata downloaded or not
 * [ ] BundleSelection: Add sort by date picture taken, date published, price
@@ -36,6 +37,7 @@
 
 # DONE
 
+* [x] Camera: Fix pictures flickering or being shortly replaced by a spinner each time a picture is taken
 * [x] BundleSelection: Speed up search bar on Linux: getMergedMetadata seems to be slowed by the maximum Rust thread limit
 * [x] BundleSelection: Speed up search bar on Linux: getMergedMetadata is called for all bundle only once
 * [x] Camera: Fix display of cached deleted picture (take a picture, delete it, take another picture, the first picture is shown)

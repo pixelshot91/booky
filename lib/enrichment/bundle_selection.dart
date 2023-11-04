@@ -455,7 +455,12 @@ class _BundleSelectionState extends State<BundleSelection> {
       case BundleType.deleted:
         text = 'Deleted bundles will show here';
     }
-    return Center(child: Text(text, style: const TextStyle(fontSize: 30, color: Colors.grey)));
+    return Center(
+        child: Text(
+      text,
+      textAlign: TextAlign.center,
+      style: const TextStyle(fontSize: 30, color: Colors.grey),
+    ));
   }
 }
 
@@ -606,6 +611,15 @@ class _ActionButtons extends StatelessWidget {
                   label: 'Open in file explorer',
                   onPressed: () => Process.run('pcmanfm', [bundle.directory.path]),
                 ),
+              _popUpMenuIconText(
+                icon: Icons.camera_alt,
+                label: 'Edit bundle',
+                onPressed: () {
+                  // Pushing a new route here synchronously does nothing as the PopUpMenuButton called a Navigator.pop immediately after to close the PopUpMenu
+                  Future(() => Navigator.push(context,
+                      MaterialPageRoute<void>(builder: (context) => CameraWidget(bundleDirToEdit: bundle.directory))));
+                },
+              ),
               _popUpMenuIconText(
                 icon: Icons.image_search,
                 label: 'ISBN decoding',

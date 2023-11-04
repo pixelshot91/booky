@@ -1,13 +1,10 @@
 import 'dart:async';
 import 'dart:io';
-import 'dart:ui' as ui;
 
 import 'package:audioplayers/audioplayers.dart';
 import 'package:booky/common.dart';
-import 'package:booky/image_helper.dart';
 import 'package:booky/isbn_helper.dart';
 import 'package:camera/camera.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge.dart';
 import 'package:google_mlkit_barcode_scanning/google_mlkit_barcode_scanning.dart';
@@ -19,44 +16,35 @@ import '../common.dart' as common;
 import '../ffi.dart';
 import '../helpers.dart';
 import 'barcode_detection.dart';
-import 'barcode_detector_painter.dart';
+import 'camera_preview_widget.dart';
 import 'draggable_widget.dart';
 
 class CameraWidget extends StatefulWidget {
-  const CameraWidget({Key? key}) : super(key: key);
+  const CameraWidget({this.bundleDirToEdit});
+
+  // Null means create a new bundle
+  final Directory? bundleDirToEdit;
 
   @override
   State<CameraWidget> createState() => _CameraWidgetState();
 }
 
-void _logError(String code, String? message) {
-  // ignore: avoid_print
-  print('Error: $code${message == null ? '' : '\nError Message: $message'}');
-}
-
 class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver, TickerProviderStateMixin {
-  CameraController? controller;
+  CameraDescription? cameraDescription;
+
+  CameraController? _controller;
+
   late String bundleName;
 
-  final BarcodeScanner _barcodeScanner = BarcodeScanner(formats: [BarcodeFormat.ean13]);
-  bool _isBusy = false;
-  bool _canProcessBarcode = true;
-  CustomPaint? _customPaint;
   final Map<String, BarcodeDetection> _registeredBarcodes = {};
 
   // Used to signal when the imageProcessing pipeline finish processing the current frame
   Completer<void>? imageProcessingCompleter;
 
-  // 0 means no crop
-  // toward 1 the image become thinner in width
-  // toward -1 the image become shorter in height
-  double _cropValue = 0;
-
-  // Prevent from cropping more than 80% of the image
-  static const double maxCropRatio = 0.8;
+  final BarcodeScanner _barcodeScanner = BarcodeScanner(formats: [BarcodeFormat.ean13]);
 
   Future<Directory> get getBundleDir async =>
-      (await common.bookyDir()).getDir(BundleType.toPublish).joinDir(bundleName);
+      widget.bundleDirToEdit ?? (await common.bookyDir()).getDir(BundleType.toPublish).joinDir(bundleName);
 
   Future<Bundle> get getBundle async => Bundle(await getBundleDir);
 
@@ -68,30 +56,28 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
   void initState() {
     super.initState();
     _generateNewFolderPath();
-    WidgetsBinding.instance.addObserver(this);
 
     Future(() async {
       try {
         // WidgetsFlutterBinding.ensureInitialized();
-        _cameras = await availableCameras();
+        final cameras = await availableCameras();
+        cameraDescription = cameras.first;
+        _onNewCameraSelected(cameraDescription!);
       } on CameraException catch (e) {
-        _logError(e.code, e.description);
+        _showCameraException(e);
       }
-      _onNewCameraSelected(_cameras.first);
     });
   }
 
   @override
   void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
-    _canProcessBarcode = false;
     _barcodeScanner.close();
     super.dispose();
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    final CameraController? cameraController = controller;
+    final CameraController? cameraController = _controller;
 
     // App state changed before we got the chance to initialize.
     if (cameraController == null || !cameraController.value.isInitialized) {
@@ -117,15 +103,18 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
                   await Future.delayed(const Duration(seconds: 0), () async {
                     await showDialog<void>(
                       context: context,
-                      builder: (BuildContext _) => SimpleDialog(
-                          title: const Text('Select camera'),
-                          children: _cameras
-                              .where((c) => c.lensDirection == CameraLensDirection.back)
-                              .map((c) => SimpleDialogOption(
-                                    onPressed: () => _onNewCameraSelected(c),
-                                    child: Text('Camera ${c.name}'),
-                                  ))
-                              .toList()),
+                      builder: (BuildContext _) => FutureWidget(
+                        future: availableCameras(),
+                        builder: (cameras) => SimpleDialog(
+                            title: const Text('Select camera'),
+                            children: cameras
+                                .where((c) => c.lensDirection == CameraLensDirection.back)
+                                .map((c) => SimpleDialogOption(
+                                      onPressed: () => setState(() => cameraDescription = c),
+                                      child: Text('Camera ${c.name}'),
+                                    ))
+                                .toList()),
+                      ),
                     );
                   });
                 })
@@ -159,7 +148,37 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
                   child: Padding(
                     padding: const EdgeInsets.all(1.0),
                     child: Center(
-                      child: _cameraPreviewWidget(),
+                      child: CameraPreviewWidget(
+                        controller: _controller,
+                        barcodeScanner: _barcodeScanner,
+                        onImageTaken: (img.Image croppedImage) async {
+                          await (await getBundleDir).create(recursive: true);
+                          final firstUnusedImagePath = await _getFirstUnusedName(await getBundleDir);
+                          final res = await img.encodeJpgFile(firstUnusedImagePath, croppedImage);
+                          if (!res) {
+                            print('error while saving cropped image');
+                          }
+
+                          final inputImage = InputImage.fromFilePath(firstUnusedImagePath);
+                          final barcodes = await _barcodeScanner.processImage(inputImage);
+
+                          _filterBarcode(barcodes).forEach((barcodeString) {
+                            _registeredBarcodes
+                                .update(barcodeString, (oldDetection) => oldDetection.makeSure(_onBarcodeDetected),
+                                    ifAbsent: () {
+                              _onBarcodeDetected();
+                              return SureDetection();
+                            });
+                          });
+                        },
+                        onBarcodeLiveDetected: (List<Barcode> barcodes) {
+                          _filterBarcode(barcodes).forEach((barcodeString) {
+                            _registeredBarcodes.update(
+                                barcodeString, (oldDetection) => oldDetection.increaseCounter(_onBarcodeDetected),
+                                ifAbsent: () => UnsureDetection());
+                          });
+                        },
+                      ),
                     ),
                   ),
                 ),
@@ -172,18 +191,20 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
               child: FutureWidget(
                 future: getBundle,
                 builder: (bundle) => BottomWidget(
+                  key: const ValueKey('BottomWidgetKey'),
                   bundle: bundle,
                   onSubmit: () {
-                    setState(() {
-                      _generateNewFolderPath();
-                      _registeredBarcodes.clear();
-                    });
-                    Navigator.pop(context);
-                  },
-                  onBarcodeDetectStart: () => controller!.startImageStream(_processCameraImage),
-                  onBarcodeDetectStop: () async {
-                    controller!.addListener(_listener);
-                    await controller!.stopImageStream();
+                    /// The bundle has been edited, close pop-up and go back to BundleSelection
+                    if (widget.bundleDirToEdit != null) {
+                      Navigator.pop(context);
+                      Navigator.pop(context);
+                    } else {
+                      setState(() {
+                        _generateNewFolderPath();
+                        _registeredBarcodes.clear();
+                      });
+                      Navigator.pop(context);
+                    }
                   },
                   isbns: _getValidRegisteredBarcodes(),
                 ),
@@ -195,179 +216,34 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
     );
   }
 
-  // Even if we await the stopImageStream, there might still be an instance f _processCameraImage processing a frame
-  // So _listener is called until the streaming stops, and the last frame has been processed
-  // Only then should we remove the _customPaint
-  void _listener() async {
-    // No new frame are added into the pipeline
-    if (controller!.value.isStreamingImages == false) {
-      controller!.removeListener(_listener);
-
-      if (_isBusy) {
-        imageProcessingCompleter = Completer();
-        // The current frame is finished processing
-        await imageProcessingCompleter!.future;
-        imageProcessingCompleter = null;
-      }
-      setState(() {
-        _customPaint = null;
-      });
+  void _onBarcodeDetected() {
+    // Refresh the barcode list
+    if (mounted) {
+      setState(() {});
     }
-  }
-
-  /// Display the preview from the camera (or a message if the preview is not available).
-  Widget _cameraPreviewWidget() {
-    final CameraController? cameraController = controller;
-
-    if (cameraController == null || !cameraController.value.isInitialized) {
-      return const Text(
-        'Tap a camera',
-        style: TextStyle(
-          color: Colors.white,
-          fontSize: 24.0,
-          fontWeight: FontWeight.w900,
-        ),
-      );
-    } else {
-      return Center(
-        child: Column(
-          children: [
-            Expanded(
-              child: CameraPreview(
-                cameraController,
-                child: LayoutBuilder(
-                  builder: (context, boxConstraints) => GestureDetector(
-                    onTapDown: (TapDownDetails details) async {
-                      print('TapDownDetails');
-                      _onViewFinderTap(details, boxConstraints);
-                      // The auto focus is not instantaneous. We must wait a little while before taking the picture
-                      // In release mode, if we
-                      // wait 100 ms : blurry
-                      // wait 300 ms : sharp
-                      // The optimum delay shall lie between the bounds
-                      await Future<void>.delayed(const Duration(milliseconds: 300));
-                      _onTakePictureButtonPressed();
-                    },
-                    child: AbsorbPointer(
-                      child: Stack(
-                        fit: StackFit.passthrough,
-                        children: [
-                          _viewFinderCropIndicator(),
-                          if (_customPaint != null) _customPaint!,
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            Row(
-              children: [
-                Expanded(
-                  child: SliderTheme(
-                    data: SliderThemeData(
-                        trackShape: const CenteredTrackShape(),
-                        thumbColor: _cropValue == 0 ? Colors.blue.shade200 : Colors.blue),
-                    child: Slider(
-                        min: -maxCropRatio,
-                        max: maxCropRatio,
-                        value: _cropValue,
-                        onChanged: (newValue) => setState(() => _cropValue = newValue)),
-                  ),
-                ),
-                IconButton(
-                    tooltip: 'Use full frame',
-                    onPressed: _cropValue == 0 ? null : () => setState(() => _cropValue = 0),
-                    icon: const Icon(Icons.undo)),
-              ],
-            ),
-          ],
-        ),
-      );
-    }
-  }
-
-  // <-- croppedFraction / 2 --> | <-- AOI (Area of Interest) --> | <-- croppedFraction / 2 -->
-  Widget _viewFinderCropIndicator() {
-    // flex factor is an int, so multiply all flex value by this amount to emulate double
-    const intToDouble = 1000;
-
-    final disabledColor = Colors.grey.withOpacity(0.6);
-    final croppedFraction = _cropValue.abs();
-    // ignore: non_constant_identifier_names
-    final AOIFraction = (1 - croppedFraction);
-
-    final croppedFlex = croppedFraction * intToDouble;
-    // ignore: non_constant_identifier_names
-    final AOIFlex = (AOIFraction * intToDouble).toInt();
-    return Flex(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      direction: _cropValue > 0 ? Axis.horizontal : Axis.vertical,
-      children: [
-        Expanded(
-            flex: croppedFlex ~/ 2,
-            child: ColoredBox(
-              color: disabledColor,
-            )),
-        Expanded(flex: AOIFlex, child: const SizedBox.shrink()),
-        Expanded(
-            flex: croppedFlex ~/ 2,
-            child: ColoredBox(
-              color: disabledColor,
-            )),
-      ],
-    );
-  }
-
-  void showInSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
-  }
-
-  void _onViewFinderTap(TapDownDetails details, BoxConstraints constraints) {
-    if (controller == null) {
-      return;
-    }
-
-    final CameraController cameraController = controller!;
-
-    final Offset offset = Offset(
-      details.localPosition.dx / constraints.maxWidth,
-      details.localPosition.dy / constraints.maxHeight,
-    );
-    cameraController.setExposurePoint(offset);
-    cameraController.setFocusPoint(offset);
+    AudioPlayer().play(AssetSource('sounds/success.mp3'), mode: PlayerMode.lowLatency);
   }
 
   Future<void> _onNewCameraSelected(CameraDescription cameraDescription) async {
-    final CameraController? oldController = controller;
+    final CameraController? oldController = _controller;
     if (oldController != null) {
       // `controller` needs to be set to null before getting disposed,
       // to avoid a race condition when we use the controller that is being
       // disposed. This happens when camera permission dialog shows up,
       // which triggers `didChangeAppLifecycleState`, which disposes and
       // re-creates the controller.
-      controller = null;
+      _controller = null;
       await oldController.dispose();
     }
     final CameraController cameraController = CameraController(
       cameraDescription,
-      ResolutionPreset.max,
-      // If the imageFormatGroup is specified, the stream processing does not work anymore
-      // It seems that the default format for still picture is jpeg, bu the default format for streaming is not
-      // imageFormatGroup: ImageFormatGroup.jpeg,
+      // Set to ResolutionPreset.high. Do NOT set it to ResolutionPreset.max because for some phones does NOT work.
+      ResolutionPreset.high,
+      enableAudio: false,
+      imageFormatGroup: Platform.isAndroid ? ImageFormatGroup.nv21 : ImageFormatGroup.bgra8888,
     );
 
-    controller = cameraController;
-
-    // If the controller is updated then update the UI.
-    cameraController.addListener(() {
-      if (mounted) {
-        setState(() {});
-      }
-      if (cameraController.value.hasError) {
-        showInSnackBar('Camera error ${cameraController.value.errorDescription}');
-      }
-    });
+    _controller = cameraController;
 
     try {
       await cameraController.initialize();
@@ -407,150 +283,14 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
     }
   }
 
-  Future<void> _processCameraImage(CameraImage image) async {
-    final WriteBuffer allBytes = WriteBuffer();
-    for (final Plane plane in image.planes) {
-      allBytes.putUint8List(plane.bytes);
-    }
-    final bytes = allBytes.done().buffer.asUint8List();
-
-    final ui.Size imageSize = ui.Size(image.width.toDouble(), image.height.toDouble());
-
-    final camera = controller!.description;
-    final imageRotation = InputImageRotationValue.fromRawValue(camera.sensorOrientation);
-    if (imageRotation == null) return;
-
-    final inputImageFormat = InputImageFormatValue.fromRawValue(image.format.raw as int);
-    if (inputImageFormat == null) return;
-
-    final planeData = image.planes.map(
-      (Plane plane) {
-        return InputImagePlaneMetadata(
-          bytesPerRow: plane.bytesPerRow,
-          height: plane.height,
-          width: plane.width,
-        );
-      },
-    ).toList();
-
-    final inputImageData = InputImageData(
-      size: imageSize,
-      imageRotation: imageRotation,
-      inputImageFormat: inputImageFormat,
-      planeData: planeData,
-    );
-
-    final inputImage = InputImage.fromBytes(bytes: bytes, inputImageData: inputImageData);
-
-    _extractBarcodeFromImage(inputImage);
-  }
-
-  Future<void> _extractBarcodeFromImage(InputImage inputImage) async {
-    if (_isBusy) return;
-    _isBusy = true;
-    if (_canProcessBarcode) {
-      final barcodes = await _barcodeScanner.processImage(inputImage);
-      if (inputImage.inputImageData?.size != null && inputImage.inputImageData?.imageRotation != null) {
-        final painter =
-            BarcodeDetectorPainter(barcodes, inputImage.inputImageData!.size, inputImage.inputImageData!.imageRotation);
-        _customPaint = CustomPaint(painter: painter);
-
-        _filterBarcode(barcodes).forEach((barcodeString) {
-          _registeredBarcodes.update(barcodeString, (oldDetection) => oldDetection.increaseCounter(),
-              ifAbsent: () => UnsureDetection());
-        });
-      }
-    }
-    if (mounted) {
-      setState(() {});
-    }
-    imageProcessingCompleter?.complete();
-
-    _isBusy = false;
-  }
-
   Iterable<String> _filterBarcode(Iterable<Barcode> barcodes) => barcodes
       .where((barcode) => barcode.type == BarcodeType.isbn)
       .map((barcode) => barcode.displayValue)
       .whereType<String>();
 
-  void _onTakePictureButtonPressed() {
-    takePicture().then((XFile? file) async {
-      if (file == null) {
-        return;
-      }
-
-      AudioPlayer().play(AssetSource('sounds/take_picture.mp3'), mode: PlayerMode.lowLatency);
-
-      await (await getBundleDir).create(recursive: true);
-      final firstUnusedImagePath = await _getFirstUnusedName(await getBundleDir);
-
-      if (_cropValue != 0) {
-        final croppedImage = await crop(file, _cropValue);
-        final res = await img.encodeJpgFile(firstUnusedImagePath, croppedImage);
-        if (!res) {
-          print('error while saving cropped image');
-        }
-      } else {
-        file.saveTo(firstUnusedImagePath);
-      }
-
-      final inputImage = InputImage.fromFilePath(file.path);
-      final barcodes = await _barcodeScanner.processImage(inputImage);
-
-      _filterBarcode(barcodes).forEach((barcodeString) {
-        _registeredBarcodes.update(barcodeString, (oldDetection) => oldDetection.makeSure(),
-            ifAbsent: () => SureDetection());
-      });
-
-      if (mounted) {
-        setState(() {});
-      }
-    });
-  }
-
   Future<String> _getFirstUnusedName(Directory dir) async {
     final numberOfImages = (await (await getBundle).images).length;
     return _numberToImgPath((await getBundleDir), numberOfImages);
-  }
-
-  Future<void> onCaptureOrientationLockButtonPressed() async {
-    try {
-      if (controller != null) {
-        final CameraController cameraController = controller!;
-        if (cameraController.value.isCaptureOrientationLocked) {
-          await cameraController.unlockCaptureOrientation();
-          showInSnackBar('Capture orientation unlocked');
-        } else {
-          await cameraController.lockCaptureOrientation();
-          showInSnackBar(
-              'Capture orientation locked to ${cameraController.value.lockedCaptureOrientation.toString().split('.').last}');
-        }
-      }
-    } on CameraException catch (e) {
-      _showCameraException(e);
-    }
-  }
-
-  Future<XFile?> takePicture() async {
-    final CameraController? cameraController = controller;
-    if (cameraController == null || !cameraController.value.isInitialized) {
-      showInSnackBar('Error: select a camera first.');
-      return null;
-    }
-
-    if (cameraController.value.isTakingPicture) {
-      // A capture is already pending, do nothing.
-      return null;
-    }
-
-    try {
-      final XFile file = await cameraController.takePicture();
-      return file;
-    } on CameraException catch (e) {
-      _showCameraException(e);
-      return null;
-    }
   }
 
   void _showCameraException(CameraException e) {
@@ -558,76 +298,19 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
     showInSnackBar('Error: ${e.code}\n${e.description}');
   }
 
+  void _logError(String code, String? message) {
+    // ignore: avoid_print
+    print('Error: $code${message == null ? '' : '\nError Message: $message'}');
+  }
+
+  void showInSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+  }
+
   List<String> _getValidRegisteredBarcodes() => _registeredBarcodes.entries
       .where((entry) => isbnValidator(entry.key) == null && entry.value is SureDetection)
       .map((e) => e.key)
       .toList();
-}
-
-class CenteredTrackShape extends RoundedRectSliderTrackShape {
-  const CenteredTrackShape();
-
-  @override
-  void paint(
-    PaintingContext context,
-    Offset offset, {
-    required RenderBox parentBox,
-    required SliderThemeData sliderTheme,
-    required Animation<double> enableAnimation,
-    required TextDirection textDirection,
-    required Offset thumbCenter,
-    Offset? secondaryOffset,
-    bool isDiscrete = false,
-    bool isEnabled = false,
-    double additionalActiveTrackHeight = 2,
-  }) {
-    assert(sliderTheme.disabledActiveTrackColor != null);
-    assert(sliderTheme.disabledInactiveTrackColor != null);
-    assert(sliderTheme.activeTrackColor != null);
-    assert(sliderTheme.inactiveTrackColor != null);
-    assert(sliderTheme.thumbShape != null);
-    // If the slider [SliderThemeData.trackHeight] is less than or equal to 0,
-    // then it makes no difference whether the track is painted or not,
-    // therefore the painting can be a no-op.
-    if (sliderTheme.trackHeight == null || sliderTheme.trackHeight! <= 0) {
-      return;
-    }
-
-    // Assign the track segment paints, which are leading: active and
-    // trailing: inactive.
-    final ColorTween activeTrackColorTween =
-        ColorTween(begin: sliderTheme.disabledActiveTrackColor, end: sliderTheme.activeTrackColor);
-    final ColorTween inactiveTrackColorTween =
-        ColorTween(begin: sliderTheme.disabledInactiveTrackColor, end: sliderTheme.inactiveTrackColor);
-    final Paint activePaint = Paint()..color = activeTrackColorTween.evaluate(enableAnimation)!;
-    final Paint inactivePaint = Paint()..color = inactiveTrackColorTween.evaluate(enableAnimation)!;
-
-    final Rect trackRect = getPreferredRect(
-      parentBox: parentBox,
-      offset: offset,
-      sliderTheme: sliderTheme,
-      isEnabled: isEnabled,
-      isDiscrete: isDiscrete,
-    );
-    final Radius trackRadius = Radius.circular(trackRect.height / 2);
-    final Radius activeTrackRadius = Radius.circular((trackRect.height + additionalActiveTrackHeight) / 2);
-
-    context.canvas.drawRRect(
-      RRect.fromRectAndRadius(trackRect, activeTrackRadius),
-      inactivePaint,
-    );
-    context.canvas.drawRRect(
-      RRect.fromLTRBAndCorners(
-        trackRect.center.dx,
-        trackRect.top,
-        thumbCenter.dx,
-        trackRect.bottom,
-        topRight: trackRadius,
-        bottomRight: trackRadius,
-      ),
-      activePaint,
-    );
-  }
 }
 
 String _numberToImgPath(Directory bundlePath, int index) {
@@ -638,17 +321,14 @@ String _numberToImgPath(Directory bundlePath, int index) {
 
 class BottomWidget extends StatefulWidget {
   const BottomWidget({
+    required super.key,
     required this.bundle,
     required this.onSubmit,
-    required this.onBarcodeDetectStart,
-    required this.onBarcodeDetectStop,
     required this.isbns,
   });
 
   final Bundle bundle;
   final void Function() onSubmit;
-  final void Function() onBarcodeDetectStart;
-  final void Function() onBarcodeDetectStop;
   final List<String> isbns;
 
   @override
@@ -656,6 +336,12 @@ class BottomWidget extends StatefulWidget {
 }
 
 class _BottomWidgetState extends State<BottomWidget> {
+  @override
+  void initState() {
+    print('XXX _BottomWidgetState initState');
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -677,26 +363,10 @@ class _BottomWidgetState extends State<BottomWidget> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: <Widget>[
-            _barcodeDetectionButton(),
             _addMetadataButton(context: context, directory: widget.bundle.directory, onSubmit: widget.onSubmit),
           ],
         ),
       ],
-    );
-  }
-
-  Widget _barcodeDetectionButton() {
-    return GestureDetector(
-      onTapDown: (_) => widget.onBarcodeDetectStart(),
-      onTapUp: (_) => widget.onBarcodeDetectStop(),
-      onTapCancel: () => widget.onBarcodeDetectStop(),
-      child: AbsorbPointer(
-        child: OutlinedButton.icon(
-          icon: const Icon(Icons.select_all_rounded),
-          onPressed: () {},
-          label: const Text('Live barcode detection'),
-        ),
-      ),
     );
   }
 
@@ -850,5 +520,3 @@ class _MetadataWidgetState extends State<MetadataWidget> {
     );
   }
 }
-
-List<CameraDescription> _cameras = <CameraDescription>[];
