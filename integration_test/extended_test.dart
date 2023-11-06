@@ -15,10 +15,6 @@ import 'package:integration_test/integration_test.dart';
 
 import '_extended_test_io.dart' if (dart.library.html) '_extended_test_web.dart' as tests;
 
-String? maybeFromEnv(String name) {
-  return bool.hasEnvironment(name) ? String.fromEnvironment(name) : null;
-}
-
 // TODO: I would like to give the name of the test to run as parameter to run only some test
 //  But it's difficult to pass argument to this main
 //  The argument list of main is always empty

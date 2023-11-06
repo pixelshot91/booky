@@ -93,6 +93,20 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
 
   @override
   Widget build(BuildContext context) {
+    Widget showBarcodeList() {
+      return Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Column(
+          children: _getValidRegisteredBarcodes()
+              .map((barcode) => BarcodeLabel(
+                    barcode,
+                    onDeletePressed: () => setState(() => _registeredBarcodes.remove(barcode)),
+                  ))
+              .toList(),
+        ),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(title: const Text('Booky Camera app'), actions: [
         PopupMenuButton<void>(
@@ -128,21 +142,7 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
               children: [
                 SizedBox(
                   width: 180,
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Column(
-                      children: _getValidRegisteredBarcodes()
-                          .map((barcode) => Row(
-                                children: [
-                                  Expanded(child: Text(barcode, style: const TextStyle(fontWeight: FontWeight.bold))),
-                                  IconButton(
-                                      onPressed: () => setState(() => _registeredBarcodes.remove(barcode)),
-                                      icon: const Icon(Icons.delete))
-                                ],
-                              ))
-                          .toList(),
-                    ),
-                  ),
+                  child: showBarcodeList(),
                 ),
                 Expanded(
                   child: Padding(
@@ -170,6 +170,7 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
                               return SureDetection();
                             });
                           });
+                          setState(() {});
                         },
                         onBarcodeLiveDetected: (List<Barcode> barcodes) {
                           _filterBarcode(barcodes).forEach((barcodeString) {
@@ -426,6 +427,23 @@ class _BottomWidgetState extends State<BottomWidget> {
             builder: (BuildContext context) =>
                 MetadataWidget(directory: directory, isbns: widget.isbns, onSubmit: onSubmit)),
       );
+}
+
+class BarcodeLabel extends StatelessWidget {
+  const BarcodeLabel(this.barcode, {required this.onDeletePressed});
+
+  final String barcode;
+  final void Function() onDeletePressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(child: Text(barcode, style: const TextStyle(fontWeight: FontWeight.bold))),
+        IconButton(onPressed: onDeletePressed, icon: const Icon(Icons.delete))
+      ],
+    );
+  }
 }
 
 class MetadataWidget extends StatefulWidget {

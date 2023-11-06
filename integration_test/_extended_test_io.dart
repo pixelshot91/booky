@@ -1,9 +1,8 @@
-// Copyright 2014 The Flutter Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
-
+import 'package:booky/camera/camera.dart';
+import 'package:booky/camera/draggable_widget.dart';
 import 'package:booky/enrichment/bundle_selection.dart';
 import 'package:booky/main.dart' as app;
+import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
@@ -15,6 +14,7 @@ void main() {
     'basic_screenshot': basicScreenshot,
     'searchbar': searchBar,
     'add_isbn': addIsbn,
+    'camera_take_picture': cameraTakePicture,
   };
   for (final test in tests.values) {
     test(binding);
@@ -210,5 +210,59 @@ void basicScreenshot(IntegrationTestWidgetsFlutterBinding binding) {
     await tester.pumpAndSettle(const Duration(seconds: 1));
 
     await ss.capture('back_to_home');
+  });
+}
+
+void cameraTakePicture(IntegrationTestWidgetsFlutterBinding binding) {
+  final ss = Screenshotter(binding, 'camera_take_picture');
+
+  testWidgets('verify screenshot', (WidgetTester tester) async {
+    app.main();
+    await binding.convertFlutterSurfaceToImage();
+
+    // Pump a frame before taking the screenshot.
+    await tester.pumpAndSettle();
+    await ss.capture('home');
+
+    final cameraIconFinder = find.byIcon(Icons.camera);
+    expect(cameraIconFinder, findsOneWidget);
+
+    await tester.tap(cameraIconFinder);
+    await tester.pumpAndSettle(const Duration(seconds: 1));
+    await ss.capture('Camera');
+
+    final barcodeLabelFinder = find.byType(BarcodeLabel);
+    expect(barcodeLabelFinder, findsNothing);
+    final draggableWidgetFinder = find.byType(DraggableWidget);
+    expect(draggableWidgetFinder, findsNothing);
+
+    final cameraPreviewFinder = find.byType(CameraPreview);
+    expect(cameraPreviewFinder, findsOneWidget);
+
+    await tester.tap(cameraPreviewFinder);
+    await tester.pumpAndSettle(const Duration(seconds: 5));
+    await ss.capture('after_taking_picture');
+
+    expect(draggableWidgetFinder, findsOneWidget);
+
+    expect(barcodeLabelFinder, findsOneWidget);
+    expect(
+        find.descendant(
+          of: barcodeLabelFinder,
+          matching: find.text('9782246247616'),
+        ),
+        findsOneWidget);
+
+    await tester.tap(find.descendant(of: barcodeLabelFinder, matching: find.byIcon(Icons.delete)));
+    await tester.pumpAndSettle(const Duration(seconds: 1));
+    expect(barcodeLabelFinder, findsNothing);
+    await ss.capture('after_delete_isbn');
+
+    await tester.drag(draggableWidgetFinder, const Offset(0, -60));
+    await tester.pumpAndSettle(const Duration(seconds: 1));
+    expect(draggableWidgetFinder, findsNothing);
+    await ss.capture('after_delete_image');
+
+    await tester.pageBack();
   });
 }

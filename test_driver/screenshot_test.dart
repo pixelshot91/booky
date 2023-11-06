@@ -3,16 +3,12 @@ import 'dart:io';
 import 'package:integration_test/integration_test_driver_extended.dart';
 
 Future<void> main(List<String> args) async {
- /* print('args : ${args}');
-  print('exearg: ${Platform.executableArguments}');
-  print('exe: ${Platform.executable}');
-  print('env: ${Platform.environment}');
-  const ss = String.fromEnvironment('target');
-
-
-
-  print('ss = $ss');
-  */
+  // Every `flutter drive` run on a freshly installed app, with no permission enabled by default
+  // Grant all the necessary permission first to avoid the permission pop-up
+  await Process.run(
+    'adb',
+    ['shell', 'pm', 'grant', 'fr.pimoid.booky.debug', 'android.permission.CAMERA'],
+  );
   final screenshotDir = Platform.environment['screenshot_dir'];
   try {
     await integrationDriver(
