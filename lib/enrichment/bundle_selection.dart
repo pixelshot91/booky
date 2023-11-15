@@ -34,6 +34,13 @@ PopupMenuItem<void> _popUpMenuIconText(
           ],
         ));
 
+class BundleMetaDataWithIndex {
+  BundleMetaDataWithIndex(this.index, this.md);
+
+  final int index;
+  final BundleMetaData? md;
+}
+
 class CustomSearchHintDelegate extends SearchDelegate<String> {
   CustomSearchHintDelegate({
     required String hintText,
@@ -44,7 +51,7 @@ class CustomSearchHintDelegate extends SearchDelegate<String> {
           keyboardType: TextInputType.text,
           textInputAction: TextInputAction.search,
         );
-  final Future<List<(int, BundleMetaData?)>?> bundlesWithMD;
+  final Future<List<BundleMetaDataWithIndex>?> bundlesWithMD;
 
   AutoScrollController bundlesScrollController;
 
@@ -108,18 +115,18 @@ class CustomSearchHintDelegate extends SearchDelegate<String> {
           }
 
           final bundlesMatchingISBN = matchOnISBN
-              ? bundlesWithMD.where((b) => b.$2?.books.any((book) => book.isbn.contains(query)) ?? false)
-              : const Iterable<(int, BundleMetaData?)>.empty();
+              ? bundlesWithMD.where((b) => b.md?.books.any((book) => book.isbn.contains(query)) ?? false)
+              : const Iterable<BundleMetaDataWithIndex>.empty();
           final bundlesMatchingTitle = matchOnTitle
               ? bundlesWithMD
-                  .where((b) => b.$2?.books.any((book) => book.title?.containsIgnoringCase(query) ?? false) ?? false)
-              : const Iterable<(int, BundleMetaData?)>.empty();
-          final Iterable<(int, BundleMetaData?)> bundlesMatchingAuthor = matchOnAuthor
+                  .where((b) => b.md?.books.any((book) => book.title?.containsIgnoringCase(query) ?? false) ?? false)
+              : const Iterable<BundleMetaDataWithIndex>.empty();
+          final Iterable<BundleMetaDataWithIndex> bundlesMatchingAuthor = matchOnAuthor
               ? bundlesWithMD.where((b) =>
-                  b.$2?.books.any((book) => book.authors
+                  b.md?.books.any((book) => book.authors
                       .any((author) => '${author.firstName} ${author.lastName}'.containsIgnoringCase(query))) ??
                   false)
-              : const Iterable<(int, BundleMetaData?)>.empty();
+              : const Iterable<BundleMetaDataWithIndex>.empty();
           final bundleMatching = bundlesMatchingISBN.followedBy(bundlesMatchingTitle).followedBy(bundlesMatchingAuthor);
           return ListView.builder(
             itemBuilder: (context, index) {
@@ -132,15 +139,15 @@ class CustomSearchHintDelegate extends SearchDelegate<String> {
                     children: [
                       Expanded(
                         child: Text(
-                          b.$2?.books.firstOrNull?.title ?? 'None',
+                          b.md?.books.firstOrNull?.title ?? 'None',
                         ),
                       ),
                       TextButton(
                           onPressed: () async {
                             Navigator.of(context).pop();
-                            await bundlesScrollController.scrollToIndex(b.$1,
+                            await bundlesScrollController.scrollToIndex(b.index,
                                 preferPosition: AutoScrollPosition.middle);
-                            await bundlesScrollController.highlight(b.$1);
+                            await bundlesScrollController.highlight(b.index);
                           },
                           child: const Text('See in list')),
                     ],
@@ -200,10 +207,10 @@ class _BundleSelectionState extends State<BundleSelection> {
               icon: const Icon(Icons.search),
               onPressed: () {
                 // Process all the bundleMD once when the searchbar open
-                final bundlesWithMD = Future<List<(int, BundleMetaData?)>?>(() async {
+                final bundlesWithMD = Future<List<BundleMetaDataWithIndex>?>(() async {
                   final bundlesDir = (await common.bookyDir()).getDir(bundleType);
                   final mds = await api.getMergedMetadataForAllBundles(bundlesDir: bundlesDir.path);
-                  return mds.mapIndexed((index, element) => (index, element)).toList();
+                  return mds.mapIndexed((index, element) => BundleMetaDataWithIndex(index, element)).toList();
                 });
                 showSearch(
                     context: context,

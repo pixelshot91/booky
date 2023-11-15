@@ -10,9 +10,9 @@ use std::vec;
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 
-use crate::{abebooks, babelio, booksprice, fs_helper, google_books, justbooks, leslibraires};
 use crate::client::Client;
 use crate::common::{self};
+use crate::{abebooks, babelio, booksprice, fs_helper, google_books, justbooks, leslibraires};
 
 #[derive(EnumIter, PartialEq, Eq, Hash, Debug, Deserialize, Serialize, Copy, Clone)]
 pub enum ProviderEnum {
@@ -45,8 +45,8 @@ pub fn detect_barcode_in_image(img_path: String) -> Result<BarcodeDetectResults>
     let output = std::process::Command::new(
         "/home/julien/Perso/LeBonCoin/chain_automatisation/booky/native/detect_barcode",
     )
-        .arg(format!("--in={}", img_path))
-        .output()?;
+    .arg(format!("--in={}", img_path))
+    .output()?;
 
     if !output.status.success() {
         println!("status: {}", output.status);
@@ -259,7 +259,9 @@ pub fn set_manual_metadata_for_bundle(
 }
 
 /// Use tokio async to get all the data faster than just calling many times [`get_merged_metadata_for_bundle`]
-pub fn get_merged_metadata_for_all_bundles(bundles_dir: String) -> Result<Vec<Option<BundleMetaData>>> {
+pub fn get_merged_metadata_for_all_bundles(
+    bundles_dir: String,
+) -> Result<Vec<Option<BundleMetaData>>> {
     tokio::runtime::Builder::new_multi_thread()
         .enable_all()
         .build()
@@ -267,18 +269,23 @@ pub fn get_merged_metadata_for_all_bundles(bundles_dir: String) -> Result<Vec<Op
         .block_on(async {
             let read_dir = std::fs::read_dir(bundles_dir)?;
             let mds_future = read_dir.map(|dir| async {
-                let bundle_path = dir.unwrap().path().to_str().unwrap().to_owned();
+                let dir_entry = &dir.unwrap();
+                let bundle_path = dir_entry.path().to_str().unwrap().to_owned();
                 // Using spawn_blocking is fine to use with synchronous IO
                 // It avoid to rewrite get_manual_metadata_for_bundle with async
-                tokio::task::spawn_blocking(|| {
+                let md = tokio::task::spawn_blocking(|| {
                     let md = crate::api::get_merged_metadata_for_bundle(bundle_path);
                     md.ok()
                 })
-                    .await
-                    .unwrap()
+                .await
+                .unwrap();
+                (dir_entry.file_name(), md)
             });
-            let res = join_all(mds_future).await;
-            Ok(res)
+            let mut md_with_name = join_all(mds_future).await;
+            md_with_name
+                .sort_by(|(dir_name1, _md1), (dir_name2, _md2)| dir_name1.cmp(dir_name2));
+            let sorted_md = md_with_name.into_iter().map(|(_, b)| b).collect_vec();
+            Ok(sorted_md)
         })
 }
 
@@ -380,8 +387,8 @@ fn replace_with_longest_string_if_none_or_empty<F1>(
         auto_mds: Option<&HashMap<ProviderEnum, Option<common::BookMetaDataFromProvider>>>,
         string_getter: F1,
     ) -> Option<String>
-        where
-            F1: Fn(&common::BookMetaDataFromProvider) -> &Option<String>,
+    where
+        F1: Fn(&common::BookMetaDataFromProvider) -> &Option<String>,
     {
         auto_mds?
             .values()
