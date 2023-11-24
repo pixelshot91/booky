@@ -107,5 +107,46 @@ Follow the instruction of flutter_rust_bridge_template. Here is an extract
 #### super_native_extension
 Follow this tutorial: https://pub.dev/packages/super_clipboard
 
+#### Launching the test suite
+##### OBS
+###### Setup of Virtual camera
+OBS home page: <https://obsproject.com/>
+
+Some test require to simulate a camera. Booky use OBS virtual camera to mock the real camera.
+OBS virtual camera need v4l2loopback module which may not be enabled.
+
+If it is not enabled, you should see this log when launching OBS:
+```
+warning: v4l2loopback not installed, virtual camera disabled
+```
+And the button `Start virutal camera` will not appear.
+
+To enable it, run
+```shell
+sudo modprobe v4l2loopback
+```
+and relaunch OBS.
+
+###### Setup of android emulator
+
+In the Android Virtual Device settings, select "webcam0" for both front and back camera
+
+The android camera app will always rash, but Booky should work fine.
+
+If in Booky the camera list is empty, stop OBS virtual cam, then execute:
+```
+echo "options v4l2loopback devices=1 video_nr=63 card_label='OBS Virtual Camera'    exclusive_caps=1" | sudo tee /etc/modprobe.d/v4l2loopback.conf
+echo "v4l2loopback" | sudo tee /etc/modules-load.d/v4l2loopback.conf
+sudo modprobe -r v4l2loopback
+sudo modprobe v4l2loopback devices=63 video_nr=13 card_label='OBS Virtual Camera' exclusive_caps=1
+```
+
+then restart virtual cam and cold boot the emulator.
+
+###### Importing scene
+OBS does not provide a convenient way to create portable scene, because all scene contain absolute path to the sources.
+To be able to use relative path, Booky use OBS Scene Transporter.
+<https://github.com/pixelshot91/obs-scene-transporter>
+
 # License
 [Icon by Freepik](https://www.freepik.com/icon/books_562132)
