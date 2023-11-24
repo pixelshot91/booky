@@ -12,7 +12,6 @@
 * [ ] Camera: Add sound when deleting a picture
 * [ ] Camera: Fix flashlight turning on and never off again
 * [ ] Camera: Camera is still in use when going back to BundleSelection, and even when going to the home screen
-* [ ] BundleSelection: Fix 'See in list' regression where the focus bundle is not the correct one
 * [ ] BundleSelection: Make image load faster (at least on Linux) (use even smaller thumbnail, cache images)
 * [ ] BundleSelection: Add filter by auto_metadata downloaded or not
 * [ ] BundleSelection: Add sort by date picture taken, date published, price
@@ -31,12 +30,13 @@
 * [ ] AdEditing: Fix drag-and-drop crash on Android
 * [ ] Search with Selenium in headless mode
 * [ ] Test: Launch github action runner without opening graphical interface (use -no-boot-anim  -no-window)
-* [ ] Test: CI: Prevent running the CI twice: on pull-request, then on push. See https://github.com/marketplace/actions/skip-duplicate-actions
 * [ ] Test: CI show false success when a step with continue-on-error fails
 * [ ] Test: CI save screenshots as artifact and compare them with the one in extra/screenshots/ to check for regression
 
 # DONE
 
+* [x] BundleSelection: Fix 'See in list' regression where the focus bundle is not the correct one
+* [x] Test: CI: Prevent running the CI twice: on pull-request, then on push. See https://github.com/marketplace/actions/skip-duplicate-actions
 * [x] Camera: Fix pictures flickering or being shortly replaced by a spinner each time a picture is taken
 * [x] BundleSelection: Speed up search bar on Linux: getMergedMetadata seems to be slowed by the maximum Rust thread limit
 * [x] BundleSelection: Speed up search bar on Linux: getMergedMetadata is called for all bundle only once
