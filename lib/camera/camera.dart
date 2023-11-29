@@ -124,7 +124,7 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
                             children: cameras
                                 .where((c) => c.lensDirection == CameraLensDirection.back)
                                 .map((c) => SimpleDialogOption(
-                                      onPressed: () => setState(() => cameraDescription = c),
+                                      onPressed: () => _onNewCameraSelected(c),
                                       child: Text('Camera ${c.name}'),
                                     ))
                                 .toList()),
