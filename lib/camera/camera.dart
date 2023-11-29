@@ -71,6 +71,7 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
 
   @override
   void dispose() {
+    _controller?.dispose();
     _barcodeScanner.close();
     super.dispose();
   }
@@ -337,12 +338,6 @@ class BottomWidget extends StatefulWidget {
 }
 
 class _BottomWidgetState extends State<BottomWidget> {
-  @override
-  void initState() {
-    print('XXX _BottomWidgetState initState');
-    super.initState();
-  }
-
   @override
   Widget build(BuildContext context) {
     return Column(
