@@ -99,10 +99,11 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
         padding: const EdgeInsets.all(8.0),
         child: Column(
           children: _getValidRegisteredBarcodes()
-              .map((barcode) => BarcodeLabel(
-                    barcode,
-                    onDeletePressed: () => setState(() => _registeredBarcodes.remove(barcode)),
-                  ))
+              .map((barcode) =>
+              BarcodeLabel(
+                barcode,
+                onDeletePressed: () => setState(() => _registeredBarcodes.remove(barcode)),
+              ))
               .toList(),
         ),
       );
@@ -111,25 +112,29 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
     return Scaffold(
       appBar: AppBar(title: const Text('Booky Camera app'), actions: [
         PopupMenuButton<void>(
-          itemBuilder: (_) => [
+          itemBuilder: (_) =>
+          [
             PopupMenuItem(
                 child: const Text('Change camera'),
                 onTap: () async {
                   await Future.delayed(const Duration(seconds: 0), () async {
                     await showDialog<void>(
                       context: context,
-                      builder: (BuildContext _) => FutureWidget(
-                        future: availableCameras(),
-                        builder: (cameras) => SimpleDialog(
-                            title: const Text('Select camera'),
-                            children: cameras
-                                .where((c) => c.lensDirection == CameraLensDirection.back)
-                                .map((c) => SimpleDialogOption(
-                                      onPressed: () => _onNewCameraSelected(c),
-                                      child: Text('Camera ${c.name}'),
-                                    ))
-                                .toList()),
-                      ),
+                      builder: (BuildContext _) =>
+                          FutureWidget(
+                            future: availableCameras(),
+                            builder: (cameras) =>
+                                SimpleDialog(
+                                    title: const Text('Select camera'),
+                                    children: cameras
+                                        .where((c) => c.lensDirection == CameraLensDirection.back)
+                                        .map((c) =>
+                                        SimpleDialogOption(
+                                          onPressed: () => _onNewCameraSelected(c),
+                                          child: Text('Camera ${c.name}'),
+                                        ))
+                                        .toList()),
+                          ),
                     );
                   });
                 })
@@ -166,10 +171,10 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
                           _filterBarcode(barcodes).forEach((barcodeString) {
                             _registeredBarcodes
                                 .update(barcodeString, (oldDetection) => oldDetection.makeSure(_onBarcodeDetected),
-                                    ifAbsent: () {
-                              _onBarcodeDetected();
-                              return SureDetection();
-                            });
+                                ifAbsent: () {
+                                  _onBarcodeDetected();
+                                  return SureDetection();
+                                });
                           });
                           setState(() {});
                         },
@@ -192,24 +197,25 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
               padding: const EdgeInsets.all(5.0),
               child: FutureWidget(
                 future: getBundle,
-                builder: (bundle) => BottomWidget(
-                  key: const ValueKey('BottomWidgetKey'),
-                  bundle: bundle,
-                  onSubmit: () {
-                    /// The bundle has been edited, close pop-up and go back to BundleSelection
-                    if (widget.bundleDirToEdit != null) {
-                      Navigator.pop(context);
-                      Navigator.pop(context);
-                    } else {
-                      setState(() {
-                        _generateNewFolderPath();
-                        _registeredBarcodes.clear();
-                      });
-                      Navigator.pop(context);
-                    }
-                  },
-                  isbns: _getValidRegisteredBarcodes(),
-                ),
+                builder: (bundle) =>
+                    BottomWidget(
+                      key: const ValueKey('BottomWidgetKey'),
+                      bundle: bundle,
+                      onSubmit: () {
+                        /// The bundle has been edited, close pop-up and go back to BundleSelection
+                        if (widget.bundleDirToEdit != null) {
+                          Navigator.pop(context);
+                          Navigator.pop(context);
+                        } else {
+                          setState(() {
+                            _generateNewFolderPath();
+                            _registeredBarcodes.clear();
+                          });
+                          Navigator.pop(context);
+                        }
+                      },
+                      isbns: _getValidRegisteredBarcodes(),
+                    ),
               ),
             ),
           ),
@@ -256,22 +262,22 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
           showInSnackBar('You have denied camera access.');
           break;
         case 'CameraAccessDeniedWithoutPrompt':
-          // iOS only
+        // iOS only
           showInSnackBar('Please go to Settings app to enable camera access.');
           break;
         case 'CameraAccessRestricted':
-          // iOS only
+        // iOS only
           showInSnackBar('Camera access is restricted.');
           break;
         case 'AudioAccessDenied':
           showInSnackBar('You have denied audio access.');
           break;
         case 'AudioAccessDeniedWithoutPrompt':
-          // iOS only
+        // iOS only
           showInSnackBar('Please go to Settings app to enable audio access.');
           break;
         case 'AudioAccessRestricted':
-          // iOS only
+        // iOS only
           showInSnackBar('Audio access is restricted.');
           break;
         default:
@@ -285,10 +291,11 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
     }
   }
 
-  Iterable<String> _filterBarcode(Iterable<Barcode> barcodes) => barcodes
-      .where((barcode) => barcode.type == BarcodeType.isbn)
-      .map((barcode) => barcode.displayValue)
-      .whereType<String>();
+  Iterable<String> _filterBarcode(Iterable<Barcode> barcodes) =>
+      barcodes
+          .where((barcode) => barcode.type == BarcodeType.isbn)
+          .map((barcode) => barcode.displayValue)
+          .whereType<String>();
 
   Future<String> _getFirstUnusedName(Directory dir) async {
     final numberOfImages = (await (await getBundle).images).length;
@@ -309,10 +316,11 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
   }
 
-  List<String> _getValidRegisteredBarcodes() => _registeredBarcodes.entries
-      .where((entry) => isbnValidator(entry.key) == null && entry.value is SureDetection)
-      .map((e) => e.key)
-      .toList();
+  List<String> _getValidRegisteredBarcodes() =>
+      _registeredBarcodes.entries
+          .where((entry) => isbnValidator(entry.key) == null && entry.value is SureDetection)
+          .map((e) => e.key)
+          .toList();
 }
 
 String _numberToImgPath(Directory bundlePath, int index) {
@@ -345,17 +353,17 @@ class _BottomWidgetState extends State<BottomWidget> {
       children: [
         Expanded(
             child: FutureWidget(future: () async {
-          try {
-            return await widget.bundle.images;
-          } on PathNotFoundException {
-            return null;
-          }
-        }(), builder: (images) {
-          if (images == null) {
-            return const Center(child: Text('Tap the camera preview to take a picture'));
-          }
-          return _thumbnailWidget(images);
-        })),
+              try {
+                return await widget.bundle.images;
+              } on PathNotFoundException {
+                return null;
+              }
+            }(), builder: (images) {
+              if (images == null) {
+                return const Center(child: Text('Tap the camera preview to take a picture'));
+              }
+              return _thumbnailWidget(images);
+            })),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: <Widget>[
@@ -375,34 +383,51 @@ class _BottomWidgetState extends State<BottomWidget> {
         spacing: 8.0,
         runSpacing: 8.0,
         children: images
-            .map((imgFile) => SizedBox(
-                  width: 64,
-                  height: 64,
-                  child: DraggableWidget(
-                      // Use a key otherwise if we delete an image, the image that will take its place will inherit the state of the deleted image
-                      key: ValueKey(imgFile.path),
-                      child: Image.file(File(imgFile.path)),
-                      onVerticalDrag: () async {
-                        final deletedImageNumber = _pathToNumber(imgFile.path);
-                        final images = await widget.bundle.images;
-                        await imgFile.delete();
-                        for (final img in images.skip(deletedImageNumber + 1)) {
-                          final imgNumber = _pathToNumber(img.path);
-                          final newPath = _numberToImgPath(Directory(path.dirname(img.path)), imgNumber - 1);
-                          await img.safeRename(newPath);
-                        }
-                        for (final img in images.skip(deletedImageNumber)) {
-                          // Clear the cache of all changed images (the one deleted and all the one after)
-                          final evictRes = await FileImage(img).evict();
-                          if (!evictRes && mounted) {
-                            ScaffoldMessenger.of(context)
-                                .showSnackBar(SnackBar(content: Text('Error while trying to evict image ${img.path}')));
-                          }
-                        }
+            .map((imgFile) =>
+            SizedBox(
+              width: 64,
+              height: 64,
+              child: DraggableWidget(
+                // Use a key otherwise if we delete an image, the image that will take its place will inherit the state of the deleted image
+                  key: ValueKey(imgFile.path),
+                  child: Image.file(File(imgFile.path)),
+                  onVerticalDrag: () async {
+                    final imageNumberToDelete = _pathToNumber(imgFile.path);
+                    final images = await widget.bundle.images;
+                    final compressedImages = await widget.bundle.compressedImages;
 
-                        setState(() {});
-                      }),
-                ))
+                    if (images[imageNumberToDelete].path != imgFile.path) {
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                            content: Text(
+                                'image path is ${imgFile
+                                    .path}, so imageNumberToDelete = $imageNumberToDelete, but the images at index imageNumberToDelete is ${images[imageNumberToDelete]
+                                    .path}. Not deleting anything')));
+                      }
+                      return;
+                    }
+
+                    Future<void> removeImageAndDecreaseNumberOfFollowingImages(Iterable<File> imgs,
+                        int imageNumberToDelete) async {
+                      await imgs.elementAt(imageNumberToDelete).delete();
+                      // rename all the following images so they all have consecutive number
+                      await Future.forEach(imgs.skip(imageNumberToDelete + 1), (File f) async {
+                        final imgNumber = _pathToNumber(f.path);
+                        final newPath = _numberToImgPath(Directory(path.dirname(f.path)), imgNumber - 1);
+                        await f.safeRename(newPath);
+                      });
+                      // Clear the cache of all changed images (the one deleted and all the one after)
+                      await Future.wait(imgs.skip(imageNumberToDelete).map((img) => FileImage(img).evict()));
+                    }
+
+                    await Future.wait([
+                      removeImageAndDecreaseNumberOfFollowingImages(images, imageNumberToDelete),
+                      removeImageAndDecreaseNumberOfFollowingImages(compressedImages, imageNumberToDelete)
+                    ]);
+
+                    setState(() {});
+                  }),
+            ))
             .toList(),
       ),
     );
@@ -413,14 +438,15 @@ class _BottomWidgetState extends State<BottomWidget> {
   }
 
   Widget _addMetadataButton(
-          {required BuildContext context, required Directory directory, required void Function() onSubmit}) =>
+      {required BuildContext context, required Directory directory, required void Function() onSubmit}) =>
       ElevatedButton.icon(
         label: const Text('Save'),
         icon: const Icon(Icons.save),
-        onPressed: () => showDialog<void>(
-            context: context,
-            builder: (BuildContext context) =>
-                MetadataWidget(directory: directory, isbns: widget.isbns, onSubmit: onSubmit)),
+        onPressed: () =>
+            showDialog<void>(
+                context: context,
+                builder: (BuildContext context) =>
+                    MetadataWidget(directory: directory, isbns: widget.isbns, onSubmit: onSubmit)),
       );
 }
 
@@ -465,7 +491,7 @@ class _MetadataWidgetState extends State<MetadataWidget> {
     super.initState();
     metadata = BundleMetaData(
         books:
-            widget.isbns.map((isbn) => BookMetaData(isbn: isbn, authors: [], keywords: [], priceCent: null)).toList());
+        widget.isbns.map((isbn) => BookMetaData(isbn: isbn, authors: [], keywords: [], priceCent: null)).toList());
   }
 
   @override
@@ -489,7 +515,8 @@ class _MetadataWidgetState extends State<MetadataWidget> {
             hint: const Text('Book state'),
             value: metadata.itemState,
             items: ItemState.values.map((s) => DropdownMenuItem(value: s, child: Text(s.loc))).toList(),
-            onChanged: (state) => setState(() {
+            onChanged: (state) =>
+                setState(() {
                   metadata.itemState = state;
                 })),
         TextFormField(
@@ -525,10 +552,11 @@ class _MetadataWidgetState extends State<MetadataWidget> {
               widget.onSubmit();
             })
       ]
-          .map((w) => Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4.0),
-                child: w,
-              ))
+          .map((w) =>
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4.0),
+            child: w,
+          ))
           .toList(),
     );
   }

@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:booky/common.dart' as common;
 import 'package:booky/enrichment/bundle_selection.dart';
+import 'package:booky/route_observer.dart';
 import 'package:flutter/material.dart';
 
 void main() {
@@ -19,11 +20,10 @@ class BookyApp extends StatelessWidget {
   }));
 
   @override
-  Widget build(BuildContext context) =>
-      FutureBuilder(
-          future: createAllDirs,
-          builder: (context, _) =>
-          const MaterialApp(
-            home: BundleSelection(),
+  Widget build(BuildContext context) => FutureBuilder(
+      future: createAllDirs,
+      builder: (context, _) => MaterialApp(
+            navigatorObservers: [routeObserver],
+            home: const BundleSelection(),
           ));
 }

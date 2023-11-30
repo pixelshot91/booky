@@ -18,6 +18,7 @@ import '../bundle.dart';
 import '../common.dart' as common;
 import '../ffi.dart';
 import '../helpers.dart';
+import '../route_observer.dart';
 import '../widgets/scrollable_bundle_images.dart';
 import 'enrichment.dart';
 import 'metadata_collecting.dart';
@@ -175,7 +176,7 @@ class BundleSelection extends StatefulWidget {
   State<BundleSelection> createState() => _BundleSelectionState();
 }
 
-class _BundleSelectionState extends State<BundleSelection> {
+class _BundleSelectionState extends State<BundleSelection> with RouteAware {
   int? bundleNb;
   int? compressedBundleNb;
   int? autoMdCollectedBundleNb;
@@ -190,6 +191,15 @@ class _BundleSelectionState extends State<BundleSelection> {
         viewportBoundaryGetter: () => Rect.fromLTRB(0, 0, 0, MediaQuery.of(context).padding.bottom),
         axis: Axis.vertical);
     Future(_compressImages);
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+      routeObserver.subscribe(this, ModalRoute.of(context)!);
+    });
+  }
+
+  @override
+  void didPopNext() {
+    // Every time we go back to the BundleSelection screen, refresh the list in case the images changed
+    setState(() {});
   }
 
   Future<void> _compressImages() async {
