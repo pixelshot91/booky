@@ -170,7 +170,9 @@ class CustomSearchHintDelegate extends SearchDelegate<String> {
 }
 
 class BundleSelection extends StatefulWidget {
-  const BundleSelection();
+  const BundleSelection(this.repo);
+
+  final BookyRepo repo;
 
   @override
   State<BundleSelection> createState() => _BundleSelectionState();
@@ -218,7 +220,7 @@ class _BundleSelectionState extends State<BundleSelection> with RouteAware {
               onPressed: () {
                 // Process all the bundleMD once when the searchbar open
                 final bundlesWithMD = Future<List<BundleMetaDataWithIndex>?>(() async {
-                  final bundlesDir = (await common.bookyDir()).getDir(bundleType);
+                  final bundlesDir = widget.repo.getDir(bundleType);
                   final mds = await api.getMergedMetadataForAllBundles(bundlesDir: bundlesDir.path);
                   return mds.mapIndexed((index, element) => BundleMetaDataWithIndex(index, element)).toList();
                 });
@@ -283,8 +285,8 @@ class _BundleSelectionState extends State<BundleSelection> with RouteAware {
       ),
       floatingActionButton: FloatingActionButton(
           child: const Icon(Icons.camera),
-          onPressed: () =>
-              Navigator.push(context, MaterialPageRoute<void>(builder: (context) => const CameraWidget()))),
+          onPressed: () => Navigator.push(
+              context, MaterialPageRoute<void>(builder: (context) => CameraWidget(ShootMultipleBundle(widget.repo))))),
       body: FutureWidget(
         future: _listBundles(),
         builder: (bundles) {
@@ -363,7 +365,7 @@ class _BundleSelectionState extends State<BundleSelection> with RouteAware {
 
   Future<Iterable<Bundle>?> _listBundles() async {
     try {
-      final dirs = await (await common.bookyDir()).getDir(bundleType).list().whereType<Directory>().toList();
+      final dirs = await widget.repo.getDir(bundleType).list().whereType<Directory>().toList();
       return dirs.sorted((d1, d2) => d1.path.compareTo(d2.path)).map((d) => Bundle(d));
     } catch (e) {
       if (e is PathNotFoundException || e is FileSystemException) {
@@ -442,6 +444,7 @@ class _BundleSelectionState extends State<BundleSelection> with RouteAware {
                       child: GestureDetector(
                         child: BundleWidget(
                           key: const PageStorageKey('BundleWidget'),
+                          widget.repo,
                           bundle,
                           refreshParent: () => setState(() {}),
                           downloadMetadataForBundles: _downloadMetadataForBundles,
@@ -512,8 +515,10 @@ class ProgressIndicator extends StatelessWidget {
 }
 
 class BundleWidget extends StatefulWidget {
-  const BundleWidget(this.bundle, {required this.refreshParent, super.key, required this.downloadMetadataForBundles});
+  const BundleWidget(this.repo, this.bundle,
+      {required this.refreshParent, super.key, required this.downloadMetadataForBundles});
 
+  final common.BookyRepo repo;
   final Bundle bundle;
   final void Function() refreshParent;
   final void Function(Iterable<Bundle> bundles) downloadMetadataForBundles;
@@ -596,6 +601,7 @@ class _BundleWidgetState extends State<BundleWidget> {
                       if (bundleMergedMD != null) MetadataIcons(bundleMergedMD),
                       Expanded(child: ScrollableBundleImages(widget.bundle, Axis.horizontal)),
                       _ActionButtons(
+                          repo: widget.repo,
                           bundle: widget.bundle,
                           refreshParent: widget.refreshParent,
                           downloadMetadataForBundles: widget.downloadMetadataForBundles),
@@ -610,8 +616,13 @@ class _BundleWidgetState extends State<BundleWidget> {
 }
 
 class _ActionButtons extends StatelessWidget {
-  const _ActionButtons({required this.bundle, required this.refreshParent, required this.downloadMetadataForBundles});
+  const _ActionButtons(
+      {required this.repo,
+      required this.bundle,
+      required this.refreshParent,
+      required this.downloadMetadataForBundles});
 
+  final common.BookyRepo repo;
   final Bundle bundle;
   final void Function() refreshParent;
   final void Function(Iterable<Bundle> bundles) downloadMetadataForBundles;
@@ -634,7 +645,7 @@ class _ActionButtons extends StatelessWidget {
                 onPressed: () {
                   // Pushing a new route here synchronously does nothing as the PopUpMenuButton called a Navigator.pop immediately after to close the PopUpMenu
                   Future(() => Navigator.push(context,
-                      MaterialPageRoute<void>(builder: (context) => CameraWidget(bundleDirToEdit: bundle.directory))));
+                      MaterialPageRoute<void>(builder: (context) => CameraWidget(EditOneBundle(bundle.directory)))));
                 },
               ),
               _popUpMenuIconText(

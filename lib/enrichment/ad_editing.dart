@@ -13,7 +13,6 @@ import '../bundle.dart';
 import '../copiable_text_field.dart';
 import '../draggable_files_widget.dart';
 import '../helpers.dart';
-import 'bundle_selection.dart';
 import 'enrichment.dart';
 
 class Ad {
@@ -250,7 +249,9 @@ class _AdEditingWidget2State extends State<AdEditingWidget2> {
                                 await finalDirectory.rename(initialDirectory.path);
                               }),
                         ));
-                        Navigator.push(context, MaterialPageRoute<void>(builder: (context) => const BundleSelection()));
+                        // TODO
+                        Navigator.pop(context);
+                        // Navigator.push(context, MaterialPageRoute<void>(builder: (context) => const BundleSelection()));
                       }
                     },
                     child: const Text('Mark as published')),

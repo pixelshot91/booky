@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:booky/ffi.dart';
 import 'package:path/path.dart' as path;
-import 'package:path_provider/path_provider.dart' as path_provider;
 
 extension IterableFutureMapEntryExt<K, V> on Iterable<Future<MapEntry<K, V>>> {
   Future<Map<K, V>> toMap() async => Map.fromEntries(await Future.wait(this));
@@ -43,8 +42,8 @@ extension BundleTypeExt on BundleType {
   }
 }
 
-class BookyDir {
-  BookyDir(this.root);
+class BookyRepo {
+  BookyRepo(this.root);
 
   Directory root;
 
@@ -57,16 +56,8 @@ extension DirectoryExt on Directory {
   File joinFile(String f) => File(path.join(this.path, f));
 }
 
-Future<BookyDir> bookyDir() async {
-  if (Platform.isAndroid) {
-    final extDir = (await path_provider.getExternalStorageDirectory())!;
-    return BookyDir(extDir);
-  }
-
-  return Future(() => BookyDir(Directory('/media/phone/storage/emulated/0/Android/data/fr.pimoid.booky/files')));
-  return Future(
-      () => BookyDir(Directory('/home/julien/Perso/LeBonCoin/chain_automatisation/saved_folder/after_migration')));
-}
+final externalDeviceRepo = Directory('/media/phone/storage/emulated/0/Android/data/fr.pimoid.booky/files');
+// final externalDeviceRepo = Directory('/home/julien/Perso/LeBonCoin/chain_automatisation/saved_folder/after_migration');
 
 extension ItemStateExt on ItemState {
   String get loc {
