@@ -104,13 +104,15 @@ async fn init_obs() -> anyhow::Result<ProcessKillOnDrop> {
         Command::new("/home/julien/.venv/bin/obs-scene-transporter").args(["import", archive_name]),
     )
     .unwrap();
-    let obs = Command::new("obs").spawn().unwrap();
+    let obs = ProcessKillOnDrop {
+        process: Command::new("obs").spawn().unwrap(),
+    };
 
-    std::thread::sleep(Duration::from_secs(1));
+    std::thread::sleep(Duration::from_secs(5));
     let client = obws::Client::connect("localhost", 4455, env::var("OBS_PASSWORD").ok()).await?;
     client.virtual_cam().start().await.unwrap();
 
-    Ok(ProcessKillOnDrop { process: obs })
+    Ok(obs)
 }
 
 fn copy_files_to_devices() -> () {
