@@ -1,3 +1,4 @@
+use anyhow::Context;
 use pretty_assertions::assert_eq;
 use std::env;
 use std::process::Command;
@@ -28,11 +29,20 @@ fn launch_command(cmd: &mut std::process::Command) -> Result<Output, std::proces
     Err(process.status)
 }
 
+fn emulator_cmd() -> Command {
+    Command::new("/home/julien/Android/Sdk/emulator/emulator")
+}
+
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    let _obs = init_obs().await?;
+    let mut args = env::args();
+    let arg0 = args.next().unwrap();
+    let avds_name = args.into_iter();
+    anyhow::ensure!(avds_name.len() > 0, "Usage: {} <avd names...>", arg0);
 
-    let avds_name = env::args().skip(1);
+    let _obs = init_obs().await?;
+    check_emulator_webcam().context("webcam is not correct to android emulator")?;
+
     for avd_name in avds_name {
         println!("Launching test on device {avd_name}");
 
@@ -40,12 +50,14 @@ async fn main() -> anyhow::Result<()> {
         let output = launch_simple_command(&["adb", "devices", "-l"]).unwrap();
         let devices: Vec<&str> = output.stdout.lines().collect();
         // 2 lines mean no devices
-        assert_eq!(devices.len(), 2);
+        assert_eq!(
+            devices.len(),
+            2,
+            "Some emulator are still running. {}",
+            output.stdout
+        );
 
-        let mut command = Command::new("/home/julien/Android/Sdk/emulator/emulator");
-        command.args(["-avd", &avd_name]);
-
-        let mut avd_process = command.spawn()?;
+        let mut avd_process = emulator_cmd().args(["-avd", &avd_name]).spawn()?;
 
         println!("Command is running");
         std::thread::sleep(Duration::from_secs(1));
@@ -108,11 +120,25 @@ async fn init_obs() -> anyhow::Result<ProcessKillOnDrop> {
         process: Command::new("obs").spawn().unwrap(),
     };
 
-    std::thread::sleep(Duration::from_secs(5));
+    std::thread::sleep(Duration::from_secs(2));
     let client = obws::Client::connect("localhost", 4455, env::var("OBS_PASSWORD").ok()).await?;
     client.virtual_cam().start().await.unwrap();
+    std::thread::sleep(Duration::from_secs(2));
 
     Ok(obs)
+}
+
+fn check_emulator_webcam() -> anyhow::Result<()> {
+    let output = launch_command(emulator_cmd().arg("-webcam-list")).unwrap();
+    assert_eq!(
+        output.stdout,
+        "List of web cameras connected to the computer:
+ Camera 'webcam0' is connected to device '/dev/video0' on channel 0 using pixel format 'YUYV'
+
+", "no camera found. You can try to launch 'v4l2-ctl --list-devices' and create a symlink named /etc/video0 pointing the video device of OBS"
+    );
+
+    Ok(())
 }
 
 fn copy_files_to_devices() -> () {
