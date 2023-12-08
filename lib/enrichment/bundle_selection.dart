@@ -6,7 +6,6 @@ import 'package:booky/common.dart';
 import 'package:booky/enrichment/isbn_decoding.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge.dart';
 import 'package:flutter_scroll_shadow/flutter_scroll_shadow.dart';
 import 'package:kt_dart/kt.dart';
@@ -201,7 +200,9 @@ class _BundleSelectionState extends State<BundleSelection> with RouteAware {
   @override
   void didPopNext() {
     // Every time we go back to the BundleSelection screen, refresh the list in case the images changed
-    setState(() {});
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   Future<void> _compressImages() async {
@@ -391,7 +392,7 @@ class _BundleSelectionState extends State<BundleSelection> with RouteAware {
         segments.insert(segments.length - 1, 'compressed');
         final targetPath = path.joinAll(segments);
         if (!(await File(targetPath).exists())) {
-          await _testCompressAndGetFile(image, targetPath);
+          await testCompressAndGetFile(image, targetPath);
         }
       });
       await Future.wait(imagesFutures);
@@ -405,17 +406,6 @@ class _BundleSelectionState extends State<BundleSelection> with RouteAware {
         content: Text('Compression finished'),
       ));
     }
-  }
-
-  Future<File?> _testCompressAndGetFile(File file, String targetPath) async {
-    await Directory(path.dirname(targetPath)).create();
-    return await FlutterImageCompress.compressAndGetFile(
-      file.absolute.path,
-      targetPath,
-      minHeight: 800,
-      minWidth: 800,
-      quality: 70,
-    );
   }
 
   Widget _bundleListWidget(Iterable<Bundle> bundles) {

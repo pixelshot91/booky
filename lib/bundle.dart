@@ -1,12 +1,24 @@
 import 'dart:io';
 
 import 'package:collection/collection.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge.dart';
 import 'package:path/path.dart' as path;
 import 'package:stream_transform/stream_transform.dart';
 
 import '../ffi.dart';
 import 'common.dart' as common;
+
+Future<File?> testCompressAndGetFile(File file, String targetPath) async {
+  await Directory(path.dirname(targetPath)).create();
+  return await FlutterImageCompress.compressAndGetFile(
+    file.absolute.path,
+    targetPath,
+    minHeight: 8,
+    minWidth: 8,
+    quality: 7,
+  );
+}
 
 class Bundle {
   Bundle(this.directory);

@@ -175,13 +175,22 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
                         barcodeScanner: _barcodeScanner,
                         onImageTaken: (img.Image croppedImage) async {
                           await getBundleDir.create(recursive: true);
-                          final firstUnusedImagePath = await _getFirstUnusedName(getBundleDir);
-                          final res = await img.encodeJpgFile(firstUnusedImagePath, croppedImage);
-                          if (!res) {
-                            print('error while saving cropped image');
+                          final numberOfImages = (await (await getBundle).images).length;
+                          final fullScaleImageFile = getBundleDir.joinFile(_numberToImageFileName(numberOfImages));
+                          final compressedImageFile =
+                              getBundleDir.joinDir('compressed').joinFile(_numberToImageFileName(numberOfImages));
+
+                          final fullScaleRes = await img.encodeJpgFile(fullScaleImageFile.path, croppedImage);
+                          if (!fullScaleRes) {
+                            print('error while saving full scale image');
+                          }
+                          final compressedRes =
+                              await testCompressAndGetFile(fullScaleImageFile, compressedImageFile.path);
+                          if (compressedRes == null) {
+                            print('error while saving compressed image');
                           }
 
-                          final inputImage = InputImage.fromFilePath(firstUnusedImagePath);
+                          final inputImage = InputImage.fromFilePath(fullScaleImageFile.path);
                           final barcodes = await _barcodeScanner.processImage(inputImage);
 
                           _filterBarcode(barcodes).forEach((barcodeString) {
@@ -312,6 +321,11 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
       .where((barcode) => barcode.type == BarcodeType.isbn)
       .map((barcode) => barcode.displayValue)
       .whereType<String>();
+
+  String _numberToImageFileName(int index) {
+    // Add padding so that numerical and lexical sorting have the same output
+    return index.toString().padLeft(5, '0') + '.jpg';
+  }
 
   Future<String> _getFirstUnusedName(Directory dir) async {
     final numberOfImages = (await (await getBundle).images).length;
