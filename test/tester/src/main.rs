@@ -135,7 +135,8 @@ fn check_emulator_webcam() -> anyhow::Result<()> {
         "List of web cameras connected to the computer:
  Camera 'webcam0' is connected to device '/dev/video0' on channel 0 using pixel format 'YUYV'
 
-", "no camera found. You can try to launch 'v4l2-ctl --list-devices' and create a symlink named /etc/video0 pointing the video device of OBS"
+",
+"no camera found. You can try to launch 'v4l2-ctl --list-devices' and create a symlink named /etc/video0 pointing the video device of OBS",
     );
 
     Ok(())

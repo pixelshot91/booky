@@ -14,10 +14,22 @@ Future<File?> testCompressAndGetFile(File file, String targetPath) async {
   return await FlutterImageCompress.compressAndGetFile(
     file.absolute.path,
     targetPath,
-    minHeight: 8,
-    minWidth: 8,
-    quality: 7,
+    minHeight: 200,
+    minWidth: 200,
+    quality: 90,
   );
+}
+
+class MultiResImage {
+  MultiResImage({required this.fullScale});
+
+  File fullScale;
+
+  File get compressed {
+    final segments = path.split(fullScale.path);
+    segments.insert(segments.length - 1, 'compressed');
+    return File(path.joinAll(segments));
+  }
 }
 
 class Bundle {
@@ -25,11 +37,12 @@ class Bundle {
 
   final Directory directory;
 
-  Future<List<File>> get images => directory.listImages();
+  Future<List<MultiResImage>> get images async {
+    final fullScaleImgFiles = await directory.listImages();
+    return fullScaleImgFiles.map((img) => MultiResImage(fullScale: img)).toList();
+  }
 
   Directory get compressedImagesDir => Directory(path.join(directory.path, 'compressed'));
-
-  Future<Iterable<File>> get compressedImages => compressedImagesDir.listImages();
 
   File get metadataFile => File(path.join(directory.path, 'metadata.json'));
 

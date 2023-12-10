@@ -136,8 +136,8 @@ void addIsbn(final IntegrationTestWidgetsFlutterBinding binding) {
 
     await ss.capture('back_to_home');
     await tapPopMenu_ISBNDecoding();
-    expect(find.text(isbnToAdd), findsNothing);
     await ss.capture('no_isbn_as_initial');
+    expect(find.text(isbnToAdd), findsNothing);
   });
 }
 
@@ -255,13 +255,13 @@ void cameraTakePicture(IntegrationTestWidgetsFlutterBinding binding) {
 
     await tester.tap(find.descendant(of: barcodeLabelFinder, matching: find.byIcon(Icons.delete)));
     await tester.pumpAndSettle(const Duration(seconds: 1));
-    expect(barcodeLabelFinder, findsNothing);
     await ss.capture('after_delete_isbn');
+    expect(barcodeLabelFinder, findsNothing);
 
     await tester.drag(draggableWidgetFinder, const Offset(0, -60));
     await tester.pumpAndSettle(const Duration(seconds: 1));
-    expect(draggableWidgetFinder, findsNothing);
     await ss.capture('after_delete_image');
+    expect(draggableWidgetFinder, findsNothing);
 
     await tester.pageBack();
   });

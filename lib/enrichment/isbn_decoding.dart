@@ -34,7 +34,7 @@ class _ISBNDecodingWidgetState extends State<ISBNDecodingWidget> {
       Future(() async {
         final images = await widget.step.bundle.images;
         images.forEach((image) {
-          decodedIsbns[image.path] = api.detectBarcodeInImage(imgPath: image.path);
+          decodedIsbns[image.fullScale.path] = api.detectBarcodeInImage(imgPath: image.fullScale.path);
         });
       });
     }
@@ -61,7 +61,7 @@ class _ISBNDecodingWidgetState extends State<ISBNDecodingWidget> {
                 future: widget.step.bundle.images,
                 builder: (images) => Wrap(
                   children: images
-                      .map((imgPath) => Card(
+                      .map((img) => Card(
                             child: Padding(
                               padding: const EdgeInsets.all(8.0),
                               child: Column(
@@ -70,10 +70,10 @@ class _ISBNDecodingWidgetState extends State<ISBNDecodingWidget> {
                                       height: 600,
                                       child: InteractiveViewer(
                                         maxScale: 10,
-                                        child: ImageWidget(imgPath),
+                                        child: ImageWidget(img.fullScale),
                                       )),
                                   FutureWidget(
-                                      future: decodedIsbns[imgPath.path] ?? Future(() => null),
+                                      future: decodedIsbns[img.fullScale.path] ?? Future(() => null),
                                       builder: (results) {
                                         if (results == null) return const Text('No result');
                                         return Column(
@@ -98,7 +98,7 @@ class _ISBNDecodingWidgetState extends State<ISBNDecodingWidget> {
                                                                 : TextDecoration.lineThrough),
                                                       )),
                                                   const SizedBox(width: 20),
-                                                  ISBNPreview(imgFile: imgPath, result: result),
+                                                  ISBNPreview(imgFile: img.fullScale, result: result),
                                                 ],
                                               ),
                                             );

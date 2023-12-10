@@ -60,20 +60,22 @@ class _ScrollableBundleImagesState extends State<ScrollableBundleImages> {
             scrollDirection: widget.axis,
             controller: imageScrollController,
             child: FutureWidget(
-                future: widget.bundle.compressedImages,
+                future: widget.bundle.images,
                 builder: (images) => Flex(
                       direction: widget.axis.opposite,
                       children: [
                         Expanded(
                           child: Flex(
                               direction: widget.axis,
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: images
-                                  .map<Widget>((f) => GestureDetector(
+                                  .map<Widget>((img) => GestureDetector(
                                       onTap: () {
                                         showDialog<void>(
-                                            context: context, builder: (context) => Center(child: ImageWidget(f)));
+                                            context: context,
+                                            builder: (context) => Center(child: ImageWidget(img.fullScale)));
                                       },
-                                      child: ImageWidget(f)))
+                                      child: ImageWidget(img.compressed)))
                                   .intersperse(_Gap(8.0, widget.axis))
                                   .toList()),
                         ),

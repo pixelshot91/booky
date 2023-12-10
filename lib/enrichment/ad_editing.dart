@@ -21,7 +21,7 @@ class Ad {
   final int priceCent;
   final int weightGrams;
   final ItemState itemState;
-  final List<String> imgsPath;
+  final List<MultiResImage> imgs;
 
   const Ad({
     required this.title,
@@ -29,7 +29,7 @@ class Ad {
     required this.priceCent,
     required this.weightGrams,
     required this.itemState,
-    required this.imgsPath,
+    required this.imgs,
   });
 }
 
@@ -83,13 +83,12 @@ class AdEditingWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ad = Future(() async {
-      final imgsPath = (await step.bundle.compressedImages).map((e) => e.path).toList();
+      final images = await step.bundle.images;
 
       final bundleMetaData = await step.bundle.getMergedMetadata();
       if (bundleMetaData == null) {
         // TODO: Use better default value when no information is known on the bundle (use null instead of 0)
-        return Ad(
-            title: '', description: '', priceCent: 0, weightGrams: 0, itemState: ItemState.Medium, imgsPath: imgsPath);
+        return Ad(title: '', description: '', priceCent: 0, weightGrams: 0, itemState: ItemState.Medium, imgs: images);
       }
       final books = bundleMetaData.books;
 
@@ -126,7 +125,7 @@ class AdEditingWidget extends StatelessWidget {
           priceCent: totalPriceExcludingShipping,
           weightGrams: weightGramsWithWrapping,
           itemState: bundleMetaData.itemState!,
-          imgsPath: imgsPath);
+          imgs: images);
     });
     return Scaffold(
         appBar: AppBar(title: const Text('Ad editing')),
@@ -210,12 +209,12 @@ class _AdEditingWidget2State extends State<AdEditingWidget2> {
               _nonCopyableField(
                   Icons.collections,
                   DraggableFilesWidget(
-                    uris: widget.ad.imgsPath.map((path) => Uri.file(path)),
+                    uris: widget.ad.imgs.map((img) => Uri.file(img.fullScale.path)),
                     child: Column(
                       children: [
                         Row(
-                          children: widget.ad.imgsPath
-                              .map((img) => SizedBox(height: 200, child: ImageWidget(File(img))))
+                          children: widget.ad.imgs
+                              .map((img) => SizedBox(height: 200, child: ImageWidget(File(img.fullScale.path))))
                               .toList(),
                         ),
                         const Text('Drag and drop images')
@@ -231,7 +230,7 @@ class _AdEditingWidget2State extends State<AdEditingWidget2> {
                           priceCent: int.parse(priceController.text),
                           weightGrams: widget.ad.weightGrams,
                           itemState: widget.ad.itemState,
-                          imgsPath: widget.ad.imgsPath);
+                          imgs: widget.ad.imgs);
                       final manualMd = await widget.bundle.getManualMetadata();
                       // manualMd.ad = ad;
                       widget.bundle.overwriteMetadata(manualMd);

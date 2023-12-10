@@ -8,7 +8,7 @@ import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge.dart';
 import 'package:google_mlkit_barcode_scanning/google_mlkit_barcode_scanning.dart';
-import 'package:image/image.dart' as img;
+import 'package:image/image.dart' as img_lib;
 import 'package:path/path.dart' as path;
 
 import '../bundle.dart';
@@ -32,6 +32,11 @@ class ShootMultipleBundle implements CameraMode {
 
   /// Where to create new bundles
   final common.BookyRepo repo;
+}
+
+String _numberToImageFileName(int index) {
+  // Add padding so that numerical and lexical sorting have the same output
+  return index.toString().padLeft(5, '0') + '.jpg';
 }
 
 class CameraWidget extends StatefulWidget {
@@ -173,14 +178,14 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
                       child: CameraPreviewWidget(
                         controller: _controller,
                         barcodeScanner: _barcodeScanner,
-                        onImageTaken: (img.Image croppedImage) async {
+                        onImageTaken: (img_lib.Image croppedImage) async {
                           await getBundleDir.create(recursive: true);
                           final numberOfImages = (await (await getBundle).images).length;
                           final fullScaleImageFile = getBundleDir.joinFile(_numberToImageFileName(numberOfImages));
                           final compressedImageFile =
                               getBundleDir.joinDir('compressed').joinFile(_numberToImageFileName(numberOfImages));
 
-                          final fullScaleRes = await img.encodeJpgFile(fullScaleImageFile.path, croppedImage);
+                          final fullScaleRes = await img_lib.encodeJpgFile(fullScaleImageFile.path, croppedImage);
                           if (!fullScaleRes) {
                             print('error while saving full scale image');
                           }
@@ -322,16 +327,6 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
       .map((barcode) => barcode.displayValue)
       .whereType<String>();
 
-  String _numberToImageFileName(int index) {
-    // Add padding so that numerical and lexical sorting have the same output
-    return index.toString().padLeft(5, '0') + '.jpg';
-  }
-
-  Future<String> _getFirstUnusedName(Directory dir) async {
-    final numberOfImages = (await (await getBundle).images).length;
-    return _numberToImgPath(getBundleDir, numberOfImages);
-  }
-
   void _showCameraException(CameraException e) {
     _logError(e.code, e.description);
     showInSnackBar('Error: ${e.code}\n${e.description}');
@@ -350,12 +345,6 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
       .where((entry) => isbnValidator(entry.key) == null && entry.value is SureDetection)
       .map((e) => e.key)
       .toList();
-}
-
-String _numberToImgPath(Directory bundlePath, int index) {
-  // Add padding so that numerical and lexical sorting have the same output
-  final paddedNumber = index.toString().padLeft(5, '0');
-  return path.join(bundlePath.path, '$paddedNumber.jpg');
 }
 
 class BottomWidget extends StatefulWidget {
@@ -404,7 +393,7 @@ class _BottomWidgetState extends State<BottomWidget> {
   }
 
   /// Display the thumbnail of the captured image or video.
-  Widget _thumbnailWidget(Iterable<FileSystemEntity> images) {
+  Widget _thumbnailWidget(Iterable<MultiResImage> images) {
     // FIXME: The drag from DraggableWidget and SingleChildScrollView might conflict with one another
     return SingleChildScrollView(
       scrollDirection: Axis.vertical,
@@ -412,23 +401,22 @@ class _BottomWidgetState extends State<BottomWidget> {
         spacing: 8.0,
         runSpacing: 8.0,
         children: images
-            .map((imgFile) => SizedBox(
+            .map((image) => SizedBox(
                   width: 64,
                   height: 64,
                   child: DraggableWidget(
                       // Use a key otherwise if we delete an image, the image that will take its place will inherit the state of the deleted image
-                      key: ValueKey(imgFile.path),
-                      child: Image.file(File(imgFile.path)),
+                      key: ValueKey(image.fullScale.path),
+                      child: Image.file(File(image.compressed.path)),
                       onVerticalDrag: () async {
-                        final imageNumberToDelete = _pathToNumber(imgFile.path);
+                        final imageNumberToDelete = _pathToNumber(image.fullScale.path);
                         final images = await widget.bundle.images;
-                        final compressedImages = await widget.bundle.compressedImages;
 
-                        if (images[imageNumberToDelete].path != imgFile.path) {
+                        if (images[imageNumberToDelete].fullScale.path != image.fullScale.path) {
                           if (mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                                 content: Text(
-                                    'image path is ${imgFile.path}, so imageNumberToDelete = $imageNumberToDelete, but the images at index imageNumberToDelete is ${images[imageNumberToDelete].path}. Not deleting anything')));
+                                    'image path is ${image.fullScale.path}, so imageNumberToDelete = $imageNumberToDelete, but the images at index imageNumberToDelete is ${images[imageNumberToDelete].fullScale.path}. Not deleting anything')));
                           }
                           return;
                         }
@@ -439,16 +427,18 @@ class _BottomWidgetState extends State<BottomWidget> {
                           // rename all the following images so they all have consecutive number
                           await Future.forEach(imgs.skip(imageNumberToDelete + 1), (File f) async {
                             final imgNumber = _pathToNumber(f.path);
-                            final newPath = _numberToImgPath(Directory(path.dirname(f.path)), imgNumber - 1);
-                            await f.safeRename(newPath);
+                            final newPath = f.parent.joinFile(_numberToImageFileName(imgNumber - 1));
+                            await f.safeRename(newPath.path);
                           });
                           // Clear the cache of all changed images (the one deleted and all the one after)
                           await Future.wait(imgs.skip(imageNumberToDelete).map((img) => FileImage(img).evict()));
                         }
 
                         await Future.wait([
-                          removeImageAndDecreaseNumberOfFollowingImages(images, imageNumberToDelete),
-                          removeImageAndDecreaseNumberOfFollowingImages(compressedImages, imageNumberToDelete)
+                          removeImageAndDecreaseNumberOfFollowingImages(
+                              images.map((img) => img.fullScale), imageNumberToDelete),
+                          removeImageAndDecreaseNumberOfFollowingImages(
+                              images.map((img) => img.compressed), imageNumberToDelete)
                         ]);
 
                         setState(() {});

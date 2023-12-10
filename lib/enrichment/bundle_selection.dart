@@ -191,7 +191,6 @@ class _BundleSelectionState extends State<BundleSelection> with RouteAware {
     gridViewController = AutoScrollController(
         viewportBoundaryGetter: () => Rect.fromLTRB(0, 0, 0, MediaQuery.of(context).padding.bottom),
         axis: Axis.vertical);
-    Future(_compressImages);
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
       routeObserver.subscribe(this, ModalRoute.of(context)!);
     });
@@ -203,10 +202,6 @@ class _BundleSelectionState extends State<BundleSelection> with RouteAware {
     if (mounted) {
       setState(() {});
     }
-  }
-
-  Future<void> _compressImages() async {
-    (await _listBundles())?.let((bundles) => _compressedAllBundleImages(bundles));
   }
 
   @override
@@ -233,13 +228,6 @@ class _BundleSelectionState extends State<BundleSelection> with RouteAware {
                         bundlesScrollController: gridViewController)
                       ..showResults(context));
               }),
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: () {
-              setState(() {});
-              Future(_compressImages);
-            },
-          ),
           IconButton(
             icon: const Icon(Icons.cloud_download),
             onPressed: () async {
@@ -375,36 +363,6 @@ class _BundleSelectionState extends State<BundleSelection> with RouteAware {
       }
       print('Unhandled exception $e');
       rethrow;
-    }
-  }
-
-  Future<void> _compressedAllBundleImages(Iterable<Bundle> bundles) async {
-    if (!Platform.isAndroid) return;
-    if (mounted) {
-      setState(() {
-        bundleNb = bundles.length;
-        compressedBundleNb = 0;
-      });
-    }
-    final bundleFutures = bundles.map<Future<void>>((bundle) async {
-      final imagesFutures = (await bundle.images).map((image) async {
-        final segments = path.split(image.path);
-        segments.insert(segments.length - 1, 'compressed');
-        final targetPath = path.joinAll(segments);
-        if (!(await File(targetPath).exists())) {
-          await testCompressAndGetFile(image, targetPath);
-        }
-      });
-      await Future.wait(imagesFutures);
-      if (mounted) {
-        setState(() => compressedBundleNb = compressedBundleNb! + 1);
-      }
-    });
-    await Future.wait(bundleFutures);
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('Compression finished'),
-      ));
     }
   }
 

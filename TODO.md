@@ -31,6 +31,8 @@
 * [ ] Test: Launch github action runner without opening graphical interface (use -no-boot-anim  -no-window)
 * [ ] Test: CI show false success when a step with continue-on-error fails
 * [ ] Test: CI save screenshots as artifact and compare them with the one in extra/screenshots/ to check for regression
+* [ ] Test: Unify real device and emulator test target. It should append the date to the directory name to avoid having multiple test image in the same directory
+* [ ] Test: Automatically kill the emulator process on exit. KillProcessOnDrop ?
 
 # DONE
 
