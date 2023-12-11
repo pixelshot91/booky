@@ -228,7 +228,9 @@ void cameraTakePicture(IntegrationTestWidgetsFlutterBinding binding) {
     expect(cameraIconFinder, findsOneWidget);
 
     await tester.tap(cameraIconFinder);
-    await tester.pumpAndSettle(const Duration(seconds: 1));
+    for (int i = 0; i < 100; i++) {
+      await tester.pumpAndSettle();
+    }
     await ss.capture('Camera');
 
     final barcodeLabelFinder = find.byType(BarcodeLabel);
@@ -237,10 +239,15 @@ void cameraTakePicture(IntegrationTestWidgetsFlutterBinding binding) {
     expect(draggableWidgetFinder, findsNothing);
 
     final cameraPreviewFinder = find.byType(CameraPreview);
+    while (findsOneWidget.matches(cameraPreviewFinder, {}) == false) {
+      await tester.pumpAndSettle();
+    }
     expect(cameraPreviewFinder, findsOneWidget);
 
     await tester.tap(cameraPreviewFinder);
-    await tester.pumpAndSettle(const Duration(seconds: 5));
+    for (int i = 0; i < 100; i++) {
+      await tester.pumpAndSettle();
+    }
     await ss.capture('after_taking_picture');
 
     expect(draggableWidgetFinder, findsOneWidget);
