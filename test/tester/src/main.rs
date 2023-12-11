@@ -57,7 +57,9 @@ async fn main() -> anyhow::Result<()> {
             output.stdout
         );
 
-        let mut avd_process = emulator_cmd().args(["-avd", &avd_name]).spawn()?;
+        let mut avd_process = ProcessKillOnDrop {
+            process: emulator_cmd().args(["-avd", &avd_name]).spawn()?,
+        };
 
         println!("Command is running");
         std::thread::sleep(Duration::from_secs(1));
@@ -82,8 +84,8 @@ async fn main() -> anyhow::Result<()> {
         )
         .unwrap();
 
-        println!("Killing");
-        avd_process.kill().expect("command wasn't running");
+        println!("Killing android emulator");
+        drop(avd_process);
         std::thread::sleep(Duration::from_secs(3));
         println!("Avd {avd_name} shoud be off by now");
     }
@@ -98,7 +100,7 @@ impl Drop for ProcessKillOnDrop {
     fn drop(&mut self) {
         let kill_result = self.process.kill();
         if let Err(e) = kill_result {
-            println!("kill obs failed. Error = {:?}", e);
+            println!("Failed to kill PID {}. Error = {:?}", self.process.id(), e);
         }
     }
 }

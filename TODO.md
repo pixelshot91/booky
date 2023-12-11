@@ -32,10 +32,10 @@
 * [ ] Test: CI show false success when a step with continue-on-error fails
 * [ ] Test: CI save screenshots as artifact and compare them with the one in extra/screenshots/ to check for regression
 * [ ] Test: Unify real device and emulator test target. It should append the date to the directory name to avoid having multiple test image in the same directory
-* [ ] Test: Automatically kill the emulator process on exit. KillProcessOnDrop ?
 
 # DONE
 
+* [x] Test: Automatically kill the emulator process on exit with KillProcessOnDrop
 * [x] Device Mounting: On Linux, on app start-up, the app create the directory even if the phone is not mounted
 * [x] BundleSelection: Fix 'See in list' regression where the focus bundle is not the correct one
 * [x] Test: CI: Prevent running the CI twice: on pull-request, then on push. See https://github.com/marketplace/actions/skip-duplicate-actions
