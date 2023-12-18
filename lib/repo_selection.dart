@@ -45,21 +45,26 @@ class _RepoSelectionState extends State<RepoSelection> {
           if (isDeviceConnected) {
             return BundleSelection(common.BookyRepo(common.externalDeviceRepo));
           }
-          return Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text(
-                  'Device not connected',
-                  style: TextStyle(fontSize: 30),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.refresh),
-                  onPressed: () {
-                    setState(() {});
-                  },
-                ),
-              ],
+          return Scaffold(
+            appBar: AppBar(
+              title: const Text('Repo Selection'),
+            ),
+            body: Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                    'Device not connected',
+                    style: TextStyle(fontSize: 30),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.refresh),
+                    onPressed: () {
+                      setState(() {});
+                    },
+                  ),
+                ],
+              ),
             ),
           );
         });

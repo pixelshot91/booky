@@ -10,9 +10,9 @@ use std::vec;
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 
+use crate::{abebooks, babelio, booksprice, fs_helper, google_books, justbooks, leslibraires};
 use crate::client::Client;
 use crate::common::{self};
-use crate::{abebooks, babelio, booksprice, fs_helper, google_books, justbooks, leslibraires};
 
 #[derive(EnumIter, PartialEq, Eq, Hash, Debug, Deserialize, Serialize, Copy, Clone)]
 pub enum ProviderEnum {
@@ -45,8 +45,8 @@ pub fn detect_barcode_in_image(img_path: String) -> Result<BarcodeDetectResults>
     let output = std::process::Command::new(
         "/home/julien/Perso/LeBonCoin/chain_automatisation/booky/native/detect_barcode",
     )
-    .arg(format!("--in={}", img_path))
-    .output()?;
+        .arg(format!("--in={}", img_path))
+        .output()?;
 
     if !output.status.success() {
         println!("status: {}", output.status);
@@ -158,13 +158,21 @@ pub struct ProviderMetadataPair {
 fn _get_auto_metadata_from_bundle(
     path: String,
 ) -> Result<HashMap<String, HashMap<ProviderEnum, Option<common::BookMetaDataFromProvider>>>> {
-    let mut file = fs_helper::my_file_open(path)?;
-    let mut contents = String::new();
-    file.read_to_string(&mut contents)?;
-
-    let raw_map: HashMap<String, HashMap<ProviderEnum, Option<common::BookMetaDataFromProvider>>> =
-        serde_json::from_str(&contents)?;
-    Ok(raw_map)
+    let file = fs_helper::my_file_open(path)?;
+    match file {
+        fs_helper::MyFileOpenRes::Ok(mut file) => {
+            let mut contents = String::new();
+            file.read_to_string(&mut contents).unwrap();
+            let raw_map: HashMap<
+                String,
+                HashMap<ProviderEnum, Option<common::BookMetaDataFromProvider>>,
+            > = serde_json::from_str(&contents)?;
+            return Ok(raw_map);
+        }
+        fs_helper::MyFileOpenRes::NoFile => {
+            return Ok(HashMap::new());
+        }
+    }
 }
 
 pub fn get_auto_metadata_from_bundle(path: String) -> Result<Vec<ISBNMetadataPair>> {
@@ -237,12 +245,22 @@ pub struct BookMetaData {
 const METADATA_FILE_NAME: &str = "metadata.json";
 
 pub fn get_manual_metadata_for_bundle(bundle_path: String) -> Result<BundleMetaData> {
-    let mut file = fs_helper::my_file_open(format!("{bundle_path}/{METADATA_FILE_NAME}"))?;
-    let mut contents = String::new();
-    file.read_to_string(&mut contents).unwrap();
+    _get_manual_metadata_for_bundle(&bundle_path)
+}
 
-    let manual_bundle_md: BundleMetaData = serde_json::from_str(&contents).unwrap();
-    return Ok(manual_bundle_md);
+fn _get_manual_metadata_for_bundle(bundle_path: &String) -> Result<BundleMetaData> {
+    let file = fs_helper::my_file_open(format!("{bundle_path}/{METADATA_FILE_NAME}"))?;
+    match file {
+        fs_helper::MyFileOpenRes::Ok(mut file) => {
+            let mut contents = String::new();
+            file.read_to_string(&mut contents).unwrap();
+            let manual_bundle_md: BundleMetaData = serde_json::from_str(&contents).unwrap();
+            return Ok(manual_bundle_md);
+        }
+        fs_helper::MyFileOpenRes::NoFile => {
+            return Ok(BundleMetaData::default());
+        }
+    }
 }
 
 pub fn set_manual_metadata_for_bundle(
@@ -251,10 +269,14 @@ pub fn set_manual_metadata_for_bundle(
 ) -> Result<()> {
     let file_path = format!("{bundle_path}/{METADATA_FILE_NAME}");
     let content = serde_json::to_string(&bundle_metadata)?;
+    std::fs::create_dir_all(bundle_path).unwrap();
     std::fs::write(&file_path, content)?;
 
     // On mtpfs new file are not accessible for opening. This is necessary to make this new file accessible
-    fs_helper::my_file_open(&file_path)?.sync_all()?;
+    if let fs_helper::MyFileOpenRes::Ok(file) = fs_helper::my_file_open(&file_path)? {
+        file.sync_all()?;
+    }
+
     Ok(())
 }
 
@@ -277,13 +299,12 @@ pub fn get_merged_metadata_for_all_bundles(
                     let md = crate::api::get_merged_metadata_for_bundle(bundle_path);
                     md.ok()
                 })
-                .await
-                .unwrap();
+                    .await
+                    .unwrap();
                 (dir_entry.file_name(), md)
             });
             let mut md_with_name = join_all(mds_future).await;
-            md_with_name
-                .sort_by(|(dir_name1, _md1), (dir_name2, _md2)| dir_name1.cmp(dir_name2));
+            md_with_name.sort_by(|(dir_name1, _md1), (dir_name2, _md2)| dir_name1.cmp(dir_name2));
             let sorted_md = md_with_name.into_iter().map(|(_, b)| b).collect_vec();
             Ok(sorted_md)
         })
@@ -292,16 +313,7 @@ pub fn get_merged_metadata_for_all_bundles(
 // Retrieve a summary of all the information of a bundle
 // If a book metadata is not available, try to use a metadata from a Provider
 pub fn get_merged_metadata_for_bundle(bundle_path: String) -> Result<BundleMetaData> {
-    // get from metadata.json
-    let path = format!("{bundle_path}/{METADATA_FILE_NAME}");
-    let mut file = fs_helper::my_file_open(&path)?;
-    let mut contents = String::new();
-    file.read_to_string(&mut contents).unwrap();
-
-    let mut manual_bundle_md: BundleMetaData = serde_json::from_str(&contents).expect(&format!(
-        "Unable to deserialize {}. content is {contents}.",
-        path
-    ));
+    let mut manual_bundle_md = _get_manual_metadata_for_bundle(&bundle_path)?;
 
     // Get MD from Provider
     let bundle_auto_md =
@@ -387,8 +399,8 @@ fn replace_with_longest_string_if_none_or_empty<F1>(
         auto_mds: Option<&HashMap<ProviderEnum, Option<common::BookMetaDataFromProvider>>>,
         string_getter: F1,
     ) -> Option<String>
-    where
-        F1: Fn(&common::BookMetaDataFromProvider) -> &Option<String>,
+        where
+            F1: Fn(&common::BookMetaDataFromProvider) -> &Option<String>,
     {
         auto_mds?
             .values()

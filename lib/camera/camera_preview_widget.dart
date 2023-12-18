@@ -24,7 +24,9 @@ class CameraPreviewWidget extends StatefulWidget {
   final CameraController? controller;
   final BarcodeScanner barcodeScanner;
 
-  final void Function(img.Image croppedImage) onImageTaken;
+  /// The image that was just taken
+  /// Potentially cropped, if the user change the crop slider
+  final void Function(img.Image imageTaken) onImageTaken;
   final void Function(List<Barcode> barcodes) onBarcodeLiveDetected;
 
   @override
@@ -71,19 +73,18 @@ class _CameraPreviewWidgetState extends State<CameraPreviewWidget> {
               child: CameraPreview(
                 cameraController,
                 child: LayoutBuilder(
-                  builder: (context, boxConstraints) =>
-                      GestureDetector(
-                        onTapDown: (TapDownDetails details) async => _onViewFinderTap(details, boxConstraints),
-                        child: AbsorbPointer(
-                          child: Stack(
-                            fit: StackFit.passthrough,
-                            children: [
-                              _viewFinderCropIndicator(),
-                              if (_customPaint != null) _customPaint!,
-                            ],
-                          ),
-                        ),
+                  builder: (context, boxConstraints) => GestureDetector(
+                    onTapDown: (TapDownDetails details) async => _onViewFinderTap(details, boxConstraints),
+                    child: AbsorbPointer(
+                      child: Stack(
+                        fit: StackFit.passthrough,
+                        children: [
+                          _viewFinderCropIndicator(),
+                          if (_customPaint != null) _customPaint!,
+                        ],
                       ),
+                    ),
+                  ),
                 ),
               ),
             ),

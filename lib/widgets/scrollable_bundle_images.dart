@@ -75,7 +75,7 @@ class _ScrollableBundleImagesState extends State<ScrollableBundleImages> {
                                             context: context,
                                             builder: (context) => Center(child: ImageWidget(img.fullScale)));
                                       },
-                                      child: ImageWidget(img.compressed)))
+                                      child: ImageWidget(img.thumbnail)))
                                   .intersperse(_Gap(8.0, widget.axis))
                                   .toList()),
                         ),

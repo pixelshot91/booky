@@ -88,7 +88,12 @@ class AdEditingWidget extends StatelessWidget {
       final bundleMetaData = await step.bundle.getMergedMetadata();
       if (bundleMetaData == null) {
         // TODO: Use better default value when no information is known on the bundle (use null instead of 0)
-        return Ad(title: '', description: '', priceCent: 0, weightGrams: 0, itemState: ItemState.Medium, imgs: images);
+        return Ad(title: '',
+            description: '',
+            priceCent: 0,
+            weightGrams: 0,
+            itemState: ItemState.Medium,
+            imgs: images);
       }
       final books = bundleMetaData.books;
 
@@ -112,13 +117,16 @@ class AdEditingWidget extends StatelessWidget {
         description += '\n\nMots-clés:\n' + keywords;
       }
 
-      final totalPriceIncludingShipping = books.map((e) => e.priceCent ?? 0).sum;
+      final totalPriceIncludingShipping = books
+          .map((e) => e.priceCent ?? 0)
+          .sum;
       final weightGramsWithWrapping = (bundleMetaData.weightGrams! * 1.2).toInt();
       var totalPriceExcludingShipping =
           totalPriceIncludingShipping - _estimatedShippingCost(grams: weightGramsWithWrapping);
 
       const minimumSellingPrice = 100;
       totalPriceExcludingShipping = max(totalPriceExcludingShipping, minimumSellingPrice);
+
       return Ad(
           title: title,
           description: description,
@@ -170,7 +178,8 @@ class _AdEditingWidget2State extends State<AdEditingWidget2> {
   }
 
   @override
-  Widget build(BuildContext context) => Padding(
+  Widget build(BuildContext context) =>
+      Padding(
         padding: const EdgeInsets.all(8.0),
         child: SingleChildScrollView(
           child: Column(
@@ -206,21 +215,7 @@ class _AdEditingWidget2State extends State<AdEditingWidget2> {
                 Icons.scale,
                 SizedBox(width: 300, child: _LBCStyledWeight(widget.ad.weightGrams)),
               ),
-              _nonCopyableField(
-                  Icons.collections,
-                  DraggableFilesWidget(
-                    uris: widget.ad.imgs.map((img) => Uri.file(img.fullScale.path)),
-                    child: Column(
-                      children: [
-                        Row(
-                          children: widget.ad.imgs
-                              .map((img) => SizedBox(height: 200, child: ImageWidget(File(img.fullScale.path))))
-                              .toList(),
-                        ),
-                        const Text('Drag and drop images')
-                      ],
-                    ),
-                  )),
+              _nonCopyableField(Icons.collections, DraggableFilesWidget(images: widget.ad.imgs)),
               Center(
                 child: ElevatedButton(
                     onPressed: () async {
@@ -256,10 +251,11 @@ class _AdEditingWidget2State extends State<AdEditingWidget2> {
                     child: const Text('Mark as published')),
               )
             ]
-                .map((e) => Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 4.0),
-                      child: e,
-                    ))
+                .map((e) =>
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4.0),
+                  child: e,
+                ))
                 .toList(),
           ),
         ),
@@ -307,6 +303,8 @@ class _LBCStyledWeight extends StatelessWidget {
       _WeightCategory(maxWeight: 20000, description: 'De 10 kg à 20 kg'),
       _WeightCategory(maxWeight: 20000, description: 'De 20 kg à 30 kg'),
     ];
-    return LBCRadioButton(weightCategories.firstWhere((c) => c.maxWeight > weightGrams).description);
+    return LBCRadioButton(weightCategories
+        .firstWhere((c) => c.maxWeight > weightGrams)
+        .description);
   }
 }

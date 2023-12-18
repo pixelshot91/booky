@@ -204,6 +204,10 @@ class _BundleSelectionState extends State<BundleSelection> with RouteAware {
     }
   }
 
+  Future<void> _compressImages() async {
+    (await _listBundles())?.let((bundles) => _compressedAllBundleImages(bundles));
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -228,6 +232,13 @@ class _BundleSelectionState extends State<BundleSelection> with RouteAware {
                         bundlesScrollController: gridViewController)
                       ..showResults(context));
               }),
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: () {
+              setState(() {});
+              Future(_compressImages);
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.cloud_download),
             onPressed: () async {
@@ -274,8 +285,8 @@ class _BundleSelectionState extends State<BundleSelection> with RouteAware {
       ),
       floatingActionButton: FloatingActionButton(
           child: const Icon(Icons.camera),
-          onPressed: () => Navigator.push(
-              context, MaterialPageRoute<void>(builder: (context) => CameraWidget(ShootMultipleBundle(widget.repo))))),
+          onPressed: () => Navigator.push(context,
+              MaterialPageRoute<void>(builder: (context) => CameraWidgetInit(ShootMultipleBundle(widget.repo))))),
       body: FutureWidget(
         future: _listBundles(),
         builder: (bundles) {
@@ -363,6 +374,33 @@ class _BundleSelectionState extends State<BundleSelection> with RouteAware {
       }
       print('Unhandled exception $e');
       rethrow;
+    }
+  }
+
+  Future<void> _compressedAllBundleImages(Iterable<Bundle> bundles) async {
+    if (!Platform.isAndroid) return;
+    if (mounted) {
+      setState(() {
+        bundleNb = bundles.length;
+        compressedBundleNb = 0;
+      });
+    }
+    final bundleFutures = bundles.map<Future<void>>((bundle) async {
+      final imagesFutures = (await bundle.images).map((image) async {
+        print('compressing ${image.fullScale.path}');
+        await image.compressToThumbnail();
+        await image.compressToImageToExport();
+      });
+      await Future.wait(imagesFutures);
+      if (mounted) {
+        setState(() => compressedBundleNb = compressedBundleNb! + 1);
+      }
+    });
+    await Future.wait(bundleFutures);
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('Compression finished'),
+      ));
     }
   }
 
@@ -592,8 +630,10 @@ class _ActionButtons extends StatelessWidget {
                 label: 'Edit bundle',
                 onPressed: () {
                   // Pushing a new route here synchronously does nothing as the PopUpMenuButton called a Navigator.pop immediately after to close the PopUpMenu
-                  Future(() => Navigator.push(context,
-                      MaterialPageRoute<void>(builder: (context) => CameraWidget(EditOneBundle(bundle.directory)))));
+                  Future(() => Navigator.push(
+                      context,
+                      MaterialPageRoute<void>(
+                          builder: (context) => CameraWidgetInit(EditOneBundle(bundle.directory)))));
                 },
               ),
               _popUpMenuIconText(

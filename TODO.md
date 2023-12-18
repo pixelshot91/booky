@@ -11,7 +11,6 @@
 * [ ] Camera: Add sound when deleting a picture
 * [ ] Camera: Fix flashlight turning on and never off again
 * [ ] Camera: Camera is still in use when going back to BundleSelection, and even when going to the home screen
-* [ ] BundleSelection: Make image load faster (at least on Linux) (use even smaller thumbnail, cache images)
 * [ ] BundleSelection: Add filter by auto_metadata downloaded or not
 * [ ] BundleSelection: Add sort by date picture taken, date published, price
 * [ ] BundleSelection: Add ability to go back into Camera mode to add/delete picture/ISBN, change the weight/state
@@ -26,7 +25,7 @@
 * [ ] MetadataCollecting: Show a visual indication that the title is too long (105 characters for LeBonCoin)
 * [ ] AdEditing: Disable 'Mark as published' if the title is empty
 * [ ] AdEditing: Save the ad as it was published
-* [ ] AdEditing: Fix drag-and-drop crash on Android
+* [ ] AdEditing: Fix drag-and-drop crash on Android (See <https://developer.android.com/training/secure-file-sharing)>
 * [ ] Search with Selenium in headless mode
 * [ ] Test: Launch github action runner without opening graphical interface (use -no-boot-anim  -no-window)
 * [ ] Test: CI show false success when a step with continue-on-error fails
@@ -35,6 +34,7 @@
 
 # DONE
 
+* [x] BundleSelection: Make image load faster. Differentiate thumbnail and image to export
 * [x] Test: Automatically kill the emulator process on exit with KillProcessOnDrop
 * [x] Device Mounting: On Linux, on app start-up, the app create the directory even if the phone is not mounted
 * [x] BundleSelection: Fix 'See in list' regression where the focus bundle is not the correct one
