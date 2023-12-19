@@ -7,7 +7,7 @@ Future<void> main(List<String> args) async {
   // Grant all the necessary permission first to avoid the permission pop-up
   await Process.run(
     'adb',
-    ['shell', 'pm', 'grant', 'fr.pimoid.booky.debug', 'android.permission.CAMERA'],
+    ['shell', 'pm', 'grant', 'fr.pimoid.booky.drive.debug', 'android.permission.CAMERA'],
   );
   final screenshotDir = Platform.environment['screenshot_dir'];
   try {

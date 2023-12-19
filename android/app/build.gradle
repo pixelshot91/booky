@@ -63,7 +63,22 @@ android {
             // Signing with the debug keys for now, so `flutter run --release` works.
             signingConfig signingConfigs.debug
         }
+
     }
+
+    flavorDimensions "driveDimension"
+
+    productFlavors {
+        drive {
+            dimension "driveDimension"
+//            resValue "string", "app_name", "free flavor example"
+            applicationIdSuffix ".drive"
+        }
+        noDrive {
+            // default
+        }
+    }
+
 }
 
 flutter {
@@ -75,7 +90,7 @@ dependencies {
 }
 
 [
-        Debug: null,
+        Debug  : null,
         Profile: '--release',
         Release: '--release'
 ].each {

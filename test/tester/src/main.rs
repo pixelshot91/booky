@@ -151,35 +151,19 @@ fn copy_files_to_devices() -> () {
         // Just to check that the emulator is fully started
         let res = launch_simple_command(&["adb", "shell", "ls /storage/emulated/0/Android/data/"]);
         if res.is_ok() {
-            launch_simple_command(&[
-                "adb",
-                "shell",
-                "rm -rf /storage/emulated/0/Android/data/fr.pimoid.booky.debug/files/",
-            ])
-            .unwrap();
-            launch_simple_command(&[
-                "adb",
-                "shell",
-                "mkdir -p /storage/emulated/0/Android/data/fr.pimoid.booky.debug/",
-            ])
-            .unwrap();
+            let booky_dir = "/storage/emulated/0/Android/data/fr.pimoid.booky.drive.debug/";
+            launch_simple_command(&["adb", "shell", &format!("rm -rf {booky_dir}/files/")])
+                .unwrap();
+            launch_simple_command(&["adb", "shell", &format!("mkdir -p {booky_dir}")]).unwrap();
 
             launch_simple_command(&[
                 "adb",
                 "push",
                 "../../extra/mock_data/basic/",
-                "/storage/emulated/0/Android/data/fr.pimoid.booky.debug/files/",
+                &format!("{booky_dir}/files"),
             ])
             .unwrap();
 
-            let list = launch_simple_command(&[
-                "adb",
-                "shell",
-                "ls /storage/emulated/0/Android/data/fr.pimoid.booky.debug/files",
-            ])
-            .unwrap()
-            .stdout;
-            println!("ls returned: {list}");
             return ();
         }
 

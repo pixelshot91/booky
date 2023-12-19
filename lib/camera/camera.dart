@@ -66,17 +66,26 @@ class _CameraWidgetInitState extends State<CameraWidgetInit> {
         future: metadata,
         builder: (metadata) {
           return CameraWidget(
-              bundle: bundle, initialWeight: metadata.weightGrams, initialItemState: metadata.itemState);
+            bundle: bundle,
+            initialWeight: metadata.weightGrams,
+            initialItemState: metadata.itemState,
+            initialBarcodes: metadata.books.map((b) => b.isbn).toSet(),
+          );
         });
   }
 }
 
 class CameraWidget extends StatefulWidget {
-  const CameraWidget({required this.bundle, required this.initialWeight, required this.initialItemState});
+  const CameraWidget(
+      {required this.bundle,
+      required this.initialWeight,
+      required this.initialItemState,
+      required this.initialBarcodes});
 
   final Bundle bundle;
   final int? initialWeight;
   final ItemState? initialItemState;
+  final Set<String> initialBarcodes;
 
   @override
   State<CameraWidget> createState() => _CameraWidgetState();
@@ -146,11 +155,10 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
         padding: const EdgeInsets.all(8.0),
         child: Column(
           children: _getValidRegisteredBarcodes()
-              .map((barcode) =>
-              BarcodeLabel(
-                barcode,
-                onDeletePressed: () => setState(() => _registeredBarcodes.remove(barcode)),
-              ))
+              .map((barcode) => BarcodeLabel(
+                    barcode,
+                    onDeletePressed: () => setState(() => _registeredBarcodes.remove(barcode)),
+                  ))
               .toList(),
         ),
       );
@@ -183,10 +191,10 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
                           _filterBarcode(barcodes).forEach((barcodeString) {
                             _registeredBarcodes
                                 .update(barcodeString, (oldDetection) => oldDetection.makeSure(_onBarcodeDetected),
-                                ifAbsent: () {
-                                  _onBarcodeDetected();
-                                  return SureDetection();
-                                });
+                                    ifAbsent: () {
+                              _onBarcodeDetected();
+                              return SureDetection();
+                            });
                           });
                           setState(() {});
                         },
@@ -237,9 +245,8 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
                 ],
               ),
             ]
-                .map((w) =>
-                Expanded(
-                    child: Padding(
+                .map((w) => Expanded(
+                        child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 4),
                       child: w,
                     )))
@@ -274,25 +281,24 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
         spacing: 8.0,
         runSpacing: 8.0,
         children: images
-            .map((image) =>
-            SizedBox(
-              width: 64,
-              height: 64,
-              child: DraggableWidget(
-                // Use a key otherwise if we delete an image, the image that will take its place will inherit the state of the deleted image
-                  key: ValueKey(image.fullScale.path),
-                  child: Image.file(File(image.thumbnail.path)),
-                  onVerticalDrag: () async {
-                    final res = await widget.bundle.deleteImage(image);
-                    if (!res && mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                        content: Text('Error while saving image'),
-                      ));
-                      return;
-                    }
-                    setState(() {});
-                  }),
-            ))
+            .map((image) => SizedBox(
+                  width: 64,
+                  height: 64,
+                  child: DraggableWidget(
+                      // Use a key otherwise if we delete an image, the image that will take its place will inherit the state of the deleted image
+                      key: ValueKey(image.fullScale.path),
+                      child: Image.file(File(image.thumbnail.path)),
+                      onVerticalDrag: () async {
+                        final res = await widget.bundle.deleteImage(image);
+                        if (!res && mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                            content: Text('Error while saving image'),
+                          ));
+                          return;
+                        }
+                        setState(() {});
+                      }),
+                ))
             .toList(),
       ),
     );
@@ -328,29 +334,25 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
   AppBar _buildAppBar(BuildContext context) {
     return AppBar(title: const Text('Edit Bundle'), actions: [
       PopupMenuButton<void>(
-        itemBuilder: (_) =>
-        [
+        itemBuilder: (_) => [
           PopupMenuItem(
               child: const Text('Change camera'),
               onTap: () async {
                 await Future.delayed(const Duration(seconds: 0), () async {
                   await showDialog<void>(
                     context: context,
-                    builder: (BuildContext _) =>
-                        FutureWidget(
-                          future: availableCameras(),
-                          builder: (cameras) =>
-                              SimpleDialog(
-                                  title: const Text('Select camera'),
-                                  children: cameras
-                                      .where((c) => c.lensDirection == CameraLensDirection.back)
-                                      .map((c) =>
-                                      SimpleDialogOption(
-                                        onPressed: () => _onNewCameraSelected(c),
-                                        child: Text('Camera ${c.name}'),
-                                      ))
-                                      .toList()),
-                        ),
+                    builder: (BuildContext _) => FutureWidget(
+                      future: availableCameras(),
+                      builder: (cameras) => SimpleDialog(
+                          title: const Text('Select camera'),
+                          children: cameras
+                              .where((c) => c.lensDirection == CameraLensDirection.back)
+                              .map((c) => SimpleDialogOption(
+                                    onPressed: () => _onNewCameraSelected(c),
+                                    child: Text('Camera ${c.name}'),
+                                  ))
+                              .toList()),
+                    ),
                   );
                 });
               })
@@ -397,22 +399,22 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
           showInSnackBar('You have denied camera access.');
           break;
         case 'CameraAccessDeniedWithoutPrompt':
-        // iOS only
+          // iOS only
           showInSnackBar('Please go to Settings app to enable camera access.');
           break;
         case 'CameraAccessRestricted':
-        // iOS only
+          // iOS only
           showInSnackBar('Camera access is restricted.');
           break;
         case 'AudioAccessDenied':
           showInSnackBar('You have denied audio access.');
           break;
         case 'AudioAccessDeniedWithoutPrompt':
-        // iOS only
+          // iOS only
           showInSnackBar('Please go to Settings app to enable audio access.');
           break;
         case 'AudioAccessRestricted':
-        // iOS only
+          // iOS only
           showInSnackBar('Audio access is restricted.');
           break;
         default:
@@ -426,11 +428,10 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
     }
   }
 
-  Iterable<String> _filterBarcode(Iterable<Barcode> barcodes) =>
-      barcodes
-          .where((barcode) => barcode.type == BarcodeType.isbn)
-          .map((barcode) => barcode.displayValue)
-          .whereType<String>();
+  Iterable<String> _filterBarcode(Iterable<Barcode> barcodes) => barcodes
+      .where((barcode) => barcode.type == BarcodeType.isbn)
+      .map((barcode) => barcode.displayValue)
+      .whereType<String>();
 
   void _showCameraException(CameraException e) {
     _logError(e.code, e.description);
@@ -446,11 +447,10 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
   }
 
-  List<String> _getValidRegisteredBarcodes() =>
-      _registeredBarcodes.entries
-          .where((entry) => isbnValidator(entry.key) == null && entry.value is SureDetection)
-          .map((e) => e.key)
-          .toList();
+  List<String> _getValidRegisteredBarcodes() => _registeredBarcodes.entries
+      .where((entry) => isbnValidator(entry.key) == null && entry.value is SureDetection)
+      .map((e) => e.key)
+      .toList();
 }
 
 class BarcodeLabel extends StatelessWidget {
@@ -494,7 +494,7 @@ class _MetadataWidgetState extends State<MetadataWidget> {
     super.initState();
     metadata = BundleMetaData(
         books:
-        widget.isbns.map((isbn) => BookMetaData(isbn: isbn, authors: [], keywords: [], priceCent: null)).toList());
+            widget.isbns.map((isbn) => BookMetaData(isbn: isbn, authors: [], keywords: [], priceCent: null)).toList());
   }
 
   @override
@@ -526,11 +526,10 @@ class _MetadataWidgetState extends State<MetadataWidget> {
               widget.onSubmit();
             })
       ]
-          .map((w) =>
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 4.0),
-            child: w,
-          ))
+          .map((w) => Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4.0),
+                child: w,
+              ))
           .toList(),
     );
   }
