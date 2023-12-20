@@ -107,9 +107,36 @@ Follow the instruction of flutter_rust_bridge_template. Here is an extract
 #### super_native_extension
 Follow this tutorial: https://pub.dev/packages/super_clipboard
 
-#### Launching the test suite
-##### OBS
-###### Setup of Virtual camera
+### Run the flutter application
+#### On an android device
+Connect your phone.  
+Use
+```
+flutter run --flavor nodrive
+```
+If you don't specify a flavor, flutter will output this error:
+```
+Exception: Gradle build failed to produce an .apk file. It's likely that this file was generated under /Users/pattobrien/dev/fine_designs/template/src/frontend/build, but the tool couldn't find it.
+```
+(See <https://github.com/flutter/flutter/issues/22856> for issue about this cryptic message and the use of default flavor)
+
+#### On Linux
+First connect your phonem then mount its content on /media/phone.  
+You can mount your phone with [adbfs-rootless](https://github.com/spion/adbfs-rootless)
+```
+$ ./adbfs /media/phone/
+$ ls /media/phone
+... storage/ ... 
+```
+
+Then launch Booky with:
+```
+$ flutter run --flavor noDrive -d linux
+```
+
+### Launching the test suite
+#### OBS
+##### Setup of Virtual camera
 OBS home page: <https://obsproject.com/>
 
 Some test require to simulate a camera. Booky use OBS virtual camera to mock the real camera.
