@@ -20,7 +20,6 @@ class UnsureDetection implements BarcodeDetection {
     if (occurrence < BarcodeDetection.minBarcodeOccurrence - 1) {
       return UnsureDetection._(occurrence + 1);
     } else {
-      print('UnsureDetection increaseCounter -> SureDetection');
       onSureTransition();
       return SureDetection();
     }

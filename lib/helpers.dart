@@ -174,6 +174,10 @@ extension ListExt<T> on List<T> {
   List<T>? nullIfEmpty() => isEmpty ? null : this;
 }
 
+extension MapExt<K, V> on Iterable<MapEntry<K, V>> {
+  Map<K, V> toMap() => Map<K, V>.fromEntries(this);
+}
+
 extension IterableListExt<T> on Iterable<List<T>> {
   List<T> biggest() => fold([], (biggest, element) => element.length > biggest.length ? element : biggest);
 }

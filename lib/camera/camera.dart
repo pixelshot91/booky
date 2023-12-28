@@ -3,11 +3,11 @@ import 'dart:io';
 
 import 'package:audioplayers/audioplayers.dart';
 import 'package:booky/common.dart';
-import 'package:booky/isbn_helper.dart';
 import 'package:booky/utils/debounce.dart';
 import 'package:camera/camera.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge.dart';
 import 'package:google_mlkit_barcode_scanning/google_mlkit_barcode_scanning.dart';
 import 'package:image/image.dart' as img_lib;
@@ -16,6 +16,7 @@ import '../bundle.dart';
 import '../common.dart' as common;
 import '../ffi.dart';
 import '../helpers.dart';
+import '../isbn_helper.dart';
 import 'barcode_detection.dart';
 import 'camera_preview_widget.dart';
 import 'draggable_widget.dart';
@@ -69,7 +70,8 @@ class _CameraWidgetInitState extends State<CameraWidgetInit> {
             bundle: bundle,
             initialWeight: metadata.weightGrams,
             initialItemState: metadata.itemState,
-            initialBarcodes: metadata.books.map((b) => b.isbn).toSet(),
+            initialBarcodes:
+                metadata.books.map((b) => MapEntry<String, BarcodeDetection>(b.isbn, SureDetection())).toMap(),
           );
         });
   }
@@ -85,7 +87,7 @@ class CameraWidget extends StatefulWidget {
   final Bundle bundle;
   final int? initialWeight;
   final ItemState? initialItemState;
-  final Set<String> initialBarcodes;
+  final Map<String, BarcodeDetection> initialBarcodes;
 
   @override
   State<CameraWidget> createState() => _CameraWidgetState();
@@ -99,8 +101,7 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
   late int? weightGrams = widget.initialWeight;
   late ItemState? itemState = widget.initialItemState;
 
-  // TODO: initialize
-  final Map<String, BarcodeDetection> _registeredBarcodes = {};
+  late final Map<String, BarcodeDetection> _registeredBarcodes = widget.initialBarcodes;
 
   // Used to signal when the imageProcessing pipeline finish processing the current frame
   Completer<void>? imageProcessingCompleter;
@@ -153,14 +154,33 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
     Widget showBarcodeList() {
       return Padding(
         padding: const EdgeInsets.all(8.0),
-        child: Column(
-          children: _getValidRegisteredBarcodes()
-              .map((barcode) => BarcodeLabel(
-                    barcode,
-                    onDeletePressed: () => setState(() => _registeredBarcodes.remove(barcode)),
-                  ))
-              .toList(),
-        ),
+        child: Column(children: [
+          TextFormField(
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r'^[0-9X]{0,13}')),
+              ],
+              autovalidateMode: AutovalidateMode.always,
+              validator: (s) => isbnValidator(s!),
+              decoration: const InputDecoration(hintText: 'Type manually the ISBN here'),
+              onFieldSubmitted: (newIsbn) {
+                setState(() {
+                  _registeredBarcodes.update(newIsbn, (oldDetection) => oldDetection.makeSure(() {}), ifAbsent: () {
+                    return SureDetection();
+                  });
+                });
+              }),
+          Expanded(
+            child: SingleChildScrollView(
+              child: Column(
+                  children: _getValidRegisteredBarcodes()
+                      .map((barcode) => BarcodeLabel(
+                            barcode,
+                            onDeletePressed: () => setState(() => _registeredBarcodes.remove(barcode)),
+                          ))
+                      .toList()),
+            ),
+          ),
+        ]),
       );
     }
 
@@ -431,7 +451,8 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
   Iterable<String> _filterBarcode(Iterable<Barcode> barcodes) => barcodes
       .where((barcode) => barcode.type == BarcodeType.isbn)
       .map((barcode) => barcode.displayValue)
-      .whereType<String>();
+      .whereNotNull()
+      .where((isbn) => isbnValidator(isbn) == null);
 
   void _showCameraException(CameraException e) {
     _logError(e.code, e.description);
@@ -447,10 +468,9 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
   }
 
-  List<String> _getValidRegisteredBarcodes() => _registeredBarcodes.entries
-      .where((entry) => isbnValidator(entry.key) == null && entry.value is SureDetection)
-      .map((e) => e.key)
-      .toList();
+  List<String> _getValidRegisteredBarcodes() {
+    return _registeredBarcodes.entries.where((entry) => entry.value is SureDetection).map((e) => e.key).toList();
+  }
 }
 
 class BarcodeLabel extends StatelessWidget {
