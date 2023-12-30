@@ -56,7 +56,7 @@ extension DirectoryExt on Directory {
   File joinFile(String f) => File(path.join(this.path, f));
 }
 
-final externalDeviceRepo = Directory('/media/phone/storage/emulated/0/Android/data/fr.pimoid.booky.debug/files');
+final externalDeviceRepo = Directory('/media/phone/storage/emulated/0/Android/data/fr.pimoid.booky/files');
 
 // final externalDeviceRepo = Directory('/home/julien/Perso/LeBonCoin/chain_automatisation/booky/extra/mock_data/basic/');
 extension ItemStateExt on ItemState {

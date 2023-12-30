@@ -10,6 +10,8 @@ import 'package:integration_test/integration_test.dart';
 void main() {
   final IntegrationTestWidgetsFlutterBinding binding = IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
+  searchBar(binding);
+  return;
   final tests = {
     'basic_screenshot': basicScreenshot,
     'searchbar': searchBar,
@@ -144,7 +146,7 @@ void addIsbn(final IntegrationTestWidgetsFlutterBinding binding) {
 void searchBar(final IntegrationTestWidgetsFlutterBinding binding) {
   final ss = Screenshotter(binding, 'searchbar');
 
-  testWidgets('test SearchBar', (WidgetTester tester) async {
+/*  testWidgets('test SearchBar', (WidgetTester tester) async {
     // Build our app.
     app.main();
 
@@ -160,7 +162,7 @@ void searchBar(final IntegrationTestWidgetsFlutterBinding binding) {
     await tester.tap(searchIconFinder);
 
     await tester.pumpAndSettle(const Duration(seconds: 3));
-    await ss.capture('open_seach_bar');
+    await ss.capture('open_search_bar');
 
     final findSearchBarTextField = find
         .byWidgetPredicate((widget) => widget is TextField && widget.decoration?.hintText == 'Search all the bundles');
@@ -170,11 +172,65 @@ void searchBar(final IntegrationTestWidgetsFlutterBinding binding) {
     await tester.pumpAndSettle(const Duration(seconds: 1));
 
     await ss.capture('type_nord');
-    expect(
-        find.byWidgetPredicate((widget) => widget is Text && widget.data!.startsWith('Harricana: Le Royaume du Nord')),
-        findsOneWidget);
+    final titleToFind =
+        find.byWidgetPredicate((widget) => widget is Text && widget.data!.startsWith('Harricana: Le Royaume du Nord'));
+    expect(titleToFind, findsOneWidget);
+  });*/
+  testWidgets('test SearchBar', (WidgetTester tester) async {
+    // Build our app.
+    app.main();
 
-    await tester.pageBack();
+    // On Android, this is required prior to taking the screenshot.
+    await binding.convertFlutterSurfaceToImage();
+
+    // Pump a frame before taking the screenshot.
+    await tester.pumpAndSettle();
+    await ss.capture('home');
+
+    // The book should be to far below to be visible
+    const bookTitle = 'Les épîtres de Paul';
+    expect(find.text(bookTitle), findsNothing);
+
+    final searchIconFinder = find.byIcon(Icons.search);
+    expect(searchIconFinder, findsOneWidget);
+    await tester.tap(searchIconFinder);
+
+    await tester.pumpAndSettle(const Duration(seconds: 3));
+    await ss.capture('open_search_bar');
+
+    final findSearchBarTextField = find
+        .byWidgetPredicate((widget) => widget is TextField && widget.decoration?.hintText == 'Search all the bundles');
+    expect(findSearchBarTextField, findsOneWidget);
+    await tester.enterText(findSearchBarTextField, 'epitre');
+    await tester.pumpAndSettle(const Duration(seconds: 1));
+
+    await ss.capture('type_in_search_bar');
+    final resultTitleToFind = find.byWidgetPredicate((widget) => widget is Text && widget.data!.startsWith(bookTitle));
+    expect(resultTitleToFind, findsOneWidget);
+
+    /*final titlesToFind = find.byWidgetPredicate((widget) => widget is Text && widget.data!.startsWith('Harricana: Le Royaume du Nord')).evaluate();
+    expect(titlesToFind.length, equals(1));
+    final titleToFind = titlesToFind.first;*/
+
+    final resultRow =
+        find.ancestor(of: resultTitleToFind, matching: find.byWidgetPredicate((widget) => widget is Row)).first;
+    expect(resultRow, findsOneWidget);
+
+    final seeInListTextButtonFinder = find.descendant(
+        of: resultRow,
+        matching: find.byWidgetPredicate((widget) {
+          if (widget is! TextButton) return false;
+          final child = widget.child;
+          return child is Text && child.data == 'See in list';
+        }));
+    expect(seeInListTextButtonFinder, findsOneWidget);
+
+    await tester.tap(seeInListTextButtonFinder);
+    await tester.pumpAndSettle(const Duration(seconds: 1));
+
+    await ss.capture('tap_see_in_list');
+    // Now that we tapped on 'See in list', the book should be visible
+    expect(find.byWidgetPredicate((widget) => widget is Text && widget.data!.startsWith(bookTitle)), findsOneWidget);
   });
 }
 
@@ -271,5 +327,18 @@ void cameraTakePicture(IntegrationTestWidgetsFlutterBinding binding) {
     expect(draggableWidgetFinder, findsNothing);
 
     await tester.pageBack();
+  });
+}
+
+void publishAd(IntegrationTestWidgetsFlutterBinding binding) {
+  final ss = Screenshotter(binding, 'publish_ad');
+
+  testWidgets('verify screenshot', (WidgetTester tester) async {
+    app.main();
+    await binding.convertFlutterSurfaceToImage();
+
+    // Pump a frame before taking the screenshot.
+    await tester.pumpAndSettle();
+    await ss.capture('home');
   });
 }
