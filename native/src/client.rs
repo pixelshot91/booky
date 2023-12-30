@@ -11,7 +11,7 @@ pub trait Client {
     ) -> Response;
 }
 
-// Used to represent indifferently cached response or fresh response from the network
+/// Used to represent indifferently cached response or fresh response from the network
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub struct Response {
     pub url: String,

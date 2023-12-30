@@ -122,15 +122,50 @@ mod tests {
             }
         );
     }
+
+    #[test]
+    fn extract_metadata_from_isbn_response_with_escape_character() {
+        let html = my_read_to_string("src/google_books/test/9782070456284/search_by_isbn_9782070456284.html")
+            .unwrap();
+        let metadata = extract_metadata_from_isbn_response(&html);
+        assert_eq!(
+            metadata,
+            BookMetaDataFromProvider {
+                title: None,
+                authors: vec![common::Author {
+                    first_name: "".to_string(),
+                    last_name: "Philippe Djian".to_string()
+                }],
+                blurb: Some("Décembre est un mois où les hommes se saoulent - tuent, violent, se mettent en couple, reconnaissent des enfants qui ne sont pas les leurs, s'enfuient, gémissent, meurent... \"Oh...\" raconte trente jours d'une vie sans répit, où les souvenirs, le sexe et la mort se court-circuitent à tout instant.".into()),
+                ..Default::default()
+            }
+        );
+    }
 }
 
+/// The following field description compile, but the Cow is always of the Cow::Owned variant
+/// ```
+///   #[serde(borrow)]
+///   pub my_field: Option<Cow<'a, str>>,
+/// ```
+///
+/// See: https://github.com/serde-rs/serde/issues/2016
+/// 
+/// So I use:
+/// ```
+///   #[serde_as(as = "Option<BorrowCow>")]
+///   pub subtitle: Option<Cow<'a, str>>,
+/// ```
 mod structs {
     use serde::{Deserialize, Serialize};
+    use serde_with::{serde_as, BorrowCow};
+    use std::borrow::Cow;
 
     #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub struct Root<'a> {
-        pub kind: &'a str,
+        #[serde(borrow)]
+        pub kind: Cow<'a, str>,
         pub total_items: i64,
         pub items: Option<Vec<Item<'a>>>,
     }
@@ -138,107 +173,28 @@ mod structs {
     #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub struct Item<'a> {
-        // pub kind: &'a str,
-        pub id: &'a str,
-        // pub etag: &'a str,
-        pub self_link: &'a str,
+        #[serde(borrow)]
+        pub kind: Cow<'a, str>,
+        #[serde(borrow)]
+        pub id: Cow<'a, str>,
+        #[serde(borrow)]
+        pub self_link: Cow<'a, str>,
         pub volume_info: VolumeInfo<'a>,
-        // pub sale_info: SaleInfo<'a>,
-        // pub access_info: AccessInfo<'a>,
-        // pub search_info: Option<SearchInfo<'a>>,
     }
 
+    #[serde_as]
     #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub struct VolumeInfo<'a> {
-        pub title: &'a str,
-        pub subtitle: Option<&'a str>,
-        pub authors: Option<Vec<&'a str>>,
-        // pub publisher: Option<&'a str>,
-        // pub published_date: &'a str,
-        // Should be an owned String in case the description contain escape characters like (\")
-        // TODO: change all &str to String
-        pub description: Option<String>,
-        // pub industry_identifiers: Vec<IndustryIdentifier<'a>>,
-        // pub reading_modes: ReadingModes,
-        // pub page_count: i64,
-        // pub print_type: &'a str,
-        // pub categories: Option<Vec<&'a str>>,
-        // pub maturity_rating: &'a str,
-        // pub image_links: Option<ImageLinks<'a>>,
-        // pub language: &'a str,
-        // pub preview_link: &'a str,
-        // pub info_link: &'a str,
-        // pub canonical_volume_link: &'a str,
-    }
+        #[serde(borrow)]
+        pub title: Cow<'a, str>,
+        #[serde_as(as = "Option<BorrowCow>")]
+        pub subtitle: Option<Cow<'a, str>>,
 
-    /* #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-    #[serde(rename_all = "camelCase")]
-    struct IndustryIdentifier<'a> {
-        #[serde(rename = "type")]
-        pub type_field: &'a str,
-        pub identifier: &'a str,
-    }
+        // TODO: use a borrowing versino with cow to avoid copying when there is no escape character in the source string (most common case)
+        pub authors: Option<Vec<String>>,
 
-    #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-    #[serde(rename_all = "camelCase")]
-    pub struct ReadingModes {
-        pub text: bool,
-        pub image: bool,
+        #[serde_as(as = "Option<BorrowCow>")]
+        pub description: Option<Cow<'a, str>>,
     }
-
-    #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-    #[serde(rename_all = "camelCase")]
-    pub struct PanelizationSummary {
-        pub contains_epub_bubbles: bool,
-        pub contains_image_bubbles: bool,
-    }
-
-    #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-    #[serde(rename_all = "camelCase")]
-    pub struct ImageLinks<'a> {
-        pub small_thumbnail: &'a str,
-        pub thumbnail: &'a str,
-    }
-
-    #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-    #[serde(rename_all = "camelCase")]
-    pub struct SaleInfo<'a> {
-        pub country: &'a str,
-        pub saleability: &'a str,
-        pub is_ebook: bool,
-    }
-
-    #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-    #[serde(rename_all = "camelCase")]
-    pub struct AccessInfo<'a> {
-        pub country: &'a str,
-        pub viewability: &'a str,
-        pub embeddable: bool,
-        pub public_domain: bool,
-        pub text_to_speech_permission: &'a str,
-        pub epub: Epub,
-        pub pdf: Pdf,
-        pub web_reader_link: &'a str,
-        pub access_view_status: &'a str,
-        pub quote_sharing_allowed: bool,
-    }
-
-    #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-    #[serde(rename_all = "camelCase")]
-    pub struct Epub {
-        pub is_available: bool,
-    }
-
-    #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-    #[serde(rename_all = "camelCase")]
-    pub struct Pdf {
-        pub is_available: bool,
-    }
-
-    #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-    #[serde(rename_all = "camelCase")]
-    pub struct SearchInfo<'a> {
-        pub text_snippet: &'a str,
-    }*/
 }
