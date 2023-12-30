@@ -20,7 +20,7 @@
 * [ ] BundleSelection: Suggest bundle grouping by same author, title, keyword
 * [ ] ISBNDecoding: Better layout for phone
 * [ ] ISBNDecoding: Delete an image
-* [ ] ISBN: Add character 'X' in ISBN keyboard
+* [ ] MetadataCollecting: Manual blurb or title is ignored if it is empty (because of replace_with_longest_string_if_none_or_empty)
 * [ ] MetadataCollecting: Disable 'Validate Metadatas' button if price field is empty
 * [ ] MetadataCollecting: Show a visual indication that the title is too long (105 characters for LeBonCoin)
 * [ ] AdEditing: Disable 'Mark as published' if the title is empty
@@ -34,6 +34,7 @@
 
 # DONE
 
+* [x] ISBN: Add character 'X' in ISBN keyboard
 * [x] BundleSelection: Make image load faster. Differentiate thumbnail and image to export
 * [x] Test: Automatically kill the emulator process on exit with KillProcessOnDrop
 * [x] Device Mounting: On Linux, on app start-up, the app create the directory even if the phone is not mounted

@@ -199,9 +199,9 @@ class _BundleSelectionState extends State<BundleSelection> with RouteAware {
   @override
   void didPopNext() {
     // Every time we go back to the BundleSelection screen, refresh the list in case the images changed
-    if (mounted) {
-      setState(() {});
-    }
+    // if (mounted) {
+    //   setState(() {});
+    // }
   }
 
   Future<void> _compressImages() async {
