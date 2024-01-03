@@ -7,14 +7,24 @@ Future<void> main(List<String> args) async {
   // Grant all the necessary permission first to avoid the permission pop-up
   await Process.run(
     'adb',
-    ['shell', 'pm', 'grant', 'fr.pimoid.booky.drive.debug', 'android.permission.CAMERA'],
+    [
+      'shell',
+      'pm',
+      'grant',
+      'fr.pimoid.booky.drive.debug',
+      'android.permission.CAMERA'
+    ],
   );
   final screenshotDir = Platform.environment['screenshot_dir'];
   try {
     await integrationDriver(
-      onScreenshot: (String screenshotName, List<int> screenshotBytes, [Map<String, Object?>? args]) async {
-        print('integrationDriver.onScreenshot(screenshotName = $screenshotName, args = $args');
-        final File image = await File('screenshots/$screenshotDir/$screenshotName.png').create(recursive: true);
+      onScreenshot: (String screenshotName, List<int> screenshotBytes,
+          [Map<String, Object?>? args]) async {
+        print(
+            'integrationDriver.onScreenshot(screenshotName = $screenshotName, args = $args');
+        final File image =
+            await File('screenshots/$screenshotDir/$screenshotName.png')
+                .create(recursive: true);
         await image.writeAsBytes(screenshotBytes);
         return true;
       },

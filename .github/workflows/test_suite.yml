@@ -23,16 +23,16 @@ jobs:
         with:
           paths_filter: |
             rust:
-              paths: 'native/**'
+              paths: 'rust/**'
           paths_ignore: '["README.md", "TODO.md", "doc/**"]'
   rust_test:
     needs: pre_job
-    # Do not run if no files in native/ have been changed since last job run
+    # Do not run if no files in rust/ have been changed since last job run
     if: needs.pre_job.outputs.should_skip != 'true' || !fromJSON(needs.pre_job.outputs.paths_result).rust.should_skip
     runs-on: self-hosted
     defaults:
       run:
-        working-directory: ./native
+        working-directory: ./rust
     steps:
       - uses: actions/checkout@v3
       - name: Build
@@ -51,7 +51,7 @@ jobs:
           submodules: 'true'
       - uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.13.0'
+          flutter-version: '3.16.5'
           channel: 'stable'
       - run: flutter --version
 

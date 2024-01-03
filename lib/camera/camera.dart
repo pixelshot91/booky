@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:audioplayers/audioplayers.dart';
 import 'package:booky/common.dart';
+import 'package:booky/src/rust/api/api.dart' as rust;
 import 'package:booky/utils/debounce.dart';
 import 'package:camera/camera.dart';
 import 'package:collection/collection.dart';
@@ -14,7 +15,6 @@ import 'package:image/image.dart' as img_lib;
 
 import '../bundle.dart';
 import '../common.dart' as common;
-import '../ffi.dart';
 import '../helpers.dart';
 import '../isbn_helper.dart';
 import 'barcode_detection.dart';
@@ -59,7 +59,7 @@ class _CameraWidgetInitState extends State<CameraWidgetInit> {
 
   late final Bundle bundle = Bundle(_getBundleDir());
 
-  late Future<BundleMetaData> metadata = bundle.getManualMetadata();
+  late Future<rust.BundleMetaData> metadata = bundle.getManualMetadata();
 
   @override
   Widget build(BuildContext context) {
@@ -86,7 +86,7 @@ class CameraWidget extends StatefulWidget {
 
   final Bundle bundle;
   final int? initialWeight;
-  final ItemState? initialItemState;
+  final rust.ItemState? initialItemState;
   final Map<String, BarcodeDetection> initialBarcodes;
 
   @override
@@ -99,7 +99,7 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
   CameraController? _controller;
 
   late int? weightGrams = widget.initialWeight;
-  late ItemState? itemState = widget.initialItemState;
+  late rust.ItemState? itemState = widget.initialItemState;
 
   late final Map<String, BarcodeDetection> _registeredBarcodes = widget.initialBarcodes;
 
@@ -251,10 +251,10 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
               Row(
                 children: [
                   const Icon(Icons.diamond),
-                  DropdownButton<ItemState>(
+                  DropdownButton<rust.ItemState>(
                     hint: const Text('Book state'),
                     value: itemState,
-                    items: ItemState.values.map((s) => DropdownMenuItem(value: s, child: Text(s.loc))).toList(),
+                    items: rust.ItemState.values.map((s) => DropdownMenuItem(value: s, child: Text(s.loc))).toList(),
                     onChanged: (state) {
                       setState(() {
                         itemState = state;
@@ -335,11 +335,11 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
 
         /// Add new ISBNs
         newISBNs.whereNot((newISBN) => manualMd.books.any((book) => book.isbn == newISBN)).forEach((newISBN) {
-          manualMd.books.add(BookMetaData(isbn: newISBN, authors: [], keywords: [], priceCent: null));
+          manualMd.books.add(rust.BookMetaData(isbn: newISBN, authors: [], keywords: [], priceCent: null));
         });
 
-        await api.setManualMetadataForBundle(bundlePath: widget.bundle.directory.path, bundleMetadata: manualMd);
-      } on FfiException catch (e) {
+        await rust.setManualMetadataForBundle(bundlePath: widget.bundle.directory.path, bundleMetadata: manualMd);
+      } on PanicException catch (e) {
         print('Error while saving metadata. e = $e');
 
         if (mounted) {
@@ -506,15 +506,16 @@ class MetadataWidget extends StatefulWidget {
 }
 
 class _MetadataWidgetState extends State<MetadataWidget> {
-  late BundleMetaData metadata;
+  late rust.BundleMetaData metadata;
   final additionalISBNController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    metadata = BundleMetaData(
-        books:
-            widget.isbns.map((isbn) => BookMetaData(isbn: isbn, authors: [], keywords: [], priceCent: null)).toList());
+    metadata = rust.BundleMetaData(
+        books: widget.isbns
+            .map((isbn) => rust.BookMetaData(isbn: isbn, authors: [], keywords: [], priceCent: null))
+            .toList());
   }
 
   @override
@@ -529,11 +530,11 @@ class _MetadataWidgetState extends State<MetadataWidget> {
               if (additionalISBNController.text.isNotEmpty) {
                 metadata.books.addAll(additionalISBNController.text
                     .split(' ')
-                    .map((isbn) => BookMetaData(isbn: isbn, authors: [], keywords: [], priceCent: null)));
+                    .map((isbn) => rust.BookMetaData(isbn: isbn, authors: [], keywords: [], priceCent: null)));
               }
               try {
-                await api.setManualMetadataForBundle(bundlePath: widget.directory.path, bundleMetadata: metadata);
-              } on FfiException catch (e) {
+                await rust.setManualMetadataForBundle(bundlePath: widget.directory.path, bundleMetadata: metadata);
+              } on PanicException catch (e) {
                 print('Error while saving metadata. e = $e');
 
                 if (mounted) {

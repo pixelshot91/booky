@@ -77,8 +77,8 @@ async fn main() -> anyhow::Result<()> {
                     "--driver=test_driver/screenshot_test.dart",
                     "--target=integration_test/extended_test.dart",
                     "--browser-name",
-                    "android-chrome", // "--device-id",
-                                      // "emulator-5554",
+                    "android-chrome",
+                    "--flavor=drive",
                 ])
                 .env("screenshot_dir", &avd_name),
         )
