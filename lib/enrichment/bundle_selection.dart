@@ -285,8 +285,11 @@ class _BundleSelectionState extends State<BundleSelection> with RouteAware {
       ),
       floatingActionButton: FloatingActionButton(
           child: const Icon(Icons.camera),
-          onPressed: () => Navigator.push(context,
-              MaterialPageRoute<void>(builder: (context) => CameraWidgetInit(ShootMultipleBundle(widget.repo))))),
+          onPressed: () async {
+            await Navigator.push(context,
+                MaterialPageRoute<void>(builder: (context) => CameraWidgetInit(ShootMultipleBundle(widget.repo))));
+            _refreshBundleList();
+          }),
       body: FutureWidget(
         future: _listBundles(),
         builder: (bundles) {
@@ -432,15 +435,16 @@ class _BundleSelectionState extends State<BundleSelection> with RouteAware {
                           key: const PageStorageKey('BundleWidget'),
                           widget.repo,
                           bundle,
-                          refreshParent: () => setState(() {}),
+                          refreshParent: _refreshBundleList,
                           downloadMetadataForBundles: _downloadMetadataForBundles,
                         ),
-                        onTap: () {
-                          Navigator.push(
+                        onTap: () async {
+                          await Navigator.push(
                               context,
                               MaterialPageRoute<void>(
                                   builder: (context) =>
                                       BooksMetadataCollectingWidget(step: MetadataCollectingStep(bundle: bundle))));
+                          _refreshBundleList();
                         },
                       )))
                   .toList(),
@@ -467,6 +471,10 @@ class _BundleSelectionState extends State<BundleSelection> with RouteAware {
       textAlign: TextAlign.center,
       style: const TextStyle(fontSize: 30, color: Colors.grey),
     ));
+  }
+
+  void _refreshBundleList() {
+    setState(() {});
   }
 }
 
@@ -630,10 +638,13 @@ class _ActionButtons extends StatelessWidget {
                 label: 'Edit bundle',
                 onPressed: () {
                   // Pushing a new route here synchronously does nothing as the PopUpMenuButton called a Navigator.pop immediately after to close the PopUpMenu
-                  Future(() => Navigator.push(
-                      context,
-                      MaterialPageRoute<void>(
-                          builder: (context) => CameraWidgetInit(EditOneBundle(bundle.directory)))));
+                  Future(() async {
+                    await Navigator.push(
+                        context,
+                        MaterialPageRoute<void>(
+                            builder: (context) => CameraWidgetInit(EditOneBundle(bundle.directory))));
+                    refreshParent();
+                  });
                 },
               ),
               _popUpMenuIconText(
@@ -641,10 +652,13 @@ class _ActionButtons extends StatelessWidget {
                 label: 'ISBN decoding',
                 onPressed: () {
                   // Pushing a new route here synchronously does nothing as the PopUpMenuButton called a Navigator.pop immediately after to close the PopUpMenu
-                  Future(() => Navigator.push(
-                      context,
-                      MaterialPageRoute<void>(
-                          builder: (context) => ISBNDecodingWidget(step: ISBNDecodingStep(bundle: bundle)))));
+                  Future(() async {
+                    await Navigator.push(
+                        context,
+                        MaterialPageRoute<void>(
+                            builder: (context) => ISBNDecodingWidget(step: ISBNDecodingStep(bundle: bundle))));
+                    refreshParent();
+                  });
                 },
               ),
               _popUpMenuIconText(
@@ -703,10 +717,14 @@ class _ActionButtons extends StatelessWidget {
             ],
           ),
           IconButton(
-            onPressed: () => Navigator.push(
-                context,
-                MaterialPageRoute<void>(
-                    builder: (context) => BooksMetadataCollectingWidget(step: MetadataCollectingStep(bundle: bundle)))),
+            onPressed: () async {
+              await Navigator.push(
+                  context,
+                  MaterialPageRoute<void>(
+                      builder: (context) =>
+                          BooksMetadataCollectingWidget(step: MetadataCollectingStep(bundle: bundle))));
+              refreshParent();
+            },
             icon: const Icon(Icons.send),
             iconSize: 30,
           ),
