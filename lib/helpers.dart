@@ -2,8 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:recase/recase.dart';
-
-import 'bridge_definitions.dart';
+import 'package:booky/src/rust/api/api.dart' as rust;
 
 final defaultScrollShadowColor = Colors.black.withOpacity(0.8);
 
@@ -147,7 +146,7 @@ extension FileExt on File {
   }
 }
 
-extension AuthorExt on Author {
+extension AuthorExt on rust.Author {
   String toText() => [firstName, lastName].where((s) => s.isNotEmpty).join(' ');
 }
 

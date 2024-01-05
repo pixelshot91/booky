@@ -139,11 +139,11 @@ String _keywordsToString(List<String> keywords) => keywords.join(', ');
 
 List<String> _stringToKeywords(String s) => s.split(', ').toList();
 
-String _authorsToString(List<Author> authors) => authors.map((a) => a.toText()).join('\n');
+String _authorsToString(List<rust.Author> authors) => authors.map((a) => a.toText()).join('\n');
 
-List<Author> _stringToAuthors(String s) {
+List<rust.Author> _stringToAuthors(String s) {
   if (s.isEmpty) return [];
-  return s.split('\n').map((line) => Author(firstName: '', lastName: line)).toList();
+  return s.split('\n').map((line) => rust.Author(firstName: '', lastName: line)).toList();
 }
 
 class _BookMetadataCollectingWidget extends StatefulWidget {

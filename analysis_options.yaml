@@ -11,7 +11,7 @@ linter:
     prefer_final_locals: true
 analyzer:
   exclude:
-    - lib/bridge_generated.dart
+    - lib/src/rust/frb_generated.dart
   enable-experiment:
     - records
     - patterns
