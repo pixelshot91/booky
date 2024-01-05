@@ -7,7 +7,7 @@ pub struct LesLibraires {
 }
 
 impl common::Provider for LesLibraires {
-    fn get_book_metadata_from_isbn(&self, isbn: &str) -> Option<common::BookMetaDataFromProvider> {
+    fn get_book_metadata_from_isbn(&self, isbn: &str) -> Option<crate::api::api::BookMetaDataFromProvider> {
         let isbn_search_result = request::isbn_search(&*self.client, isbn)?;
         parser::extract_metadata(&isbn_search_result)
     }

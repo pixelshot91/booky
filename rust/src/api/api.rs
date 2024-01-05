@@ -10,6 +10,7 @@ use std::vec;
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 
+
 use crate::{abebooks, babelio, booksprice, fs_helper, google_books, justbooks, leslibraires};
 use crate::client::Client;
 use crate::common::{self};
@@ -64,7 +65,7 @@ pub fn detect_barcode_in_image(img_path: String) -> Result<BarcodeDetectResults>
 
 #[cfg(test)]
 mod tests {
-    use crate::api::ProviderEnum;
+    use crate::api::api::ProviderEnum;
 
     use super::{BarcodeDetectResult, BarcodeDetectResults, Point};
 
@@ -72,18 +73,18 @@ mod tests {
     fn test_sort_longest() {
         for _ in 1..10 {
             let mut book_title: Option<String> = None;
-            crate::api::replace_with_longest_string_if_none_or_empty(
+            crate::api::api::replace_with_longest_string_if_none_or_empty(
                 Some(&std::collections::HashMap::from([
                     (
                         ProviderEnum::AbeBooks,
-                        Some(crate::common::BookMetaDataFromProvider {
+                        Some(crate::api::api::BookMetaDataFromProvider {
                             title: Some("title1".to_owned()),
                             ..Default::default()
                         }),
                     ),
                     (
                         ProviderEnum::Babelio,
-                        Some(crate::common::BookMetaDataFromProvider {
+                        Some(crate::api::api::BookMetaDataFromProvider {
                             title: Some("title2".to_owned()),
                             ..Default::default()
                         }),
@@ -122,7 +123,7 @@ mod tests {
 
 pub fn get_metadata_from_isbns(isbns: Vec<String>, path: String) -> Result<()> {
     let res = isbns.iter().map(|isbn| {
-        let mds: HashMap<ProviderEnum, Option<common::BookMetaDataFromProvider>> =
+        let mds: HashMap<ProviderEnum, Option<crate::api::api::BookMetaDataFromProvider>> =
             ProviderEnum::iter()
                 .map(|provider| {
                     let md = get_metadata_from_provider(provider, isbn.clone());
@@ -131,7 +132,7 @@ pub fn get_metadata_from_isbns(isbns: Vec<String>, path: String) -> Result<()> {
                 .collect();
         (isbn, mds)
     });
-    let hashmap: HashMap<&String, HashMap<ProviderEnum, Option<common::BookMetaDataFromProvider>>> =
+    let hashmap: HashMap<&String, HashMap<ProviderEnum, Option<crate::api::api::BookMetaDataFromProvider>>> =
         HashMap::from_iter(res);
 
     let content = &serde_json::to_string(&hashmap).expect("Unable to serialize data");
@@ -152,12 +153,12 @@ pub struct ISBNMetadataPair {
 #[derive(Debug)]
 pub struct ProviderMetadataPair {
     pub provider: ProviderEnum,
-    pub metadata: Option<common::BookMetaDataFromProvider>,
+    pub metadata: Option<crate::api::api::BookMetaDataFromProvider>,
 }
 
 fn _get_auto_metadata_from_bundle(
     path: String,
-) -> Result<HashMap<String, HashMap<ProviderEnum, Option<common::BookMetaDataFromProvider>>>> {
+) -> Result<HashMap<String, HashMap<ProviderEnum, Option<crate::api::api::BookMetaDataFromProvider>>>> {
     let file = fs_helper::my_file_open(path)?;
     match file {
         fs_helper::MyFileOpenRes::Ok(mut file) => {
@@ -165,7 +166,7 @@ fn _get_auto_metadata_from_bundle(
             file.read_to_string(&mut contents).unwrap();
             let raw_map: HashMap<
                 String,
-                HashMap<ProviderEnum, Option<common::BookMetaDataFromProvider>>,
+                HashMap<ProviderEnum, Option<crate::api::api::BookMetaDataFromProvider>>,
             > = serde_json::from_str(&contents)?;
             return Ok(raw_map);
         }
@@ -186,7 +187,7 @@ pub fn get_auto_metadata_from_bundle(path: String) -> Result<Vec<ISBNMetadataPai
             let v2: Vec<ProviderMetadataPair> = entry
                 .1
                 .iter()
-                .collect::<Vec<(&ProviderEnum, &Option<common::BookMetaDataFromProvider>)>>()
+                .collect::<Vec<(&ProviderEnum, &Option<crate::api::api::BookMetaDataFromProvider>)>>()
                 .iter()
                 .map(|entry| {
                     let res = ProviderMetadataPair {
@@ -320,7 +321,7 @@ pub fn get_merged_metadata_for_all_bundles(
                 // Using spawn_blocking is fine to use with synchronous IO
                 // It avoid to rewrite get_manual_metadata_for_bundle with async
                 let md = tokio::task::spawn_blocking(|| {
-                    let md = crate::api::get_merged_metadata_for_bundle(bundle_path);
+                    let md = crate::api::api::get_merged_metadata_for_bundle(bundle_path);
                     md.ok()
                 })
                     .await
@@ -407,11 +408,11 @@ pub fn get_merged_metadata_for_bundle(bundle_path: String) -> Result<BundleMetaD
 }
 
 fn replace_with_longest_string_if_none_or_empty<F1>(
-    auto_mds: Option<&HashMap<ProviderEnum, Option<common::BookMetaDataFromProvider>>>,
+    auto_mds: Option<&HashMap<ProviderEnum, Option<crate::api::api::BookMetaDataFromProvider>>>,
     auto_string_getter: F1,
     book_md_string: &mut Option<String>,
 ) where
-    F1: Fn(&common::BookMetaDataFromProvider) -> &Option<String>,
+    F1: Fn(&crate::api::api::BookMetaDataFromProvider) -> &Option<String>,
 {
     fn is_none_or_empty(s: &Option<String>) -> bool {
         match s {
@@ -420,11 +421,11 @@ fn replace_with_longest_string_if_none_or_empty<F1>(
         }
     }
     fn get_longest_str<F1>(
-        auto_mds: Option<&HashMap<ProviderEnum, Option<common::BookMetaDataFromProvider>>>,
+        auto_mds: Option<&HashMap<ProviderEnum, Option<crate::api::api::BookMetaDataFromProvider>>>,
         string_getter: F1,
     ) -> Option<String>
         where
-            F1: Fn(&common::BookMetaDataFromProvider) -> &Option<String>,
+            F1: Fn(&crate::api::api::BookMetaDataFromProvider) -> &Option<String>,
     {
         auto_mds?
             .values()
@@ -446,7 +447,7 @@ fn gen_client(cache_dir: &str) -> Box<dyn Client> {
     })
 }
 
-fn gen_provider(provider: ProviderEnum) -> Box<dyn common::Provider> {
+fn gen_provider(provider: ProviderEnum) -> Box<dyn crate::common::Provider> {
     match provider {
         ProviderEnum::Babelio => Box::new(babelio::Babelio {
             client: gen_client("babelio"),
@@ -470,6 +471,6 @@ fn gen_provider(provider: ProviderEnum) -> Box<dyn common::Provider> {
 pub fn get_metadata_from_provider(
     provider: ProviderEnum,
     isbn: String,
-) -> Option<common::BookMetaDataFromProvider> {
+) -> Option<crate::api::api::BookMetaDataFromProvider> {
     gen_provider(provider).get_book_metadata_from_isbn(&isbn)
 }

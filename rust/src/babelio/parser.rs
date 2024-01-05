@@ -1,4 +1,5 @@
-use crate::common::{html_select, BookMetaDataFromProvider};
+use crate::common::{html_select};
+use crate::api::api::BookMetaDataFromProvider;
 use itertools::Itertools;
 
 #[derive(PartialEq, Debug)]
@@ -55,7 +56,7 @@ pub fn extract_blurb(html: &str) -> Option<BlurbRes> {
     }
 }
 
-fn extract_author(author_scope: scraper::ElementRef) -> crate::common::Author {
+fn extract_author(author_scope: scraper::ElementRef) -> crate::api::api::Author {
     let author_span = author_scope
         .first_child()
         .expect("author_scope shoud have a first child <a ...>")
@@ -85,7 +86,7 @@ fn extract_author(author_scope: scraper::ElementRef) -> crate::common::Author {
         .expect("should be a text")
         .trim()
         .to_string();
-    crate::common::Author {
+    crate::api::api::Author {
         first_name,
         last_name,
     }
@@ -187,7 +188,7 @@ mod tests {
             title_author_keywords,
             Some(BookMetaDataFromProvider {
                 title: Some("Le nom de la bête".to_string()),
-                authors: vec![crate::common::Author {
+                authors: vec![crate::api::api::Author {
                     first_name: "Daniel".to_string(),
                     last_name: "Easterman".to_string()
                 }],
@@ -231,7 +232,7 @@ mod tests {
             title_author_keywords,
             Some(BookMetaDataFromProvider {
                 title: Some("Bardo-Thödol : Le livre tibétain des morts".to_string()),
-                authors: vec![crate::common::Author {
+                authors: vec![crate::api::api::Author {
                     first_name: "".to_string(),
                     last_name: "Padmasambhava".to_string()
                 }],

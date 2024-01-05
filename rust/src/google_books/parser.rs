@@ -1,12 +1,12 @@
 use itertools::Itertools;
 
-use crate::common::{self, BookMetaDataFromProvider};
+use crate::api::api::{BookMetaDataFromProvider, Author};
 
 pub fn extract_self_link_from_isbn_response(html: &str) -> Option<String> {
     let s: structs::Root = serde_json::from_str(html).unwrap();
     s.items.map(|items| items[0].self_link.to_string())
 }
-pub fn extract_metadata_from_isbn_response(html: &str) -> common::BookMetaDataFromProvider {
+pub fn extract_metadata_from_isbn_response(html: &str) -> BookMetaDataFromProvider {
     let s: structs::Root = serde_json::from_str(html).unwrap();
     let a = s.items.map(|items| {
         let first_book = &items[0].volume_info;
@@ -16,7 +16,7 @@ pub fn extract_metadata_from_isbn_response(html: &str) -> common::BookMetaDataFr
             .as_ref()
             .unwrap_or(&vec![])
             .iter()
-            .map(|s| common::Author {
+            .map(|s| Author {
                 first_name: "".to_string(),
                 last_name: s.to_string(),
             })
@@ -37,17 +37,17 @@ pub fn extract_metadata_from_isbn_response(html: &str) -> common::BookMetaDataFr
     })
 }
 
-pub fn extract_metadata_from_self_link_response(html: &str) -> common::BookMetaDataFromProvider {
+pub fn extract_metadata_from_self_link_response(html: &str) -> BookMetaDataFromProvider {
     let s: structs::Item = serde_json::from_str(html).unwrap();
     let first_book = &s.volume_info;
-    common::BookMetaDataFromProvider {
+    BookMetaDataFromProvider {
         title: Some(first_book.title.to_string()),
         authors: first_book
             .authors
             .as_ref()
             .unwrap_or(&vec![])
             .iter()
-            .map(|s| common::Author {
+            .map(|s| Author {
                 first_name: "".to_string(),
                 last_name: s.to_string(),
             })
@@ -64,7 +64,7 @@ pub fn extract_metadata_from_self_link_response(html: &str) -> common::BookMetaD
 
 #[cfg(test)]
 mod tests {
-    use crate::{common::BookMetaDataFromProvider, fs_helper::my_read_to_string};
+    use crate::fs_helper::my_read_to_string;
 
     use super::*;
 
@@ -88,7 +88,7 @@ mod tests {
         let metadata = extract_metadata_from_self_link_response(&html);
         assert_eq!(metadata, BookMetaDataFromProvider{
           title: Some("La cité de Dieu".to_string()),
-          authors:vec![common::Author{first_name: "".to_string(), last_name: "Paulo Lins".to_string()}],
+          authors:vec![Author{first_name: "".to_string(), last_name: "Paulo Lins".to_string()}],
           blurb: Some("Au Brésil, l'évolution d'un bidonville entre les années 1960 et 1980, à travers l'histoire de deux garçons qui suivent des voies différentes : l'un fait des études et s'efforce de devenir photographe, l'autre crée son premier gang et devient, quelques années plus tard, le maître de la cité.".to_string()),
           ..Default::default()
     });
@@ -114,7 +114,7 @@ mod tests {
             metadata,
             BookMetaDataFromProvider {
                 title: Some("L'essence du Tao".to_string()),
-                authors: vec![common::Author {
+                authors: vec![Author {
                     first_name: "".to_string(),
                     last_name: "Pamela J. Ball".to_string()
                 }],
@@ -132,7 +132,7 @@ mod tests {
             metadata,
             BookMetaDataFromProvider {
                 title: None,
-                authors: vec![common::Author {
+                authors: vec![Author {
                     first_name: "".to_string(),
                     last_name: "Philippe Djian".to_string()
                 }],

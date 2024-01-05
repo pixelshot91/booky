@@ -7,10 +7,10 @@ pub struct AbeBooks {
 }
 
 impl common::Provider for AbeBooks {
-    fn get_book_metadata_from_isbn(&self, isbn: &str) -> Option<common::BookMetaDataFromProvider> {
+    fn get_book_metadata_from_isbn(&self, isbn: &str) -> Option<crate::api::api::BookMetaDataFromProvider> {
         let isbn_search_result = request::isbn_search(&*self.client, isbn);
         let prices = parser::extract_prices(&isbn_search_result);
-        Some(common::BookMetaDataFromProvider {
+        Some(crate::api::api::BookMetaDataFromProvider {
             market_price: prices,
             ..Default::default()
         })

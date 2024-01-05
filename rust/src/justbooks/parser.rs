@@ -1,8 +1,9 @@
-use crate::common::{html_select, BookMetaDataFromProvider};
+use crate::common::{html_select};
+use crate::api::api::{BookMetaDataFromProvider, Author};
 use itertools::Itertools;
 use regex::Regex;
 
-fn extract_authors(author_scope: scraper::ElementRef) -> Vec<crate::common::Author> {
+fn extract_authors(author_scope: scraper::ElementRef) -> Vec<Author> {
     let authors_span = author_scope
         .first_child()
         .expect("author scope > span shoud have a first child");
@@ -17,12 +18,12 @@ fn extract_authors(author_scope: scraper::ElementRef) -> Vec<crate::common::Auth
         .split(';')
         .map(|author_string| {
             if let Some((last_name, first_name)) = author_string.split_once(',') {
-                crate::common::Author {
+                Author {
                     first_name: first_name.trim().to_owned(),
                     last_name: last_name.trim().to_owned(),
                 }
             } else {
-                crate::common::Author {
+                Author {
                     first_name: author_string.trim().to_owned(),
                     last_name: "".to_owned(),
                 }
@@ -87,7 +88,7 @@ fn parse_blurb(raw_blurb: &str) -> String {
 
 #[cfg(test)]
 mod tests {
-    use crate::{common::Author, fs_helper::my_read_to_string};
+    use crate::fs_helper::my_read_to_string;
 
     use super::*;
     use pretty_assertions::assert_eq;
@@ -98,11 +99,11 @@ mod tests {
         let md = extract_metadata(&html);
         assert_eq!(md, Some(BookMetaDataFromProvider {
             title: Some("La prière en sept chapitres par PADMASAMBHAVA".to_string()),
-            authors: vec![crate::common::Author {
+            authors: vec![Author {
                 first_name: "Tchimé Rigdzin Rinpotché".to_string(),
                 last_name: "".to_string()
             },
-            crate::common::Author {
+            Author {
                 first_name: "James Low".to_string(),
                 last_name: "".to_string()
             },

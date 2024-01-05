@@ -7,7 +7,7 @@ pub struct Babelio {
 }
 
 impl common::Provider for Babelio {
-    fn get_book_metadata_from_isbn(&self, isbn: &str) -> Option<common::BookMetaDataFromProvider> {
+    fn get_book_metadata_from_isbn(&self, isbn: &str) -> Option<crate::api::api::BookMetaDataFromProvider> {
         let book_url = request::get_book_url(&*self.client, isbn)?;
         let book_page = request::get_book_page(&*self.client, book_url);
         let mut res = parser::extract_title_author_keywords(&book_page)?;
@@ -30,7 +30,8 @@ impl common::Provider for Babelio {
 mod tests {
     use crate::{
         client::mock_client::MockClient,
-        common::{Author, BookMetaDataFromProvider, Provider},
+        api::api::{Author, BookMetaDataFromProvider},
+        common::Provider,
     };
     use pretty_assertions::assert_eq;
 

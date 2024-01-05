@@ -1,11 +1,9 @@
-use serde::{Deserialize, Serialize};
-
 pub fn html_select(sel: &str) -> scraper::Selector {
     scraper::Selector::parse(sel).unwrap()
 }
 
 pub trait Provider {
-    fn get_book_metadata_from_isbn(&self, isbn: &str) -> Option<BookMetaDataFromProvider>;
+    fn get_book_metadata_from_isbn(&self, isbn: &str) -> Option<crate::api::api::BookMetaDataFromProvider>;
 }
 
 pub struct Ad {

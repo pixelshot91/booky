@@ -1,8 +1,7 @@
+use crate::api::api::{Author, BookMetaDataFromProvider};
 use itertools::Itertools;
 
-use crate::common::{self, Author};
-
-pub fn extract_metadata(isbn_search_result: &str) -> Option<common::BookMetaDataFromProvider> {
+pub fn extract_metadata(isbn_search_result: &str) -> Option<BookMetaDataFromProvider> {
     let doc = scraper::Html::parse_document(isbn_search_result);
 
     let title_selector = scraper::Selector::parse(".main-infos [itemprop=\"name\"]").unwrap();
@@ -71,7 +70,7 @@ pub fn extract_metadata(isbn_search_result: &str) -> Option<common::BookMetaData
                 + shipping_price
         });
 
-    Some(common::BookMetaDataFromProvider {
+    Some(BookMetaDataFromProvider {
         title,
         authors: author_last_name.map_or(vec![], |author| {
             vec![Author {
@@ -89,7 +88,7 @@ pub fn extract_metadata(isbn_search_result: &str) -> Option<common::BookMetaData
 mod tests {
     use std::vec;
 
-    use crate::{common::Author, fs_helper::my_read_to_string};
+    use crate::fs_helper::my_read_to_string;
 
     use super::*;
     use pretty_assertions::assert_eq;
@@ -100,7 +99,7 @@ mod tests {
         let md = extract_metadata(&html);
         assert_eq!(
             md,
-            Some(common::BookMetaDataFromProvider {
+            Some(BookMetaDataFromProvider {
                 title: Some("Les autres et moi".to_owned()),
                 authors: vec![Author {
                     first_name: "".to_owned(),
@@ -118,7 +117,7 @@ mod tests {
         let md = extract_metadata(&html);
         assert_eq!(
             md,
-            Some(common::BookMetaDataFromProvider {
+            Some(BookMetaDataFromProvider {
                 title: Some("Rue des Petites Écuries".to_owned()),
                 authors: vec![Author {
                     first_name: "".to_owned(),

@@ -7,7 +7,7 @@ pub struct JustBooks {
 }
 
 impl common::Provider for JustBooks {
-    fn get_book_metadata_from_isbn(&self, isbn: &str) -> Option<common::BookMetaDataFromProvider> {
+    fn get_book_metadata_from_isbn(&self, isbn: &str) -> Option<crate::api::api::BookMetaDataFromProvider> {
         let book_page = request::get_book_page(&*self.client, isbn);
         parser::extract_metadata(&book_page)
     }
