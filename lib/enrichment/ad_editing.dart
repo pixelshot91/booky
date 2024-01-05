@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'dart:math';
+import 'package:booky/src/rust/api/api.dart' as rust;
 
-import 'package:booky/bridge_definitions.dart';
 import 'package:booky/common.dart' as common;
 import 'package:booky/personal_info.dart' as personal_info;
 import 'package:collection/collection.dart';
@@ -20,7 +20,7 @@ class Ad {
   final String description;
   final int priceCent;
   final int weightGrams;
-  final ItemState itemState;
+  final rust.ItemState itemState;
   final List<MultiResImage> imgs;
 
   const Ad({
@@ -47,11 +47,11 @@ class AdEditingWidget extends StatelessWidget {
     return 'de ${vec[0]}';
   }
 
-  String _bookFormat(BookMetaData book, {bool withISBN = false}) {
+  String _bookFormat(rust.BookMetaData book, {bool withISBN = false}) {
     return '"${book.title}" ${vecFmt(book.authors.map((a) => a.toText()))}' + (withISBN ? ' (ISBN: ${book.isbn})' : '');
   }
 
-  String? _getDescription(Iterable<BookMetaData> metadataFromIsbn) {
+  String? _getDescription(Iterable<rust.BookMetaData> metadataFromIsbn) {
     final booksWithBlurb = metadataFromIsbn.where((entry) => entry.blurb?.isNotEmpty == true);
     if (booksWithBlurb.length == 0) {
       return null;
@@ -88,12 +88,8 @@ class AdEditingWidget extends StatelessWidget {
       final bundleMetaData = await step.bundle.getMergedMetadata();
       if (bundleMetaData == null) {
         // TODO: Use better default value when no information is known on the bundle (use null instead of 0)
-        return Ad(title: '',
-            description: '',
-            priceCent: 0,
-            weightGrams: 0,
-            itemState: ItemState.Medium,
-            imgs: images);
+        return Ad(
+            title: '', description: '', priceCent: 0, weightGrams: 0, itemState: rust.ItemState.medium, imgs: images);
       }
       final books = bundleMetaData.books;
 
@@ -117,9 +113,7 @@ class AdEditingWidget extends StatelessWidget {
         description += '\n\nMots-clés:\n' + keywords;
       }
 
-      final totalPriceIncludingShipping = books
-          .map((e) => e.priceCent ?? 0)
-          .sum;
+      final totalPriceIncludingShipping = books.map((e) => e.priceCent ?? 0).sum;
       final weightGramsWithWrapping = (bundleMetaData.weightGrams! * 1.2).toInt();
       var totalPriceExcludingShipping =
           totalPriceIncludingShipping - _estimatedShippingCost(grams: weightGramsWithWrapping);
@@ -178,8 +172,7 @@ class _AdEditingWidget2State extends State<AdEditingWidget2> {
   }
 
   @override
-  Widget build(BuildContext context) =>
-      Padding(
+  Widget build(BuildContext context) => Padding(
         padding: const EdgeInsets.all(8.0),
         child: SingleChildScrollView(
           child: Column(
@@ -251,11 +244,10 @@ class _AdEditingWidget2State extends State<AdEditingWidget2> {
                     child: const Text('Mark as published')),
               )
             ]
-                .map((e) =>
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 4.0),
-                  child: e,
-                ))
+                .map((e) => Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 4.0),
+                      child: e,
+                    ))
                 .toList(),
           ),
         ),
@@ -279,7 +271,7 @@ class _WeightCategory<T> {
 class _LBCStyledState extends StatelessWidget {
   const _LBCStyledState(this.state);
 
-  final ItemState state;
+  final rust.ItemState state;
 
   @override
   Widget build(BuildContext context) => LBCRadioButton(state.loc);
@@ -303,8 +295,6 @@ class _LBCStyledWeight extends StatelessWidget {
       _WeightCategory(maxWeight: 20000, description: 'De 10 kg à 20 kg'),
       _WeightCategory(maxWeight: 20000, description: 'De 20 kg à 30 kg'),
     ];
-    return LBCRadioButton(weightCategories
-        .firstWhere((c) => c.maxWeight > weightGrams)
-        .description);
+    return LBCRadioButton(weightCategories.firstWhere((c) => c.maxWeight > weightGrams).description);
   }
 }

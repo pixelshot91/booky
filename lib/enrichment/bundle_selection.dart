@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:booky/camera/camera.dart';
 import 'package:booky/common.dart';
 import 'package:booky/enrichment/isbn_decoding.dart';
+import 'package:booky/src/rust/api/api.dart' as rust;
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge.dart';
@@ -15,7 +16,6 @@ import 'package:stream_transform/stream_transform.dart';
 
 import '../bundle.dart';
 import '../common.dart' as common;
-import '../ffi.dart';
 import '../helpers.dart';
 import '../route_observer.dart';
 import '../widgets/scrollable_bundle_images.dart';
@@ -38,7 +38,7 @@ class BundleMetaDataWithIndex {
   BundleMetaDataWithIndex(this.index, this.md);
 
   final int index;
-  final BundleMetaData? md;
+  final rust.BundleMetaData? md;
 }
 
 class CustomSearchHintDelegate extends SearchDelegate<String> {
@@ -221,7 +221,7 @@ class _BundleSelectionState extends State<BundleSelection> with RouteAware {
                 // Process all the bundleMD once when the searchbar open
                 final bundlesWithMD = Future<List<BundleMetaDataWithIndex>?>(() async {
                   final bundlesDir = widget.repo.getDir(bundleType);
-                  final mds = await api.getMergedMetadataForAllBundles(bundlesDir: bundlesDir.path);
+                  final mds = await rust.getMergedMetadataForAllBundles(bundlesDir: bundlesDir.path);
                   return mds.mapIndexed((index, element) => BundleMetaDataWithIndex(index, element)).toList();
                 });
                 showSearch(
@@ -349,11 +349,11 @@ class _BundleSelectionState extends State<BundleSelection> with RouteAware {
       final List<String> isbns = (await bundle.getManualMetadata()).books.map((book) => book.isbn).toList();
 
       try {
-        await api.getMetadataFromIsbns(
+        await rust.getMetadataFromIsbns(
           isbns: isbns,
           path: bundle.autoMetadataFile.path,
         );
-      } on FfiException catch (e) {
+      } on PanicException catch (e) {
         print(
             'FfiException thrown during getMetadataFromIsbns with isbns=${isbns.toList()}, path=${bundle.autoMetadataFile.path}');
         print('exception is $e');
@@ -522,7 +522,7 @@ class BundleWidget extends StatefulWidget {
 }
 
 class _BundleWidgetState extends State<BundleWidget> {
-  late Future<BundleMetaData?> cachedMergedMd;
+  late Future<rust.BundleMetaData?> cachedMergedMd;
 
   @override
   void initState() {
@@ -540,7 +540,7 @@ class _BundleWidgetState extends State<BundleWidget> {
     cachedMergedMd = widget.bundle.getMergedMetadata();
   }
 
-  Widget _buildTitleLine(BundleMetaData? bundleMergedMD) {
+  Widget _buildTitleLine(rust.BundleMetaData? bundleMergedMD) {
     if (bundleMergedMD == null) {
       return const Row(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -761,7 +761,7 @@ class _NumberOfBookBadge extends StatelessWidget {
 class MetadataIcons extends StatelessWidget {
   const MetadataIcons(this.bundleMergeMD);
 
-  final BundleMetaData bundleMergeMD;
+  final rust.BundleMetaData bundleMergeMD;
 
   @override
   Widget build(BuildContext context) {

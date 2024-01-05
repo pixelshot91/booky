@@ -231,7 +231,7 @@ pub struct BookMetaData {
     #[frb(non_final)]
     pub title: Option<String>,
     #[frb(non_final)]
-    pub authors: Vec<common::Author>,
+    pub authors: Vec<Author>,
     // A book blurb is a short promotional description.
     // A synopsis summarizes the twists, turns, and conclusion of the story.
     #[frb(non_final)]
@@ -241,6 +241,30 @@ pub struct BookMetaData {
     #[frb(non_final)]
     pub price_cent: Option<i32>,
 }
+
+#[derive(Default, Debug, PartialEq, Deserialize, Serialize, Clone)]
+pub struct BookMetaDataFromProvider {
+    pub title: Option<String>,
+    pub authors: Vec<Author>,
+    // A book blurb is a short promotional description.
+    // A synopsis summarizes the twists, turns, and conclusion of the story.
+    pub blurb: Option<String>,
+    pub keywords: Vec<String>,
+
+    pub market_price: Vec<f32>,
+}
+
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize, Serialize)]
+pub struct Author {
+    pub first_name: String,
+    pub last_name: String,
+}
+//
+// #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize, Serialize)]
+// pub struct AAAuthor {
+//     pub first_name: String,
+//     pub last_name: String,
+// }
 
 const METADATA_FILE_NAME: &str = "metadata.json";
 

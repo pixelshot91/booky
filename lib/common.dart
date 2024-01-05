@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:booky/ffi.dart';
+import 'package:booky/src/rust/api/api.dart' as rust;
 import 'package:path/path.dart' as path;
 
 extension IterableFutureMapEntryExt<K, V> on Iterable<Future<MapEntry<K, V>>> {
@@ -59,16 +59,16 @@ extension DirectoryExt on Directory {
 final externalDeviceRepo = Directory('/media/phone/storage/emulated/0/Android/data/fr.pimoid.booky/files');
 // final externalDeviceRepo = Directory('/home/julien/Perso/LeBonCoin/chain_automatisation/booky/extra/mock_data/basic/');
 
-extension ItemStateExt on ItemState {
+extension ItemStateExt on rust.ItemState {
   String get loc {
     switch (this) {
-      case ItemState.BrandNew:
+      case rust.ItemState.brandNew:
         return 'Brand New';
-      case ItemState.VeryGood:
+      case rust.ItemState.veryGood:
         return 'Very Good';
-      case ItemState.Good:
+      case rust.ItemState.good:
         return 'Good';
-      case ItemState.Medium:
+      case rust.ItemState.medium:
         return 'Medium';
     }
   }

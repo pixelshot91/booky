@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:booky/helpers.dart';
+import 'package:booky/src/rust/api/api.dart' as rust;
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
@@ -9,7 +10,6 @@ import 'package:image/image.dart' as img_lib;
 import 'package:path/path.dart' as path;
 import 'package:stream_transform/stream_transform.dart';
 
-import '../ffi.dart';
 import 'common.dart' as common;
 
 const _exportDirName = 'to_export';
@@ -140,11 +140,11 @@ class Bundle {
 
   File get metadataFile => directory.joinFile('metadata.json');
 
-  Future<bool> overwriteMetadata(BundleMetaData md) async {
+  Future<bool> overwriteMetadata(rust.BundleMetaData md) async {
     try {
-      api.setManualMetadataForBundle(bundlePath: directory.path, bundleMetadata: md);
+      rust.setManualMetadataForBundle(bundlePath: directory.path, bundleMetadata: md);
       return true;
-    } on FfiException {
+    } on PanicException {
       return false;
     }
   }
@@ -163,17 +163,17 @@ class Bundle {
   File get autoMetadataFile => directory.joinFile('automatic_metadata.json');
 
   /// Return the best information either manually submitted, manually verified, or automatically, for every book of the bundle
-  Future<BundleMetaData?> getMergedMetadata() async {
+  Future<rust.BundleMetaData?> getMergedMetadata() async {
     try {
-      return await api.getMergedMetadataForBundle(bundlePath: directory.path);
-    } on FfiException catch (e) {
+      return await rust.getMergedMetadataForBundle(bundlePath: directory.path);
+    } on PanicException catch (e) {
       print('getMergedMetadata. FfiException. e = $e');
       return null;
     }
   }
 
-  Future<BundleMetaData> getManualMetadata() async {
-    return api.getManualMetadataForBundle(bundlePath: directory.path);
+  Future<rust.BundleMetaData> getManualMetadata() async {
+    return rust.getManualMetadataForBundle(bundlePath: directory.path);
   }
 }
 

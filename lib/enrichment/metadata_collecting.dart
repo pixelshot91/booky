@@ -1,11 +1,11 @@
 import 'package:booky/enrichment/ad_editing.dart';
 import 'package:booky/helpers.dart';
+import 'package:booky/src/rust/api/api.dart' as rust;
 import 'package:booky/widgets/scrollable_bundle_images.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:kt_dart/kt.dart';
 
-import '../ffi.dart' if (dart.library.html) 'ffi_web.dart';
 import 'enrichment.dart';
 
 class BooksMetadataCollectingWidget extends StatefulWidget {
@@ -20,7 +20,7 @@ class BooksMetadataCollectingWidget extends StatefulWidget {
 class _Metadata {
   _Metadata({required this.providerMetadatas, required this.bookControllerSet});
 
-  Map<ProviderEnum, BookMetaDataFromProvider?> providerMetadatas;
+  Map<rust.ProviderEnum, rust.BookMetaDataFromProvider?> providerMetadatas;
   final _BookControllerSet bookControllerSet;
 }
 
@@ -32,8 +32,8 @@ class _BooksMetadataCollectingWidgetState extends State<BooksMetadataCollectingW
     super.initState();
 
     Future(() async {
-      final autoMd = await api.getAutoMetadataFromBundle(path: widget.step.bundle.autoMetadataFile.path);
-      final mergeMd = await api.getMergedMetadataForBundle(bundlePath: widget.step.bundle.directory.path);
+      final autoMd = await rust.getAutoMetadataFromBundle(path: widget.step.bundle.autoMetadataFile.path);
+      final mergeMd = await rust.getMergedMetadataForBundle(bundlePath: widget.step.bundle.directory.path);
       final map = Map.fromEntries(autoMd.map((entry) {
         final bookControllerSet = _BookControllerSet();
         final mergeMDForBook = mergeMd.books.singleWhere((book) => book.isbn == entry.isbn);
@@ -91,7 +91,7 @@ class _BooksMetadataCollectingWidgetState extends State<BooksMetadataCollectingW
                               padding: const EdgeInsets.all(8.0),
                               child: ElevatedButton(
                                   onPressed: () async {
-                                    final bundleMetadata = await api.getMergedMetadataForBundle(
+                                    final bundleMetadata = await rust.getMergedMetadataForBundle(
                                         bundlePath: widget.step.bundle.directory.path);
                                     bundleMetadata.books.forEach((book) {
                                       final bookController = controllers[book.isbn]!.bookControllerSet;
@@ -104,7 +104,7 @@ class _BooksMetadataCollectingWidgetState extends State<BooksMetadataCollectingW
                                           .multiply(100)
                                           .round();
                                     });
-                                    await api.setManualMetadataForBundle(
+                                    await rust.setManualMetadataForBundle(
                                         bundlePath: widget.step.bundle.directory.path, bundleMetadata: bundleMetadata);
                                     if (context.mounted) {
                                       Navigator.push(
@@ -195,7 +195,7 @@ class _BookMetadataCollectingWidgetState extends State<_BookMetadataCollectingWi
   @override
   Widget build(BuildContext context) {
     const columnHeaderStyle = TextStyle(fontSize: 20, fontWeight: FontWeight.bold);
-    const providers = ProviderEnum.values;
+    const providers = rust.ProviderEnum.values;
     final iter = providers.map((provider) => widget.metadatas.providerMetadatas[provider]);
     return Card(
       margin: const EdgeInsets.all(10),

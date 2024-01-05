@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:booky/ffi.dart';
 import 'package:booky/isbn_helper.dart';
+import 'package:booky/src/rust/api/api.dart' as rust;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image/image.dart' as image;
@@ -22,7 +22,7 @@ class ISBNDecodingWidget extends StatefulWidget {
 }
 
 class _ISBNDecodingWidgetState extends State<ISBNDecodingWidget> {
-  KtMutableMap<String, Future<BarcodeDetectResults>> decodedIsbns = KtMutableMap.empty();
+  KtMutableMap<String, Future<rust.BarcodeDetectResults>> decodedIsbns = KtMutableMap.empty();
 
   // TODO: Should be a list to preserve order
   late Future<KtMutableSet<String>> isbns;
@@ -34,7 +34,7 @@ class _ISBNDecodingWidgetState extends State<ISBNDecodingWidget> {
       Future(() async {
         final images = await widget.step.bundle.images;
         images.forEach((image) {
-          decodedIsbns[image.fullScale.path] = api.detectBarcodeInImage(imgPath: image.fullScale.path);
+          decodedIsbns[image.fullScale.path] = rust.detectBarcodeInImage(imgPath: image.fullScale.path);
         });
       });
     }
@@ -178,7 +178,7 @@ class _ISBNDecodingWidgetState extends State<ISBNDecodingWidget> {
 
     // TODO: reject if the ISBN already exist
     final md = await widget.step.bundle.getManualMetadata();
-    md.books.add(BookMetaData(isbn: newIsbn, authors: [], keywords: []));
+    md.books.add(rust.BookMetaData(isbn: newIsbn, authors: [], keywords: []));
 
     final res = await widget.step.bundle.overwriteMetadata(md);
     print('res = $res');
@@ -198,7 +198,7 @@ class _ISBNDecodingWidgetState extends State<ISBNDecodingWidget> {
   }
 }
 
-extension _PointExt on Point {
+extension _PointExt on rust.Point {
   image.Point toImgPoint() => image.Point(x, y);
 }
 
@@ -206,7 +206,7 @@ class ISBNPreview extends StatefulWidget {
   const ISBNPreview({required this.imgFile, required this.result});
 
   final File imgFile;
-  final BarcodeDetectResult result;
+  final rust.BarcodeDetectResult result;
 
   @override
   State<ISBNPreview> createState() => _ISBNPreviewState();
