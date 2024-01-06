@@ -1,8 +1,10 @@
 /// This is copied from Cargokit (which is the official way to use it currently)
 /// Details: https://fzyzcjy.github.io/flutter_rust_bridge/manual/integrate/builtin
 
-import java.nio.file.Paths
+
 import org.apache.tools.ant.taskdefs.condition.Os
+
+import java.nio.file.Paths
 
 CargoKitPlugin.file = buildscript.sourceFile
 
@@ -144,7 +146,7 @@ class CargoKitPlugin implements Plugin<Project> {
                 }
 
                 def task = project.tasks.create(taskName, CargoKitBuildTask.class) {
-                    buildMode = variant.name
+                    buildMode = variant.buildType.name
                     buildDir = cargoBuildDir
                     outputDir = cargoOutputDir
                     ndkVersion = plugin.project.android.ndkVersion
