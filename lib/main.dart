@@ -7,7 +7,11 @@ Future<void> main() async {
   // Required for path_provider to get the directory
   WidgetsFlutterBinding.ensureInitialized();
 
-  await RustLib.init();
+  // In integration test, main is called multiple time, one for each 'testWidgets' calls
+  // And calling `init` multiple time throw a Bad State exception
+  if (RustLib.instance.initialized == false) {
+    await RustLib.init();
+  }
 
   runApp(BookyApp());
 }
