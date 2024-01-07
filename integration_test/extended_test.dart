@@ -15,8 +15,6 @@ import 'package:integration_test/integration_test.dart';
 //  https://stackoverflow.com/questions/46475450/how-to-pass-an-environment-variable-to-a-flutter-driver-test
 void main() {
   final IntegrationTestWidgetsFlutterBinding binding = IntegrationTestWidgetsFlutterBinding.ensureInitialized();
-  searchBar(binding);
-  return;
   final tests = {
     'basic_screenshot': basicScreenshot,
     'searchbar': searchBar,
@@ -151,36 +149,6 @@ void addIsbn(final IntegrationTestWidgetsFlutterBinding binding) {
 void searchBar(final IntegrationTestWidgetsFlutterBinding binding) {
   final ss = Screenshotter(binding, 'searchbar');
 
-/*  testWidgets('test SearchBar', (WidgetTester tester) async {
-    // Build our app.
-    app.main();
-
-    // On Android, this is required prior to taking the screenshot.
-    await binding.convertFlutterSurfaceToImage();
-
-    // Pump a frame before taking the screenshot.
-    await tester.pumpAndSettle();
-    await ss.capture('home');
-
-    final searchIconFinder = find.byIcon(Icons.search);
-    expect(searchIconFinder, findsOneWidget);
-    await tester.tap(searchIconFinder);
-
-    await tester.pumpAndSettle(const Duration(seconds: 3));
-    await ss.capture('open_search_bar');
-
-    final findSearchBarTextField = find
-        .byWidgetPredicate((widget) => widget is TextField && widget.decoration?.hintText == 'Search all the bundles');
-    expect(findSearchBarTextField, findsOneWidget);
-    await tester.enterText(findSearchBarTextField, 'nord');
-
-    await tester.pumpAndSettle(const Duration(seconds: 1));
-
-    await ss.capture('type_nord');
-    final titleToFind =
-        find.byWidgetPredicate((widget) => widget is Text && widget.data!.startsWith('Harricana: Le Royaume du Nord'));
-    expect(titleToFind, findsOneWidget);
-  });*/
   testWidgets('test SearchBar', (WidgetTester tester) async {
     // Build our app.
     app.main();
@@ -212,10 +180,6 @@ void searchBar(final IntegrationTestWidgetsFlutterBinding binding) {
     await ss.capture('type_in_search_bar');
     final resultTitleToFind = find.byWidgetPredicate((widget) => widget is Text && widget.data!.startsWith(bookTitle));
     expect(resultTitleToFind, findsOneWidget);
-
-    /*final titlesToFind = find.byWidgetPredicate((widget) => widget is Text && widget.data!.startsWith('Harricana: Le Royaume du Nord')).evaluate();
-    expect(titlesToFind.length, equals(1));
-    final titleToFind = titlesToFind.first;*/
 
     final resultRow =
         find.ancestor(of: resultTitleToFind, matching: find.byWidgetPredicate((widget) => widget is Row)).first;
