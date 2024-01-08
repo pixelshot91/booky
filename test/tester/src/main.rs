@@ -1,4 +1,3 @@
-use anyhow::Context;
 use pretty_assertions::assert_eq;
 use std::env;
 use std::process::Command;
@@ -41,9 +40,9 @@ async fn main() -> anyhow::Result<()> {
     anyhow::ensure!(avds_name.len() > 0, "Usage: {} <avd names...>", arg0);
 
     let _obs = init_obs().await?;
-    check_emulator_webcam().context("webcam is not correct to android emulator")?;
+    check_emulator_webcam()?;
 
-    for avd_name in avds_name {
+    for (avd_index, avd_name) in avds_name.enumerate() {
         println!("Launching test on device {avd_name}");
 
         // Check no emulators run
@@ -57,7 +56,7 @@ async fn main() -> anyhow::Result<()> {
             output.stdout
         );
 
-        let mut avd_process = ProcessKillOnDrop {
+        let avd_process = ProcessKillOnDrop {
             process: emulator_cmd().args(["-avd", &avd_name]).spawn()?,
         };
 
@@ -76,9 +75,10 @@ async fn main() -> anyhow::Result<()> {
                     "drive",
                     "--driver=test_driver/screenshot_test.dart",
                     "--target=integration_test/extended_test.dart",
-                    "--browser-name",
-                    "android-chrome",
-                    "--flavor=drive",
+                    "--browser-name=android-chrome",
+                    // On the first emulator, build the drive apk. On following run, reuse the same apk
+                    if avd_index == 0 {"--flavor=drive"} else {"--use-application-binary=./build/app/outputs/flutter-apk/app-drive-debug.apk"},
+                    
                 ])
                 .env("screenshot_dir", &avd_name),
         )
