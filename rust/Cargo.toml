@@ -8,9 +8,7 @@ crate-type = ["cdylib", "staticlib"]
 
 [dependencies]
 anyhow = "1"
-# TODO port "worker-max" ?
 flutter_rust_bridge = "=2.0.0-dev.12"
-#flutter_rust_bridge = { version = "=1.81.0", features = ["worker-max"] }
 base64 = "0.21.0"
 itertools = "0.10.5"
 regex = "1.7.1"
