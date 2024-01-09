@@ -1,1 +1,1 @@
-pub const CACHE_PATH: &str = "native/cache";
+pub const CACHE_PATH: &str = "rust/cache";

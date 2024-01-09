@@ -5,12 +5,12 @@ gen:
     flutter_rust_bridge_codegen
 
 lint:
-    cd native && cargo fmt
+    cd rust && cargo fmt
     dart format .
 
 clean:
     flutter clean
-    cd native && cargo clean
+    cd rust && cargo clean
     
 serve *args='':
     flutter pub run flutter_rust_bridge:serve {{args}}
