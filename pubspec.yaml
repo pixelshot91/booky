@@ -38,10 +38,7 @@ dependencies:
   vector_math: ^2.1.4
   stream_transform: ^2.1.0
   audioplayers: ^4.1.0
-  flutter_scroll_shadow:
-    git:
-      url: git@github.com:pixelshot91/flutter_scroll_shadow.git
-      ref: topic/consume_notification
+  flutter_scroll_shadow: ^1.2.4
   intersperse: ^2.0.0
   recase: ^4.1.0
   uuid: ^3.0.7

@@ -398,12 +398,11 @@ packages:
   flutter_scroll_shadow:
     dependency: "direct main"
     description:
-      path: "."
-      ref: "topic/consume_notification"
-      resolved-ref: "65b56e48dea21eb8c44151b52b8b3ab124bc5ea9"
-      url: "git@github.com:pixelshot91/flutter_scroll_shadow.git"
-    source: git
-    version: "1.2.3"
+      name: flutter_scroll_shadow
+      sha256: c0509c642c5077654301fab1fb2260adc94c82a407c60e64162974b4366e7874
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.2.4"
   flutter_test:
     dependency: "direct dev"
     description: flutter
