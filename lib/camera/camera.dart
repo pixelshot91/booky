@@ -237,7 +237,7 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
               TextFormField(
-                initialValue: '',
+                initialValue: weightGrams?.toString() ?? '',
                 onChanged: (newText) {
                   setState(() => weightGrams = int.parse(newText));
                   _debouncedSaveMetadata();
@@ -248,21 +248,16 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
                   labelText: 'Weight in grams',
                 ),
               ),
-              Row(
-                children: [
-                  const Icon(Icons.diamond),
-                  DropdownButton<rust.ItemState>(
-                    hint: const Text('Book state'),
-                    value: itemState,
-                    items: rust.ItemState.values.map((s) => DropdownMenuItem(value: s, child: Text(s.loc))).toList(),
-                    onChanged: (state) {
-                      setState(() {
-                        itemState = state;
-                      });
-                      _debouncedSaveMetadata();
-                    },
-                  ),
-                ],
+              DropdownButtonFormField<rust.ItemState>(
+                decoration: const InputDecoration(icon: Icon(Icons.diamond), labelText: 'Book state'),
+                value: itemState,
+                items: rust.ItemState.values.map((s) => DropdownMenuItem(value: s, child: Text(s.loc))).toList(),
+                onChanged: (state) {
+                  setState(() {
+                    itemState = state;
+                  });
+                  _debouncedSaveMetadata();
+                },
               ),
             ]
                 .map((w) => Expanded(
@@ -337,6 +332,9 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
         newISBNs.whereNot((newISBN) => manualMd.books.any((book) => book.isbn == newISBN)).forEach((newISBN) {
           manualMd.books.add(rust.BookMetaData(isbn: newISBN, authors: [], keywords: [], priceCent: null));
         });
+
+        manualMd.weightGrams = weightGrams;
+        manualMd.itemState = itemState;
 
         await rust.setManualMetadataForBundle(bundlePath: widget.bundle.directory.path, bundleMetadata: manualMd);
       } on PanicException catch (e) {

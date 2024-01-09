@@ -7,6 +7,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 
+import 'extensions.dart';
+import 'helper.dart';
+
 // TODO: I would like to give the name of the test to run as parameter to run only some test
 //  But it's difficult to pass argument to this main
 //  The argument list of main is always empty
@@ -47,22 +50,6 @@ void addIsbn(final IntegrationTestWidgetsFlutterBinding binding) {
   testWidgets('Add ISBN in ISBNDecoding', (WidgetTester tester) async {
     // Build our app.
     app.main();
-
-    // ignore: non_constant_identifier_names
-    Future<void> tapPopMenu_ISBNDecoding() async {
-      final find7thBundle = find.byKey(const ValueKey(7));
-      expect(find7thBundle, findsOneWidget);
-
-      final popUpMenuButtonFinder = find.descendant(of: find7thBundle, matching: find.byType(PopupMenuButton<void>));
-      await tester.tap(popUpMenuButtonFinder.first);
-      await tester.pumpAndSettle(const Duration(seconds: 1));
-
-      final isbnDecodingFinder = find.text('ISBN decoding');
-
-      expect(isbnDecodingFinder, findsOneWidget);
-      await tester.tap(isbnDecodingFinder);
-      await tester.pumpAndSettle(const Duration(seconds: 1));
-    }
 
     // On Android, this is required prior to taking the screenshot.
     await binding.convertFlutterSurfaceToImage();
@@ -123,7 +110,7 @@ void addIsbn(final IntegrationTestWidgetsFlutterBinding binding) {
 
     await ss.capture('back_to_home');
 
-    await tapPopMenu_ISBNDecoding();
+    await UIBundleWidget.fromListPosition(7, tester).goToISBNDecoding();
 
     await ss.capture('open_isbn_decoding_again');
     expect(find.byWidgetPredicate((widget) => widget is SelectableText && widget.data == isbnToAdd), findsOneWidget);
@@ -140,7 +127,8 @@ void addIsbn(final IntegrationTestWidgetsFlutterBinding binding) {
     await tester.pumpAndSettle(const Duration(seconds: 1));
 
     await ss.capture('back_to_home');
-    await tapPopMenu_ISBNDecoding();
+    await UIBundleWidget.fromListPosition(7, tester).goToISBNDecoding();
+
     await ss.capture('no_isbn_as_initial');
     expect(find.text(isbnToAdd), findsNothing);
   });
@@ -296,6 +284,68 @@ void cameraTakePicture(IntegrationTestWidgetsFlutterBinding binding) {
     expect(draggableWidgetFinder, findsNothing);
 
     await tester.pageBack();
+  });
+}
+
+void editBundle(IntegrationTestWidgetsFlutterBinding binding) {
+  final ss = Screenshotter(binding, 'edit_bundle');
+
+  testWidgets('verify screenshot', (WidgetTester tester) async {
+    Finder getWeightFieldFinder() {
+      return find.byWidgetPredicate((widget) {
+        if (widget is! TextFormField) return false;
+        return find.descendant(of: find.byWidget(widget), matching: find.text('Weight in grams')).hasFoundOne();
+      }).single();
+    }
+
+    Finder getitemStateFieldFinder() {
+      return find.byWidgetPredicate((widget) {
+        if (widget is! DropdownButton) return false;
+        return find.descendant(of: find.byWidget(widget), matching: find.text('Book state')).hasFoundOne();
+      }).single();
+    }
+
+    app.main();
+    await binding.convertFlutterSurfaceToImage();
+
+    // Pump a frame before taking the screenshot.
+    await tester.pumpAndSettle();
+    await ss.capture('home');
+
+    await UIBundleWidget.fromListPosition(0, tester).goToEditBundle();
+
+    await ss.capture('edit_bundle');
+    {
+      final weightFieldFinder = getWeightFieldFinder();
+      find.descendant(of: weightFieldFinder, matching: find.text('490')).single();
+
+      final itemStateFieldFinder = getitemStateFieldFinder();
+      find.descendant(of: itemStateFieldFinder, matching: find.text('Good')).single();
+
+      await tester.enterText(weightFieldFinder, '123');
+      await tester.tap(itemStateFieldFinder);
+      await tester.pumpAndSettle();
+
+      find.text('Brand New').single();
+      await tester.tap(find.text('Brand New').single());
+      await tester.pumpAndSettle();
+
+      await ss.capture('edit_bundle_after_modif');
+    }
+
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+
+    await UIBundleWidget.fromListPosition(0, tester).goToEditBundle();
+
+    await ss.capture('edit_bundle_after_modif_and_reload');
+    {
+      final weightFieldFinder = getWeightFieldFinder();
+      find.descendant(of: weightFieldFinder, matching: find.text('123')).single();
+
+      final itemStateFieldFinder = getitemStateFieldFinder();
+      find.descendant(of: itemStateFieldFinder, matching: find.text('Brand New')).single();
+    }
   });
 }
 

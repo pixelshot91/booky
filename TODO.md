@@ -13,7 +13,6 @@
 * [ ] Camera: Camera is still in use when going back to BundleSelection, and even when going to the home screen
 * [ ] BundleSelection: Add filter by auto_metadata downloaded or not
 * [ ] BundleSelection: Add sort by date picture taken, date published, price
-* [ ] BundleSelection: Add ability to go back into Camera mode to add/delete picture/ISBN, change the weight/state
 * [ ] BundleSelection: BundleList does not refresh after autoMetadata download nor MetadataCollecting manual validation
 * [ ] BundleSelection: BUG: BundleList show autoMetadata from other bundle when some bundle are deleted
 * [ ] BundleSelection: Progress bar for 'Download metadata for all bundles' does not reach the end (Probably a race condition)
@@ -35,6 +34,7 @@
 
 # DONE
 
+* [x] BundleSelection: Add ability to go back into Camera mode to add/delete picture/ISBN, change the weight/state
 * [x] ISBN: Add character 'X' in ISBN keyboard
 * [x] BundleSelection: Make image load faster. Differentiate thumbnail and image to export
 * [x] Test: Automatically kill the emulator process on exit with KillProcessOnDrop
