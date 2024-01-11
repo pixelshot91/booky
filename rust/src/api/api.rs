@@ -10,9 +10,9 @@ use std::vec;
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 
+use crate::{abebooks, babelio, booksprice, fs_helper, google_books, justbooks, leslibraires};
 use crate::client::Client;
 use crate::common::{self};
-use crate::{abebooks, babelio, booksprice, fs_helper, google_books, justbooks, leslibraires};
 
 #[derive(EnumIter, PartialEq, Eq, Hash, Debug, Deserialize, Serialize, Copy, Clone)]
 pub enum ProviderEnum {
@@ -41,9 +41,27 @@ pub struct BarcodeDetectResults {
     pub results: Vec<BarcodeDetectResult>,
 }
 
+/// `cargo test` uses booky/rust/ as the current directory, but when running in booky, it uses booky/ as the current directory
+/// Using `std::env::set_current_dir("rust")` is shared across calls
+/// So the first time it works, but the following times it tries to go to rust/rust
+/// Instead of permanently set the current_dir, use `set_rust_as_current_dir` in all commands that rely on the current_dir
+trait CommandExt {
+    fn set_rust_as_current_dir(&mut self) -> &mut std::process::Command;
+}
+impl CommandExt for std::process::Command {
+    fn set_rust_as_current_dir(&mut self) -> &mut std::process::Command {
+        if cfg!(test) {
+            return self;
+        } else {
+            return self.current_dir("rust/");
+        }
+    }
+}
+
 pub fn detect_barcode_in_image(img_path: String) -> Result<BarcodeDetectResults> {
-    let output = std::process::Command::new("./detect_barcode")
+    let output: std::process::Output = std::process::Command::new("./detect_barcode")
         .arg(format!("--in={}", img_path))
+        .set_rust_as_current_dir()
         .output()?;
 
     if !output.status.success() {
