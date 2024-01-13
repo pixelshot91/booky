@@ -1,0 +1,154 @@
+<animated-vector
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt">
+    <aapt:attr name="android:drawable">
+        <vector
+            android:name="booky"
+            android:width="24dp"
+            android:height="24dp"
+            android:viewportWidth="24"
+            android:viewportHeight="24">
+            <group
+                android:scaleX="0.7"
+                android:scaleY="0.7"
+                android:translateX="6"
+                android:translateY="7"
+                >
+                <group android:name="book1">
+                    <path
+                        android:name="book_1_main"
+                        android:pathData="M 0 0 L 3 0 L 3 14 L 0 14 L 0 0"
+                        android:fillColor="#D06488"
+                        android:strokeColor="#000000"
+                        android:strokeWidth="0.1"/>
+                    <path
+                        android:name="book_1_ribon"
+                        android:pathData="M 0 3 L 3 3"
+                        android:strokeColor="#E91E63"
+                        android:strokeWidth="2.5"/>
+                    <path
+                        android:name="book_1_top"
+                        android:pathData="M 0 0 L 3 0 L 6 -0.5 L 3 -0.5 Z"
+                        android:fillColor="#D06488"
+                        android:strokeColor="#000000"
+                        android:strokeWidth="0.1"
+                        />
+                </group>
+                <group android:name="book2"
+                    android:translateX="3"
+                    >
+                    <path
+                        android:name="book_2_main"
+                        android:pathData="M 0 0 L 3 0 L 3 14 L 0 14 L 0 0"
+                        android:fillColor="#78D064"
+                        android:strokeColor="#000000"
+                        android:strokeWidth="0.1"
+                        />
+                    <path
+                        android:name="book_2_ribon"
+                        android:pathData="M 0 2 L 3 2 L 3 3 L 0 3 L 0 0"
+                        android:fillColor="#3AA721"
+                        android:strokeWidth="0"/>
+                    <path
+                        android:name="book_2_title"
+                        android:pathData="M 1.5 5 L 1.5 10"
+                        android:strokeColor="#56AB43"
+                        android:strokeWidth="0.8"/>
+                    <path
+                        android:name="book_2_top"
+                        android:pathData="M 0 0 L 3 0 L 6 -0.5 L 3 -0.5 Z"
+                        android:fillColor="#78D064"
+                        android:strokeColor="#000000"
+                        android:strokeWidth="0.1"
+                        />
+                </group>
+                <group android:name="book3"
+                    android:translateX="6"
+                    >
+                    <path
+                        android:name="book_3_main"
+                        android:pathData="M 0 0 L 3 0 L 3 14 L 0 14 Z"
+                        android:fillColor="#E8F34B"
+                        android:strokeColor="#000000"
+                        android:strokeWidth="0.1"
+                        />
+                    <path
+                        android:name="book_3_ribon_1"
+                        android:pathData="M 0 2 L 3 2"
+                        android:strokeWidth="1"
+                        android:strokeColor="#FF9800"/>
+                    <group android:translateY="9">
+                        <path
+                            android:name="book_2_ribon"
+                            android:pathData="M 0 2 L 3 2"
+                            android:strokeWidth="1"
+                            android:strokeColor="#FF9800"/>
+                    </group>
+                    <path
+                        android:name="book_3_rear"
+                        android:pathData="M 3 0 L 6 -0.5 L 6 13.5 L 3 14 Z"
+                        android:fillColor="#BCC53C"
+                        android:strokeColor="#000000"
+                        android:strokeWidth="0.1"
+                        />
+                    <path
+                        android:name="book_3_top"
+                        android:pathData="M 0 0 L 3 0 L 6 -0.5 L 3 -0.5 Z"
+                        android:fillColor="#BCC53C"
+                        android:strokeColor="#000000"
+                        android:strokeWidth="0.1"
+                        />
+                </group>
+                <group
+                    android:name="falling_book"
+                    android:pivotX="0"
+                    android:pivotY="14"
+                    >
+                    <path
+                        android:name="falling_book_big"
+                        android:pathData="M 0 0 L 3 0 L 3 14 L 0 14 L 0 0"
+                        android:fillColor="#64B5F6"
+                        android:strokeColor="#000000"
+                        android:strokeWidth="0.1"/>
+                    <path
+                        android:name="falling_book_ribon"
+                        android:pathData="M 0 2 L 3 2 L 3 3 L 0 3 L 0 0"
+                        android:fillColor="#3F51B5"
+                        android:strokeWidth="1"/>
+                    <path
+                        android:name="book_3_rear"
+                        android:pathData="M 3 0 L 6 -0.5 L 6 13.5 L 3 14 Z"
+                        android:fillColor="#64B5F6"
+                        android:strokeColor="#000000"
+                        android:strokeWidth="0.1"
+                        />
+                    <path
+                        android:name="book_3_top"
+                        android:pathData="M 0 0 L 3 0 L 6 -0.5 L 3 -0.5 Z"
+                        android:fillColor="#64B5F6"
+                        android:strokeColor="#000000"
+                        android:strokeWidth="0.1"
+                        />
+                </group>
+            </group>
+        </vector>
+    </aapt:attr>
+    <target android:name="falling_book">
+        <aapt:attr name="android:animation">
+            <set android:ordering="sequentially">
+            <objectAnimator
+                android:propertyName="translationXY"
+                android:propertyXName="translateX" android:propertyYName="translateY"
+                android:pathData="M 12.6 -20 L 12.6 0"
+                android:interpolator="@android:interpolator/accelerate_quint"/>
+            <objectAnimator
+                android:propertyName="rotation"
+                android:duration="1000"
+                android:valueFrom="0"
+                android:valueTo="-15"
+                android:valueType="floatType"
+                android:interpolator="@android:interpolator/bounce"/>
+            </set>
+        </aapt:attr>
+    </target>
+</animated-vector>
