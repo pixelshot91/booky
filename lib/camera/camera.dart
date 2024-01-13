@@ -168,6 +168,7 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
                     return SureDetection();
                   });
                 });
+                _debouncedSaveMetadata();
               }),
           Expanded(
             child: SingleChildScrollView(
@@ -175,7 +176,10 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
                   children: _getValidRegisteredBarcodes()
                       .map((barcode) => BarcodeLabel(
                             barcode,
-                            onDeletePressed: () => setState(() => _registeredBarcodes.remove(barcode)),
+                            onDeletePressed: () => setState(() {
+                              _registeredBarcodes.remove(barcode);
+                              _debouncedSaveMetadata();
+                            }),
                           ))
                       .toList()),
             ),
@@ -216,6 +220,7 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
                               return SureDetection();
                             });
                           });
+                          _debouncedSaveMetadata();
                           setState(() {});
                         },
                         onBarcodeLiveDetected: (List<Barcode> barcodes) {
@@ -223,6 +228,7 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
                             _registeredBarcodes.update(
                                 barcodeString, (oldDetection) => oldDetection.increaseCounter(_onBarcodeDetected),
                                 ifAbsent: () => UnsureDetection());
+                            _debouncedSaveMetadata();
                           });
                         },
                       ),
