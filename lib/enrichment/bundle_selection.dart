@@ -278,31 +278,33 @@ class _BundleSelectionState extends State<BundleSelection> {
                 MaterialPageRoute<void>(builder: (context) => CameraWidgetInit(ShootMultipleBundle(widget.repo))));
             _refreshBundleList();
           }),
-      body: FutureWidget(
-        future: _listBundles(),
-        builder: (bundles) {
-          if (bundles == null) {
-            return Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Text(
-                    'Device not connected',
-                    style: TextStyle(fontSize: 30),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.refresh),
-                    onPressed: () {
-                      setState(() {});
-                    },
-                  ),
-                ],
-              ),
-            );
-          }
-          if (bundles.isEmpty) return _showEmptyBundleList();
-          return _bundleListWidget(bundles);
-        },
+      body: SafeArea(
+        child: FutureWidget(
+          future: _listBundles(),
+          builder: (bundles) {
+            if (bundles == null) {
+              return Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text(
+                      'Device not connected',
+                      style: TextStyle(fontSize: 30),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.refresh),
+                      onPressed: () {
+                        setState(() {});
+                      },
+                    ),
+                  ],
+                ),
+              );
+            }
+            if (bundles.isEmpty) return _showEmptyBundleList();
+            return _bundleListWidget(bundles);
+          },
+        ),
       ),
       bottomNavigationBar: BottomNavigationBar(
           items: const [
