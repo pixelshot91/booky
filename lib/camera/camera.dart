@@ -194,6 +194,7 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
           Expanded(
+            flex: 2,
             child: Row(
               children: [
                 SizedBox(
@@ -238,7 +239,10 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
               ],
             ),
           ),
-          Expanded(child: _buildImageThumbnails()),
+          Expanded(
+            flex: 1,
+            child: _buildImageThumbnails(),
+          ),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
@@ -490,72 +494,6 @@ class BarcodeLabel extends StatelessWidget {
         Expanded(child: Text(barcode, style: const TextStyle(fontWeight: FontWeight.bold))),
         IconButton(onPressed: onDeletePressed, icon: const Icon(Icons.delete))
       ],
-    );
-  }
-}
-
-class MetadataWidget extends StatefulWidget {
-  const MetadataWidget({
-    required this.directory,
-    required this.onSubmit,
-    required this.isbns,
-  });
-
-  final Directory directory;
-  final void Function() onSubmit;
-  final List<String> isbns;
-
-  @override
-  State<MetadataWidget> createState() => _MetadataWidgetState();
-}
-
-class _MetadataWidgetState extends State<MetadataWidget> {
-  late rust.BundleMetaData metadata;
-  final additionalISBNController = TextEditingController();
-
-  @override
-  void initState() {
-    super.initState();
-    metadata = rust.BundleMetaData(
-        books: widget.isbns
-            .map((isbn) => rust.BookMetaData(isbn: isbn, authors: [], keywords: [], priceCent: null))
-            .toList());
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return SimpleDialog(
-      title: const Text('Add the final metadata'),
-      contentPadding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 16),
-      children: [
-        IconButton(
-            icon: const Icon(Icons.save),
-            onPressed: () async {
-              if (additionalISBNController.text.isNotEmpty) {
-                metadata.books.addAll(additionalISBNController.text
-                    .split(' ')
-                    .map((isbn) => rust.BookMetaData(isbn: isbn, authors: [], keywords: [], priceCent: null)));
-              }
-              try {
-                await rust.setManualMetadataForBundle(bundlePath: widget.directory.path, bundleMetadata: metadata);
-              } on PanicException catch (e) {
-                print('Error while saving metadata. e = $e');
-
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                    content: Text('Error while saving metadata.'),
-                  ));
-                }
-              }
-
-              widget.onSubmit();
-            })
-      ]
-          .map((w) => Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4.0),
-                child: w,
-              ))
-          .toList(),
     );
   }
 }
