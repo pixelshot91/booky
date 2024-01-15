@@ -46,6 +46,7 @@ dependencies:
   scroll_to_index: ^3.0.1
   rust_builder:
     path: rust_builder
+  equatable: ^2.0.5
 
 dev_dependencies:
   flutter_test:

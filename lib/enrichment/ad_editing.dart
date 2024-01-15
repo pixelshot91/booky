@@ -1,9 +1,9 @@
 import 'dart:io';
 import 'dart:math';
-import 'package:booky/src/rust/api/api.dart' as rust;
 
 import 'package:booky/common.dart' as common;
 import 'package:booky/personal_info.dart' as personal_info;
+import 'package:booky/src/rust/api/api.dart' as rust;
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:kt_dart/kt.dart';
@@ -220,7 +220,6 @@ class _AdEditingWidget2State extends State<AdEditingWidget2> {
                           itemState: widget.ad.itemState,
                           imgs: widget.ad.imgs);
                       final manualMd = await widget.bundle.getManualMetadata();
-                      // manualMd.ad = ad;
                       widget.bundle.overwriteMetadata(manualMd);
                       final initialDirectory = widget.bundle.directory;
                       final segments = path.split(initialDirectory.path);

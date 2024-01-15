@@ -25,7 +25,7 @@ take_automated_screenshot:
     # Make sur the file/ folder does not exist, otherwise adb push create files/basic/to_publish instead of files/to_publish
     adb shell 'rm -rf /storage/emulated/0/Android/data/fr.pimoid.booky.drive.debug/files/'
     adb push extra/mock_data/basic/ /storage/emulated/0/Android/data/fr.pimoid.booky.drive.debug/files/
-    screenshot_dir=real_android_device_$(date +"%Y-%m-%d_%H-%M-%S")
+    export screenshot_dir=real_android_device_$(date +"%Y-%m-%d_%H-%M-%S")
     ln -s --force --no-dereference $screenshot_dir screenshots/last_screenshots
     flutter drive --driver=test_driver/screenshot_test.dart --target=integration_test/extended_test.dart --flavor=drive
 

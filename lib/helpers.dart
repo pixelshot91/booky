@@ -1,8 +1,11 @@
 import 'dart:io';
 
+import 'package:booky/src/rust/api/api.dart' as rust;
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:recase/recase.dart';
-import 'package:booky/src/rust/api/api.dart' as rust;
+
+import 'isbn_helper.dart';
 
 final defaultScrollShadowColor = Colors.black.withOpacity(0.8);
 
@@ -148,6 +151,18 @@ extension FileExt on File {
 
 extension AuthorExt on rust.Author {
   String toText() => [firstName, lastName].where((s) => s.isNotEmpty).join(' ');
+}
+
+extension BundleMetaDataExt on rust.BundleMetaData {
+  void setISBN(List<ISBN> newISBNs) {
+    /// Remove ISBNs that were deleted
+    books.removeWhere((book) => newISBNs.contains(ISBN.fromString(book.isbn)!) == false);
+
+    /// Add new ISBNs
+    newISBNs.whereNot((newISBN) => books.any((book) => book.isbn == newISBN.str)).forEach((newISBN) {
+      books.add(rust.BookMetaData(isbn: newISBN.str, authors: [], keywords: [], priceCent: null));
+    });
+  }
 }
 
 extension IntExt on int {

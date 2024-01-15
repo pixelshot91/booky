@@ -8,7 +8,6 @@ import 'package:booky/utils/debounce.dart';
 import 'package:camera/camera.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge.dart';
 import 'package:google_mlkit_barcode_scanning/google_mlkit_barcode_scanning.dart';
 import 'package:image/image.dart' as img_lib;
@@ -17,7 +16,6 @@ import '../bundle.dart';
 import '../common.dart' as common;
 import '../helpers.dart';
 import '../isbn_helper.dart';
-import 'barcode_detection.dart';
 import 'camera_preview_widget.dart';
 import 'draggable_widget.dart';
 
@@ -70,8 +68,8 @@ class _CameraWidgetInitState extends State<CameraWidgetInit> {
             bundle: bundle,
             initialWeight: metadata.weightGrams,
             initialItemState: metadata.itemState,
-            initialBarcodes:
-                metadata.books.map((b) => MapEntry<String, BarcodeDetection>(b.isbn, SureDetection())).toMap(),
+            // TODO: convert directly in Rust
+            initialBarcodes: metadata.books.map((b) => ISBN.fromString(b.isbn)!),
           );
         });
   }
@@ -87,7 +85,7 @@ class CameraWidget extends StatefulWidget {
   final Bundle bundle;
   final int? initialWeight;
   final rust.ItemState? initialItemState;
-  final Map<String, BarcodeDetection> initialBarcodes;
+  final Iterable<ISBN> initialBarcodes;
 
   @override
   State<CameraWidget> createState() => _CameraWidgetState();
@@ -101,7 +99,7 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
   late int? weightGrams = widget.initialWeight;
   late rust.ItemState? itemState = widget.initialItemState;
 
-  late final Map<String, BarcodeDetection> _registeredBarcodes = widget.initialBarcodes;
+  late final isbnManager = ISBNManager(widget.initialBarcodes);
 
   // Used to signal when the imageProcessing pipeline finish processing the current frame
   Completer<void>? imageProcessingCompleter;
@@ -154,37 +152,10 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
     Widget showBarcodeList() {
       return Padding(
         padding: const EdgeInsets.all(8.0),
-        child: Column(children: [
-          TextFormField(
-              inputFormatters: [
-                FilteringTextInputFormatter.allow(RegExp(r'^[0-9X]{0,13}')),
-              ],
-              autovalidateMode: AutovalidateMode.always,
-              validator: (s) => isbnValidator(s!),
-              decoration: const InputDecoration(hintText: 'Type manually the ISBN here'),
-              onFieldSubmitted: (newIsbn) {
-                setState(() {
-                  _registeredBarcodes.update(newIsbn, (oldDetection) => oldDetection.makeSure(() {}), ifAbsent: () {
-                    return SureDetection();
-                  });
-                });
-                _debouncedSaveMetadata();
-              }),
-          Expanded(
-            child: SingleChildScrollView(
-              child: Column(
-                  children: _getValidRegisteredBarcodes()
-                      .map((barcode) => BarcodeLabel(
-                            barcode,
-                            onDeletePressed: () => setState(() {
-                              _registeredBarcodes.remove(barcode);
-                              _debouncedSaveMetadata();
-                            }),
-                          ))
-                      .toList()),
-            ),
-          ),
-        ]),
+        child: ISBNsEditor(
+          isbnManager: isbnManager,
+          onISBNsChanged: _debouncedSaveMetadata,
+        ),
       );
     }
 
@@ -213,23 +184,24 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
                           final inputImage = InputImage.fromFilePath(fullScaleImageFile.fullScale.path);
                           final barcodes = await _barcodeScanner.processImage(inputImage);
 
-                          _filterBarcode(barcodes).forEach((barcodeString) {
-                            _registeredBarcodes
-                                .update(barcodeString, (oldDetection) => oldDetection.makeSure(_onBarcodeDetected),
-                                    ifAbsent: () {
-                              _onBarcodeDetected();
-                              return SureDetection();
-                            });
+                          _filterBarcode(barcodes).forEach((isbn) {
+                            isbnManager.addSureISBN(
+                              isbn,
+                              onSureTransition: () {
+                                _onBarcodeDetected();
+                                _debouncedSaveMetadata();
+                              },
+                            );
                           });
                           _debouncedSaveMetadata();
                           setState(() {});
                         },
                         onBarcodeLiveDetected: (List<Barcode> barcodes) {
-                          _filterBarcode(barcodes).forEach((barcodeString) {
-                            _registeredBarcodes.update(
-                                barcodeString, (oldDetection) => oldDetection.increaseCounter(_onBarcodeDetected),
-                                ifAbsent: () => UnsureDetection());
-                            _debouncedSaveMetadata();
+                          _filterBarcode(barcodes).forEach((isbn) {
+                            isbnManager.addUnsureISBN(isbn, onBarcodeConfirmed: () {
+                              _onBarcodeDetected();
+                              _debouncedSaveMetadata();
+                            });
                           });
                         },
                       ),
@@ -333,15 +305,9 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
     saveFormDebouncer(() async {
       try {
         final manualMd = await widget.bundle.getManualMetadata();
-        final newISBNs = _getValidRegisteredBarcodes();
+        final newISBNs = isbnManager.getSureISBNs();
 
-        /// Remove ISBNs that were deleted
-        manualMd.books.removeWhere((book) => newISBNs.contains(book.isbn) == false);
-
-        /// Add new ISBNs
-        newISBNs.whereNot((newISBN) => manualMd.books.any((book) => book.isbn == newISBN)).forEach((newISBN) {
-          manualMd.books.add(rust.BookMetaData(isbn: newISBN, authors: [], keywords: [], priceCent: null));
-        });
+        manualMd.setISBN(newISBNs);
 
         manualMd.weightGrams = weightGrams;
         manualMd.itemState = itemState;
@@ -456,11 +422,12 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
     }
   }
 
-  Iterable<String> _filterBarcode(Iterable<Barcode> barcodes) => barcodes
+  Iterable<ISBN> _filterBarcode(Iterable<Barcode> barcodes) => barcodes
       .where((barcode) => barcode.type == BarcodeType.isbn)
       .map((barcode) => barcode.displayValue)
       .whereNotNull()
-      .where((isbn) => isbnValidator(isbn) == null);
+      .map((barcode) => ISBN.fromString(barcode))
+      .whereNotNull();
 
   void _showCameraException(CameraException e) {
     _logError(e.code, e.description);
@@ -474,26 +441,5 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
 
   void showInSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
-  }
-
-  List<String> _getValidRegisteredBarcodes() {
-    return _registeredBarcodes.entries.where((entry) => entry.value is SureDetection).map((e) => e.key).toList();
-  }
-}
-
-class BarcodeLabel extends StatelessWidget {
-  const BarcodeLabel(this.barcode, {required this.onDeletePressed});
-
-  final String barcode;
-  final void Function() onDeletePressed;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(child: Text(barcode, style: const TextStyle(fontWeight: FontWeight.bold))),
-        IconButton(onPressed: onDeletePressed, icon: const Icon(Icons.delete))
-      ],
-    );
   }
 }

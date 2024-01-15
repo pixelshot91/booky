@@ -1,11 +1,15 @@
 import 'package:booky/repo_selection.dart';
 import 'package:booky/route_observer.dart';
 import 'package:booky/src/rust/frb_generated.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 Future<void> main() async {
   // wait for the splash screen to finish its animation
-  await Future<void>.delayed(const Duration(seconds: 1));
+  // disable in debug mode to avoid long pumpAndSettle in the `flutter drive` test
+  if (!kDebugMode) {
+    await Future<void>.delayed(const Duration(seconds: 1));
+  }
 
   // Required for path_provider to get the directory
   WidgetsFlutterBinding.ensureInitialized();

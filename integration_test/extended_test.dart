@@ -1,6 +1,6 @@
-import 'package:booky/camera/camera.dart';
 import 'package:booky/camera/draggable_widget.dart';
 import 'package:booky/enrichment/bundle_selection.dart';
+import 'package:booky/isbn_helper.dart';
 import 'package:booky/main.dart' as app;
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';

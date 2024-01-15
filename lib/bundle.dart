@@ -140,13 +140,8 @@ class Bundle {
 
   File get metadataFile => directory.joinFile('metadata.json');
 
-  Future<bool> overwriteMetadata(rust.BundleMetaData md) async {
-    try {
-      rust.setManualMetadataForBundle(bundlePath: directory.path, bundleMetadata: md);
-      return true;
-    } on PanicException {
-      return false;
-    }
+  Future<void> overwriteMetadata(rust.BundleMetaData md) async {
+    rust.setManualMetadataForBundle(bundlePath: directory.path, bundleMetadata: md);
   }
 
   Future<bool> removeAutoMetadata() async {
