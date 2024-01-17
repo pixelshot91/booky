@@ -3,6 +3,7 @@ import 'package:booky/enrichment/bundle_selection.dart';
 import 'package:booky/isbn_helper.dart';
 import 'package:booky/main.dart' as app;
 import 'package:camera/camera.dart';
+import 'package:device_info_plus/device_info_plus.dart' as di;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
@@ -230,6 +231,12 @@ void cameraTakePicture(IntegrationTestWidgetsFlutterBinding binding) {
   final ss = Screenshotter(binding, 'camera_take_picture');
 
   testWidgets('verify screenshot', (WidgetTester tester) async {
+    final deviceInfo = await di.DeviceInfoPlugin().androidInfo;
+    if (deviceInfo.isPhysicalDevice) {
+      print('Skipping cameraTakePicture as it require a mock camera feed');
+      return;
+    }
+
     app.main();
     await binding.convertFlutterSurfaceToImage();
 
