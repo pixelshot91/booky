@@ -235,9 +235,8 @@ class _AdEditingWidget2State extends State<AdEditingWidget2> {
                                 await finalDirectory.rename(initialDirectory.path);
                               }),
                         ));
-                        // TODO
-                        Navigator.pop(context);
-                        // Navigator.push(context, MaterialPageRoute<void>(builder: (context) => const BundleSelection()));
+                        // TODO: Use named route to avoid poping the entire route stack
+                        Navigator.popUntil(context, (route) => route.isFirst);
                       }
                     },
                     child: const Text('Mark as published')),
