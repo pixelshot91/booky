@@ -1,23 +1,22 @@
 # TODO
 
-* [ ] App-wide: Use an animated splash screen
 * [ ] App-wide: Preserve the splash screen to hide the creation of the main dirs
 * [ ] App-wide: Better handle nonexistent or incorrect metadata file instead of throwing an exception
 * [ ] Device Mounting: mount the phone from the app
 * [ ] Device Mounting: Trigger a refresh when a new Android device is connected
 * [ ] Device Mounting: Mount only the right folder to be sure not to mess with other app data, or even Android (look into libfuse --subdir option)
+* [ ] Camera: Show visual indication when the 10 photos limit of LBC has been reached
 * [ ] Camera: LiveDetection: show confirmed barcode and pending barcodes in different color. Show a progressBar for the pending barcode
 * [ ] Camera: Reduce latency when cropping picture
 * [ ] Camera: Add sound when deleting a picture
-* [ ] Camera: Fix flashlight turning on and never off again
 * [ ] Camera: Camera is still in use when going back to BundleSelection, and even when going to the home screen
+* [ ] BundleSelection: Show different visual when the metadata collection has never been run. Useful to differentiate book that have been looked for, but found no result, or book with no ISBN
 * [ ] BundleSelection: Add filter by auto_metadata downloaded or not
 * [ ] BundleSelection: Add sort by date picture taken, date published, price
 * [ ] BundleSelection: BundleList does not refresh after autoMetadata download nor MetadataCollecting manual validation
 * [ ] BundleSelection: BUG: BundleList show autoMetadata from other bundle when some bundle are deleted
 * [ ] BundleSelection: Progress bar for 'Download metadata for all bundles' does not reach the end (Probably a race condition)
 * [ ] BundleSelection: Suggest bundle grouping by same author, title, keyword
-* [ ] ISBNDecoding: Better layout for phone
 * [ ] ISBNDecoding: Delete an image
 * [ ] MetadataCollecting: Manual blurb or title is ignored if it is empty (because of replace_with_longest_string_if_none_or_empty)
 * [ ] MetadataCollecting: Disable 'Validate Metadatas' button if price field is empty
@@ -34,6 +33,9 @@
 
 # DONE
 
+* [x] ISBNDecoding: Better layout for phone
+* [x] App-wide: Use an animated splash screen
+* [x] Camera: Fix flashlight turning on and never off again
 * [x] BundleSelection: Add ability to go back into Camera mode to add/delete picture/ISBN, change the weight/state
 * [x] ISBN: Add character 'X' in ISBN keyboard
 * [x] BundleSelection: Make image load faster. Differentiate thumbnail and image to export
