@@ -46,6 +46,8 @@ class _CameraPreviewWidgetState extends State<CameraPreviewWidget> {
   bool _canProcess = true;
   CustomPaint? _customPaint;
 
+  double _exposureOffset = 0;
+
   @override
   void dispose() {
     _canProcess = false;
@@ -105,7 +107,40 @@ class _CameraPreviewWidgetState extends State<CameraPreviewWidget> {
                 IconButton(
                     tooltip: 'Use full frame',
                     onPressed: _cropValue == 0 ? null : () => setState(() => _cropValue = 0),
-                    icon: const Icon(Icons.undo)),
+                    icon: const Icon(Icons.fullscreen)),
+              ],
+            ),
+            Row(
+              children: [
+                Expanded(
+                  child: SliderTheme(
+                    data: SliderThemeData(
+                        trackShape: const CenteredTrackShape(),
+                        thumbColor: _exposureOffset == 0 ? Colors.blue.shade200 : Colors.blue),
+                    child: Slider(
+                        min: -1.0,
+                        max: 1.0,
+                        value: _exposureOffset,
+                        onChanged: (newValue) async {
+                          setState(() => _exposureOffset = newValue);
+
+                          final minExposure = await cameraController.getMinExposureOffset();
+                          final maxExposure = await cameraController.getMaxExposureOffset();
+
+                          final remapExposure = remap(_exposureOffset, -1.0, 1.0, minExposure, maxExposure);
+                          await cameraController.setExposureOffset(remapExposure);
+                        }),
+                  ),
+                ),
+                IconButton(
+                    tooltip: 'Reset exposure',
+                    onPressed: _exposureOffset == 0
+                        ? null
+                        : () {
+                            cameraController.setExposureOffset(0);
+                            setState(() => _exposureOffset = 0);
+                          },
+                    icon: const Icon(Icons.brightness_auto)),
               ],
             ),
             BarcodeLiveDetectionButton(
@@ -128,6 +163,11 @@ class _CameraPreviewWidgetState extends State<CameraPreviewWidget> {
         ),
       );
     }
+  }
+
+  double remap(double value, double oldMin, double oldMax, double newMin, double newMax) {
+    final normalizedValue = (value - oldMin) / (oldMax - oldMin);
+    return normalizedValue * (newMax - newMin) + newMin;
   }
 
   void _onViewFinderTap(TapDownDetails details, BoxConstraints constraints) async {
