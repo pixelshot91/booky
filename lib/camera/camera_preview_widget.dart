@@ -240,6 +240,11 @@ class _CameraPreviewWidgetState extends State<CameraPreviewWidget> {
 
   // <-- croppedFraction / 2 --> | <-- AOI (Area of Interest) --> | <-- croppedFraction / 2 -->
   Widget _viewFinderCropIndicator() {
+    // Easy case, prevent the drawing of border
+    if (_cropValue == 0.0) {
+      return const SizedBox.shrink();
+    }
+
     // flex factor is an int, so multiply all flex value by this amount to emulate double
     const intToDouble = 1000;
 
@@ -251,20 +256,31 @@ class _CameraPreviewWidgetState extends State<CameraPreviewWidget> {
     final croppedFlex = croppedFraction * intToDouble;
     // ignore: non_constant_identifier_names
     final AOIFlex = (AOIFraction * intToDouble).toInt();
+
+    final direction = _cropValue > 0 ? Axis.horizontal : Axis.vertical;
+    final firstBorder = switch (direction) {
+      Axis.horizontal => const Border(right: BorderSide()),
+      Axis.vertical => const Border(bottom: BorderSide()),
+    };
+    final secondBorder = switch (direction) {
+      Axis.horizontal => const Border(left: BorderSide()),
+      Axis.vertical => const Border(top: BorderSide()),
+    };
+
     return Flex(
       crossAxisAlignment: CrossAxisAlignment.stretch,
-      direction: _cropValue > 0 ? Axis.horizontal : Axis.vertical,
+      direction: direction,
       children: [
         Expanded(
             flex: croppedFlex ~/ 2,
-            child: ColoredBox(
-              color: disabledColor,
+            child: Container(
+              decoration: BoxDecoration(color: disabledColor, border: firstBorder),
             )),
         Expanded(flex: AOIFlex, child: const SizedBox.shrink()),
         Expanded(
             flex: croppedFlex ~/ 2,
-            child: ColoredBox(
-              color: disabledColor,
+            child: Container(
+              decoration: BoxDecoration(color: disabledColor, border: secondBorder),
             )),
       ],
     );
