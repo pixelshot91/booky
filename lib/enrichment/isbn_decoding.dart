@@ -25,6 +25,9 @@ class _ISBNDecodingWidgetState extends State<ISBNDecodingWidget> {
 
   late Future<ISBNManager> isbnManager;
 
+  // Using widget.step.bundle.images directly as the parameter of FutureWidget cause the future to get execute every time (thus listing all the images again) but more importantly, it resets the FutureWidget, which show a progress indicator, then show the images back but loose the scroll position, which is quite jarring
+  late final imageFuture = widget.step.bundle.images;
+
   @override
   void initState() {
     super.initState();
@@ -59,7 +62,10 @@ class _ISBNDecodingWidgetState extends State<ISBNDecodingWidget> {
                     padding: const EdgeInsets.all(8.0),
                     child: ISBNsEditor(
                       isbnManager: isbnManager,
-                      onISBNsChanged: () => _addISBNAndSave(isbnManager),
+                      onISBNsChanged: () {
+                        setState(() {});
+                        _addISBNAndSave(isbnManager);
+                      },
                     ),
                   ),
                 ),
@@ -67,7 +73,7 @@ class _ISBNDecodingWidgetState extends State<ISBNDecodingWidget> {
               Expanded(
                   child: SingleChildScrollView(
                 child: FutureWidget(
-                  future: widget.step.bundle.images,
+                  future: imageFuture,
                   builder: (images) => Wrap(
                     children: images
                         .map((img) => Card(
@@ -106,6 +112,8 @@ class _ISBNDecodingWidgetState extends State<ISBNDecodingWidget> {
 
                                                                     isbnManager.addSureISBN(isbn,
                                                                         onSureTransition: () {});
+                                                                    setState(() {});
+                                                                    _addISBNAndSave(isbnManager);
                                                                   },
                                                             child: Text(isbn.str));
                                                       } else {
