@@ -424,7 +424,7 @@ packages:
     description:
       path: "."
       ref: HEAD
-      resolved-ref: "4f2dacee36fb675c81ab0ce0df07e5ceeedb64c5"
+      resolved-ref: f155e594abefa45d2d807fff75e6862f580f14e2
       url: "https://github.com/pixelshot91/flutter_linter.git"
     source: git
     version: "1.0.0"

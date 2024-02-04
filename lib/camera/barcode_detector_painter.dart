@@ -2,8 +2,8 @@
 /// https://github.com/flutter-ml/google_ml_kit_flutter/blob/f37b45369d86b7f6ce045da39891fb23e0145dda/packages/example/lib/vision_detector_views/painters/barcode_detector_painter.dart
 
 import 'dart:io';
-import 'dart:ui';
 import 'dart:ui' as ui;
+import 'dart:ui';
 
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
@@ -38,7 +38,7 @@ class BarcodeDetectorPainter extends CustomPainter {
         ParagraphStyle(textAlign: TextAlign.left, fontSize: 16, textDirection: TextDirection.ltr),
       );
       builder.pushStyle(ui.TextStyle(color: Colors.lightGreenAccent, background: background));
-      builder.addText('${barcode.displayValue}');
+      builder.addText(barcode.displayValue ?? 'unknown_barcode_value');
       builder.pop();
 
       final left = translateX(

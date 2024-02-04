@@ -9,17 +9,6 @@ extension IterableFutureMapEntryExt<K, V> on Iterable<Future<MapEntry<K, V>>> {
 
 String nowAsFileName() => DateTime.now().toIso8601String().replaceAll(':', '_');
 
-Future<bool> launchCommandLine(String executable, List<String> arguments) async {
-  final res = await Process.run(executable, arguments);
-  if (res.exitCode != 0) {
-    print('Error when launching executable $executable with arguments $arguments');
-    print('stdout is ${res.stdout}');
-    print('stderr is ${res.stderr}');
-    return false;
-  }
-  return true;
-}
-
 enum BundleType {
   // Contain the bundle create by the Camera
   toPublish,

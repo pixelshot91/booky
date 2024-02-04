@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:booky/src/rust/api/api.dart' as rust;
+import 'package:camera/camera.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:recase/recase.dart';
@@ -8,6 +9,23 @@ import 'package:recase/recase.dart';
 import 'isbn_helper.dart';
 
 final defaultScrollShadowColor = Colors.black.withOpacity(0.8);
+
+void showInSnackBar(BuildContext context, String message) {
+  if (context.mounted) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+  }
+}
+
+void logError(String code, String? message) {
+  // ignore: avoid_print
+  print('Error: $code${message == null ? '' : '\nError Message: $message'}');
+}
+
+void showCameraException(BuildContext context, CameraException e) {
+  logError(e.code, e.description);
+  // ignore: do_not_use_unsafe_string_interpolation
+  showInSnackBar(context, 'Error: ${e.code}\n${e.description}');
+}
 
 /// Add buttons to the context menu to quickly change the text case
 Widget recaseContextMenuBuilder(
@@ -118,6 +136,7 @@ class AsyncSnapshotWidget<T> extends StatelessWidget {
         return const Center(child: CircularProgressIndicator());
       case ConnectionState.done:
         if (snap.hasError) {
+          // ignore: do_not_use_toString
           final msg = snap.error.toString() + '\n' + snap.stackTrace.toString();
           print('AsyncSnapshotWidget error: $msg');
           return Tooltip(

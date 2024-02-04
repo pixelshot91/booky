@@ -162,6 +162,7 @@ class Bundle {
     try {
       return await rust.getMergedMetadataForBundle(bundlePath: directory.path);
     } on PanicException catch (e) {
+      // ignore: do_not_use_unsafe_string_interpolation
       print('getMergedMetadata. FfiException. e = $e');
       return null;
     }
