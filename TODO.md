@@ -18,7 +18,6 @@
 * [ ] BundleSelection: Progress bar for 'Download metadata for all bundles' does not reach the end (Probably a race condition)
 * [ ] BundleSelection: Suggest bundle grouping by same author, title, keyword
 * [ ] ISBNDecoding: Delete an image
-* [ ] MetadataCollecting: Manual blurb or title is ignored if it is empty (because of replace_with_longest_string_if_none_or_empty)
 * [ ] MetadataCollecting: Disable 'Validate Metadatas' button if price field is empty
 * [ ] MetadataCollecting: Show visual indication when LBC ad limits have been reached: 200 characters title limit, 4000 characters description
 * [ ] AdEditing: Disable 'Mark as published' if the title is empty
@@ -33,6 +32,7 @@
 
 # DONE
 
+* [x] MetadataCollecting: Manual blurb or title is ignored if it is empty (because of replace_with_longest_string_if_none_or_empty)
 * [x] ISBNDecoding: Better layout for phone
 * [x] App-wide: Use an animated splash screen
 * [x] Camera: Fix flashlight turning on and never off again

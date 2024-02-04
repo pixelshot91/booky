@@ -343,9 +343,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return BookMetaData(
       isbn: dco_decode_String(arr[0]),
       title: dco_decode_opt_String(arr[1]),
-      authors: dco_decode_list_author(arr[2]),
+      authors: dco_decode_opt_list_author(arr[2]),
       blurb: dco_decode_opt_String(arr[3]),
-      keywords: dco_decode_list_String(arr[4]),
+      keywords: dco_decode_opt_list_String(arr[4]),
       priceCent: dco_decode_opt_box_autoadd_i_32(arr[5]),
     );
   }
@@ -511,6 +511,16 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  List<String>? dco_decode_opt_list_String(dynamic raw) {
+    return raw == null ? null : dco_decode_list_String(raw);
+  }
+
+  @protected
+  List<Author>? dco_decode_opt_list_author(dynamic raw) {
+    return raw == null ? null : dco_decode_list_author(raw);
+  }
+
+  @protected
   Point dco_decode_point(dynamic raw) {
     final arr = raw as List<dynamic>;
     if (arr.length != 2)
@@ -590,9 +600,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   BookMetaData sse_decode_book_meta_data(SseDeserializer deserializer) {
     var var_isbn = sse_decode_String(deserializer);
     var var_title = sse_decode_opt_String(deserializer);
-    var var_authors = sse_decode_list_author(deserializer);
+    var var_authors = sse_decode_opt_list_author(deserializer);
     var var_blurb = sse_decode_opt_String(deserializer);
-    var var_keywords = sse_decode_list_String(deserializer);
+    var var_keywords = sse_decode_opt_list_String(deserializer);
     var var_priceCent = sse_decode_opt_box_autoadd_i_32(deserializer);
     return BookMetaData(
         isbn: var_isbn,
@@ -823,6 +833,24 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  List<String>? sse_decode_opt_list_String(SseDeserializer deserializer) {
+    if (sse_decode_bool(deserializer)) {
+      return (sse_decode_list_String(deserializer));
+    } else {
+      return null;
+    }
+  }
+
+  @protected
+  List<Author>? sse_decode_opt_list_author(SseDeserializer deserializer) {
+    if (sse_decode_bool(deserializer)) {
+      return (sse_decode_list_author(deserializer));
+    } else {
+      return null;
+    }
+  }
+
+  @protected
   Point sse_decode_point(SseDeserializer deserializer) {
     var var_x = sse_decode_u_16(deserializer);
     var var_y = sse_decode_u_16(deserializer);
@@ -932,9 +960,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   void sse_encode_book_meta_data(BookMetaData self, SseSerializer serializer) {
     sse_encode_String(self.isbn, serializer);
     sse_encode_opt_String(self.title, serializer);
-    sse_encode_list_author(self.authors, serializer);
+    sse_encode_opt_list_author(self.authors, serializer);
     sse_encode_opt_String(self.blurb, serializer);
-    sse_encode_list_String(self.keywords, serializer);
+    sse_encode_opt_list_String(self.keywords, serializer);
     sse_encode_opt_box_autoadd_i_32(self.priceCent, serializer);
   }
 
@@ -1124,6 +1152,24 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_bool(self != null, serializer);
     if (self != null) {
       sse_encode_box_autoadd_item_state(self, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_opt_list_String(
+      List<String>? self, SseSerializer serializer) {
+    sse_encode_bool(self != null, serializer);
+    if (self != null) {
+      sse_encode_list_String(self, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_opt_list_author(
+      List<Author>? self, SseSerializer serializer) {
+    sse_encode_bool(self != null, serializer);
+    if (self != null) {
+      sse_encode_list_author(self, serializer);
     }
   }
 
