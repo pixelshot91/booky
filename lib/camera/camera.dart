@@ -119,7 +119,7 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
         cameraDescription = cameras.first;
         _onNewCameraSelected(cameraDescription!);
       } on CameraException catch (e) {
-        _showCameraException(e);
+        if (mounted) showCameraException(context, e);
       }
     });
   }
@@ -314,6 +314,7 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
 
         await rust.setManualMetadataForBundle(bundlePath: widget.bundle.directory.path, bundleMetadata: manualMd);
       } on PanicException catch (e) {
+        // ignore: do_not_use_unsafe_string_interpolation
         print('Error while saving metadata. e = $e');
 
         if (mounted) {
@@ -388,32 +389,35 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
       await cameraController.initialize();
       await cameraController.setFlashMode(FlashMode.off);
     } on CameraException catch (e) {
-      switch (e.code) {
-        case 'CameraAccessDenied':
-          showInSnackBar('You have denied camera access.');
-          break;
-        case 'CameraAccessDeniedWithoutPrompt':
-          // iOS only
-          showInSnackBar('Please go to Settings app to enable camera access.');
-          break;
-        case 'CameraAccessRestricted':
-          // iOS only
-          showInSnackBar('Camera access is restricted.');
-          break;
-        case 'AudioAccessDenied':
-          showInSnackBar('You have denied audio access.');
-          break;
-        case 'AudioAccessDeniedWithoutPrompt':
-          // iOS only
-          showInSnackBar('Please go to Settings app to enable audio access.');
-          break;
-        case 'AudioAccessRestricted':
-          // iOS only
-          showInSnackBar('Audio access is restricted.');
-          break;
-        default:
-          _showCameraException(e);
-          break;
+      if (mounted == false) return;
+      if (mounted) {
+        switch (e.code) {
+          case 'CameraAccessDenied':
+            showInSnackBar(context, 'You have denied camera access.');
+            break;
+          case 'CameraAccessDeniedWithoutPrompt':
+            // iOS only
+            showInSnackBar(context, 'Please go to Settings app to enable camera access.');
+            break;
+          case 'CameraAccessRestricted':
+            // iOS only
+            showInSnackBar(context, 'Camera access is restricted.');
+            break;
+          case 'AudioAccessDenied':
+            showInSnackBar(context, 'You have denied audio access.');
+            break;
+          case 'AudioAccessDeniedWithoutPrompt':
+            // iOS only
+            showInSnackBar(context, 'Please go to Settings app to enable audio access.');
+            break;
+          case 'AudioAccessRestricted':
+            // iOS only
+            showInSnackBar(context, 'Audio access is restricted.');
+            break;
+          default:
+            showCameraException(context, e);
+            break;
+        }
       }
     }
 
@@ -428,18 +432,4 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
       .whereNotNull()
       .map((barcode) => ISBN.fromString(barcode))
       .whereNotNull();
-
-  void _showCameraException(CameraException e) {
-    _logError(e.code, e.description);
-    showInSnackBar('Error: ${e.code}\n${e.description}');
-  }
-
-  void _logError(String code, String? message) {
-    // ignore: avoid_print
-    print('Error: $code${message == null ? '' : '\nError Message: $message'}');
-  }
-
-  void showInSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
-  }
 }

@@ -1,5 +1,6 @@
 import 'package:booky/enrichment/ad_editing.dart';
 import 'package:booky/helpers.dart';
+import 'package:booky/localization.dart';
 import 'package:booky/src/rust/api/api.dart' as rust;
 import 'package:booky/widgets/scrollable_bundle_images.dart';
 import 'package:flutter/material.dart';
@@ -236,7 +237,7 @@ class _BookMetadataCollectingWidgetState extends State<_BookMetadataCollectingWi
                 TableRow(
                     children: [
                   const Text('Manual', style: columnHeaderStyle),
-                  ...providers.map((p) => Text(p.name, style: columnHeaderStyle))
+                  ...providers.map((rust.ProviderEnum p) => Text(p.loc, style: columnHeaderStyle))
                 ].map((e) => Center(child: e)).toList()),
                 TableRow(children: [
                   TextFormField(

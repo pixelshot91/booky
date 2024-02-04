@@ -41,14 +41,16 @@ class AdEditingWidget extends StatelessWidget {
   String fmtAuthors(List<rust.Author>? authors) {
     if (authors == null || authors.length == 0) return '';
 
-    if (authors.length == 1) return ' de ${authors[0]}';
-    if (authors.length == 2) return ' de ${authors[0]} et ${authors[1]}';
+    if (authors.length == 1) return ' de ${authors[0].toText()}';
+    if (authors.length == 2) return ' de ${authors[0].toText()} et ${authors[1].toText()}';
+
+    // TODO: handle more than 2 authors
     print('Warning: more than 2 authors, only show the first one');
-    return ' de ${authors[0]}';
+    return ' de ${authors[0].toText()}';
   }
 
   String _bookFormat(rust.BookMetaData book, {bool withISBN = false}) {
-    return '"${book.title}"${fmtAuthors(book.authors)}' + (withISBN ? ' (ISBN: ${book.isbn})' : '');
+    return '"${book.title ?? 'livre'}"${fmtAuthors(book.authors)}' + (withISBN ? ' (ISBN: ${book.isbn})' : '');
   }
 
   String? _getDescription(Iterable<rust.BookMetaData> metadataFromIsbn) {

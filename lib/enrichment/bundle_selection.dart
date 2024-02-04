@@ -345,7 +345,9 @@ class _BundleSelectionState extends State<BundleSelection> {
         );
       } on PanicException catch (e) {
         print(
+            // ignore: do_not_use_unsafe_string_interpolation
             'FfiException thrown during getMetadataFromIsbns with isbns=${isbns.toList()}, path=${bundle.autoMetadataFile.path}');
+        // ignore: do_not_use_unsafe_string_interpolation
         print('exception is $e');
       }
       if (mounted) {
@@ -362,9 +364,11 @@ class _BundleSelectionState extends State<BundleSelection> {
       return dirs.sorted((d1, d2) => d1.path.compareTo(d2.path)).map((d) => Bundle(d));
     } catch (e) {
       if (e is PathNotFoundException || e is FileSystemException) {
+        // ignore: do_not_use_unsafe_string_interpolation
         print('Exception in _listBundles. e = $e');
         return null;
       }
+      // ignore: do_not_use_unsafe_string_interpolation
       print('Unhandled exception $e');
       rethrow;
     }
@@ -696,6 +700,7 @@ class _ActionButtons extends StatelessWidget {
                   } on Exception catch (e) {
                     if (context.mounted) {
                       print(
+                          // ignore: do_not_use_unsafe_string_interpolation
                           'Error. Could not delete bundle. try to rename from ${initialDirectoryLocation.path} to $destination e = $e');
                       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                         content: Text('Error. Could not delete bundle'),

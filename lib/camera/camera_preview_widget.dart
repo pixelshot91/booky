@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:google_mlkit_barcode_scanning/google_mlkit_barcode_scanning.dart';
 import 'package:image/image.dart' as img;
 
+import '../helpers.dart';
 import '../image_helper.dart';
 import 'barcode_detector_painter.dart';
 import 'barcode_live_detection_button.dart';
@@ -219,23 +220,11 @@ class _CameraPreviewWidgetState extends State<CameraPreviewWidget> {
       final XFile file = await cameraController.takePicture();
       return file;
     } on CameraException catch (e) {
-      _showCameraException(e);
+      if (mounted) {
+        showCameraException(context, e);
+      }
       return null;
     }
-  }
-
-  void _showCameraException(CameraException e) {
-    _logError(e.code, e.description);
-    showInSnackBar('Error: ${e.code}\n${e.description}');
-  }
-
-  void _logError(String code, String? message) {
-    // ignore: avoid_print
-    print('Error: $code${message == null ? '' : '\nError Message: $message'}');
-  }
-
-  void showInSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
   }
 
   // <-- croppedFraction / 2 --> | <-- AOI (Area of Interest) --> | <-- croppedFraction / 2 -->
