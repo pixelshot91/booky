@@ -12,7 +12,6 @@ use strum_macros::EnumIter;
 
 use crate::{abebooks, babelio, booksprice, fs_helper, google_books, justbooks, leslibraires};
 use crate::client::Client;
-use crate::common::{self};
 
 #[derive(EnumIter, PartialEq, Eq, Hash, Debug, Deserialize, Serialize, Copy, Clone)]
 pub enum ProviderEnum {
@@ -88,7 +87,7 @@ mod tests {
     fn test_sort_longest() {
         for _ in 1..10 {
             let mut book_title: Option<String> = None;
-            crate::api::api::replace_with_longest_string_if_none_or_empty(
+            crate::api::api::replace_with_longest_string_if_none(
                 Some(&std::collections::HashMap::from([
                     (
                         ProviderEnum::AbeBooks,
@@ -245,6 +244,9 @@ pub struct BundleMetaData {
     pub books: Vec<BookMetaData>,
 }
 
+/// For each field of type Option, None means 'Information unknown'
+/// Some("") or Some([]) means the data should be empty.
+/// i.e.: keywords = Some([]) means there is no keyword for this book, don't add some keywords when merging with automatic metadata
 #[derive(Debug, Deserialize, Serialize)]
 #[frb(non_final)]
 pub struct BookMetaData {
@@ -253,13 +255,13 @@ pub struct BookMetaData {
     #[frb(non_final)]
     pub title: Option<String>,
     #[frb(non_final)]
-    pub authors: Vec<Author>,
+    pub authors: Option<Vec<Author>>,
     // A book blurb is a short promotional description.
     // A synopsis summarizes the twists, turns, and conclusion of the story.
     #[frb(non_final)]
     pub blurb: Option<String>,
     #[frb(non_final)]
-    pub keywords: Vec<String>,
+    pub keywords: Option<Vec<String>>,
     #[frb(non_final)]
     pub price_cent: Option<i32>,
 }
@@ -370,41 +372,40 @@ pub fn get_merged_metadata_for_bundle(bundle_path: String) -> Result<BundleMetaD
         manual_bundle_md.books.iter_mut().for_each(|book| {
             let auto_mds = bundle_auto_md.get(&book.isbn);
 
-            replace_with_longest_string_if_none_or_empty(
+            replace_with_longest_string_if_none(
                 auto_mds,
                 |auto| &auto.title,
                 &mut book.title,
             );
-            replace_with_longest_string_if_none_or_empty(
+            replace_with_longest_string_if_none(
                 auto_mds,
                 |auto| &auto.blurb,
                 &mut book.blurb,
             );
 
             // Take the authors from the provider which has the most authors
-            if book.authors.is_empty() {
+            if book.authors.is_none() {
                 let longest_authors = &auto_mds.and_then(|auto_mds| {
                     auto_mds
                         .values()
                         .filter_map(|auto_md| Some(&auto_md.as_ref()?.authors))
                         .max_by(|authors1, authors2| authors1.len().cmp(&authors2.len()))
                 });
-                book.authors = longest_authors.unwrap_or(&vec![]).to_vec();
+                book.authors = Some(longest_authors.unwrap_or(&vec![]).to_vec());
             }
 
             // Merge the keyword from all providers
-            if book.keywords.is_empty() {
-                book.keywords = auto_mds.map_or(vec![], |auto_md| {
-                    let res: Vec<String> = auto_md
-                        .values()
-                        .filter_map(|auto_md| auto_md.as_ref())
-                        .map(|md| &md.keywords)
-                        .fold(vec![], |mut kwa, kwb| {
-                            kwa.extend(kwb.clone());
-                            kwa
-                        });
-                    res
-                });
+            if book.keywords.is_none() {
+                book.keywords = Some(auto_mds.map_or(vec![], |auto_md| {
+                                    auto_md
+                                        .values()
+                                        .filter_map(|auto_md| auto_md.as_ref())
+                                        .map(|md| &md.keywords)
+                                        .fold(vec![], |mut kwa, kwb| {
+                                            kwa.extend(kwb.clone());
+                                            kwa
+                                        })
+                                }));
             }
 
             if book.price_cent.is_none() {
@@ -428,19 +429,13 @@ pub fn get_merged_metadata_for_bundle(bundle_path: String) -> Result<BundleMetaD
     return Ok(manual_bundle_md);
 }
 
-fn replace_with_longest_string_if_none_or_empty<F1>(
+fn replace_with_longest_string_if_none<F1>(
     auto_mds: Option<&HashMap<ProviderEnum, Option<crate::api::api::BookMetaDataFromProvider>>>,
     auto_string_getter: F1,
     book_md_string: &mut Option<String>,
 ) where
     F1: Fn(&crate::api::api::BookMetaDataFromProvider) -> &Option<String>,
 {
-    fn is_none_or_empty(s: &Option<String>) -> bool {
-        match s {
-            None => true,
-            Some(s) => s.is_empty(),
-        }
-    }
     fn get_longest_str<F1>(
         auto_mds: Option<&HashMap<ProviderEnum, Option<crate::api::api::BookMetaDataFromProvider>>>,
         string_getter: F1,
@@ -456,7 +451,7 @@ fn replace_with_longest_string_if_none_or_empty<F1>(
             .map(|s| (*s).to_owned())
     }
 
-    if is_none_or_empty(book_md_string) {
+    if book_md_string.is_none() {
         *book_md_string = get_longest_str(auto_mds, auto_string_getter);
     }
 }

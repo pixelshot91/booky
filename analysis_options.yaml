@@ -1,5 +1,13 @@
 include: package:flutter_lints/flutter.yaml
 
+custom_lint:
+  rules:
+    # enable a lint rule
+    #    - my_lint_rule
+    # A lint rule that is explicitly disabled
+    - do_not_use_flutter_icon: false
+
+
 linter:
   rules:
     use_key_in_widget_constructors: false
@@ -10,6 +18,8 @@ linter:
     avoid_function_literals_in_foreach_calls: false
     prefer_final_locals: true
 analyzer:
+  plugins:
+    - custom_lint
   exclude:
     - lib/src/rust/frb_generated.dart
   enable-experiment:

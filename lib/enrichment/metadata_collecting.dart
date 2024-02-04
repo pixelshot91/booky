@@ -8,6 +8,33 @@ import 'package:kt_dart/kt.dart';
 
 import 'enrichment.dart';
 
+/*
+
+sealed class TextValue {}
+
+class TextFromAutoMd {}
+class ManualText {
+  const ManualText(this.text);
+  final String text;
+}
+*/
+/*
+
+enum ValueSource {
+  autoMd,
+  manual,
+}
+
+/// Able to distinguish:
+///  - empty string, stored as text = '', ValueSource = manual
+///    In this case, the field appear empty, with a hint
+///  - 'No value, take the default one', stored as text = '', ValueSource = default
+///    In this case the `default text` is shown, in a custom style
+class TextWithDefaultValue {
+
+}
+*/
+
 class BooksMetadataCollectingWidget extends StatefulWidget {
   const BooksMetadataCollectingWidget({required this.step});
 
@@ -38,9 +65,9 @@ class _BooksMetadataCollectingWidgetState extends State<BooksMetadataCollectingW
         final bookControllerSet = _BookControllerSet();
         final mergeMDForBook = mergeMd.books.singleWhere((book) => book.isbn == entry.isbn);
         bookControllerSet.titleTextFieldController.text = mergeMDForBook.title ?? '';
-        bookControllerSet.authorsTextFieldController.text = _authorsToString(mergeMDForBook.authors);
+        bookControllerSet.authorsTextFieldController.text = _authorsToString((mergeMDForBook.authors ?? []));
         bookControllerSet.blurbTextFieldController.text = mergeMDForBook.blurb ?? '';
-        bookControllerSet.keywordsTextFieldController.text = _keywordsToString(mergeMDForBook.keywords);
+        bookControllerSet.keywordsTextFieldController.text = _keywordsToString((mergeMDForBook.keywords ?? []));
         bookControllerSet.priceTextFieldController.text = mergeMDForBook.priceCent?.divide(100).toString() ?? '';
         return MapEntry(
             entry.isbn,

@@ -299,9 +299,9 @@ impl SseDecode for crate::api::api::BookMetaData {
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut var_isbn = <String>::sse_decode(deserializer);
         let mut var_title = <Option<String>>::sse_decode(deserializer);
-        let mut var_authors = <Vec<crate::api::api::Author>>::sse_decode(deserializer);
+        let mut var_authors = <Option<Vec<crate::api::api::Author>>>::sse_decode(deserializer);
         let mut var_blurb = <Option<String>>::sse_decode(deserializer);
-        let mut var_keywords = <Vec<String>>::sse_decode(deserializer);
+        let mut var_keywords = <Option<Vec<String>>>::sse_decode(deserializer);
         let mut var_priceCent = <Option<i32>>::sse_decode(deserializer);
         return crate::api::api::BookMetaData {
             isbn: var_isbn,
@@ -545,6 +545,26 @@ impl SseDecode for Option<crate::api::api::ItemState> {
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         if (<bool>::sse_decode(deserializer)) {
             return Some(<crate::api::api::ItemState>::sse_decode(deserializer));
+        } else {
+            return None;
+        }
+    }
+}
+
+impl SseDecode for Option<Vec<String>> {
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        if (<bool>::sse_decode(deserializer)) {
+            return Some(<Vec<String>>::sse_decode(deserializer));
+        } else {
+            return None;
+        }
+    }
+}
+
+impl SseDecode for Option<Vec<crate::api::api::Author>> {
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        if (<bool>::sse_decode(deserializer)) {
+            return Some(<Vec<crate::api::api::Author>>::sse_decode(deserializer));
         } else {
             return None;
         }
@@ -856,9 +876,9 @@ impl SseEncode for crate::api::api::BookMetaData {
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <String>::sse_encode(self.isbn, serializer);
         <Option<String>>::sse_encode(self.title, serializer);
-        <Vec<crate::api::api::Author>>::sse_encode(self.authors, serializer);
+        <Option<Vec<crate::api::api::Author>>>::sse_encode(self.authors, serializer);
         <Option<String>>::sse_encode(self.blurb, serializer);
-        <Vec<String>>::sse_encode(self.keywords, serializer);
+        <Option<Vec<String>>>::sse_encode(self.keywords, serializer);
         <Option<i32>>::sse_encode(self.price_cent, serializer);
     }
 }
@@ -1037,6 +1057,24 @@ impl SseEncode for Option<crate::api::api::ItemState> {
         <bool>::sse_encode(self.is_some(), serializer);
         if let Some(value) = self {
             <crate::api::api::ItemState>::sse_encode(value, serializer);
+        }
+    }
+}
+
+impl SseEncode for Option<Vec<String>> {
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <bool>::sse_encode(self.is_some(), serializer);
+        if let Some(value) = self {
+            <Vec<String>>::sse_encode(value, serializer);
+        }
+    }
+}
+
+impl SseEncode for Option<Vec<crate::api::api::Author>> {
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <bool>::sse_encode(self.is_some(), serializer);
+        if let Some(value) = self {
+            <Vec<crate::api::api::Author>>::sse_encode(value, serializer);
         }
     }
 }

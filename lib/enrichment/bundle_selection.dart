@@ -122,7 +122,7 @@ class CustomSearchHintDelegate extends SearchDelegate<String> {
               : const Iterable<BundleMetaDataWithIndex>.empty();
           final Iterable<BundleMetaDataWithIndex> bundlesMatchingAuthor = matchOnAuthor
               ? bundlesWithMD.where((b) =>
-                  b.md?.books.any((book) => book.authors
+                  b.md?.books.any((book) => (book.authors ?? [])
                       .any((author) => '${author.firstName} ${author.lastName}'.containsIgnoringCase(query))) ??
                   false)
               : const Iterable<BundleMetaDataWithIndex>.empty();
@@ -759,9 +759,9 @@ class MetadataIcons extends StatelessWidget {
 
     final books = bundleMergeMD.books;
     final allBooksHaveTitle = books.every((b) => (b.title?.length ?? 0) > 0);
-    final allBooksHaveAuthor = books.every((b) => b.authors.length > 0);
+    final allBooksHaveAuthor = books.every((b) => (b.authors ?? []).length > 0);
     final allBooksHaveBlurb = books.every((b) => (b.blurb?.length ?? 0) > 0);
-    final allBooksHaveKeywords = books.every((b) => b.keywords.length > 0);
+    final allBooksHaveKeywords = books.every((b) => (b.keywords ?? []).length > 0);
     final allBooksHavePrice = books.every((b) => b.priceCent != null);
 
     return Column(

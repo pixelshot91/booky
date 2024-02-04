@@ -38,17 +38,17 @@ class AdEditingWidget extends StatelessWidget {
 
   final AdEditingStep step;
 
-  String vecFmt(Iterable<String> it) {
-    final vec = it.toList();
-    if (vec.length == 0) return '';
-    if (vec.length == 1) return 'de ${vec[0]}';
-    if (vec.length == 2) return 'de ${vec[0]} et ${vec[1]}';
+  String fmtAuthors(List<rust.Author>? authors) {
+    if (authors == null || authors.length == 0) return '';
+
+    if (authors.length == 1) return ' de ${authors[0]}';
+    if (authors.length == 2) return ' de ${authors[0]} et ${authors[1]}';
     print('Warning: more than 2 authors, only show the first one');
-    return 'de ${vec[0]}';
+    return ' de ${authors[0]}';
   }
 
   String _bookFormat(rust.BookMetaData book, {bool withISBN = false}) {
-    return '"${book.title}" ${vecFmt(book.authors.map((a) => a.toText()))}' + (withISBN ? ' (ISBN: ${book.isbn})' : '');
+    return '"${book.title}"${fmtAuthors(book.authors)}' + (withISBN ? ' (ISBN: ${book.isbn})' : '');
   }
 
   String? _getDescription(Iterable<rust.BookMetaData> metadataFromIsbn) {
@@ -108,7 +108,7 @@ class AdEditingWidget extends StatelessWidget {
 
       description += personal_info.customMessage;
 
-      final keywords = books.map((entry) => entry.keywords).expand((kw) => kw).toSet().join(', ');
+      final keywords = books.map((entry) => entry.keywords ?? []).expand((kw) => kw).toSet().join(', ');
       if (keywords.isNotEmpty) {
         description += '\n\nMots-clés:\n' + keywords;
       }

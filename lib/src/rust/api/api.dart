@@ -107,20 +107,23 @@ class BarcodeDetectResults {
           results == other.results;
 }
 
+/// For each field of type Option, None means 'Information unknown'
+/// Some("") or Some([]) means the data should be empty.
+/// i.e.: keywords = Some([]) means there is no keyword for this book, don't add some keywords when merging with automatic metadata
 class BookMetaData {
   String isbn;
   String? title;
-  List<Author> authors;
+  List<Author>? authors;
   String? blurb;
-  List<String> keywords;
+  List<String>? keywords;
   int? priceCent;
 
   BookMetaData({
     required this.isbn,
     this.title,
-    required this.authors,
+    this.authors,
     this.blurb,
-    required this.keywords,
+    this.keywords,
     this.priceCent,
   });
 

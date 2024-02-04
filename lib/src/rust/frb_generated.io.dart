@@ -116,6 +116,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   ItemState? dco_decode_opt_box_autoadd_item_state(dynamic raw);
 
   @protected
+  List<String>? dco_decode_opt_list_String(dynamic raw);
+
+  @protected
+  List<Author>? dco_decode_opt_list_author(dynamic raw);
+
+  @protected
   Point dco_decode_point(dynamic raw);
 
   @protected
@@ -239,6 +245,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   ItemState? sse_decode_opt_box_autoadd_item_state(
       SseDeserializer deserializer);
+
+  @protected
+  List<String>? sse_decode_opt_list_String(SseDeserializer deserializer);
+
+  @protected
+  List<Author>? sse_decode_opt_list_author(SseDeserializer deserializer);
 
   @protected
   Point sse_decode_point(SseDeserializer deserializer);
@@ -428,6 +440,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   }
 
   @protected
+  ffi.Pointer<wire_cst_list_String> cst_encode_opt_list_String(
+      List<String>? raw) {
+    return raw == null ? ffi.nullptr : cst_encode_list_String(raw);
+  }
+
+  @protected
+  ffi.Pointer<wire_cst_list_author> cst_encode_opt_list_author(
+      List<Author>? raw) {
+    return raw == null ? ffi.nullptr : cst_encode_list_author(raw);
+  }
+
+  @protected
   void cst_api_fill_to_wire_author(Author apiObj, wire_cst_author wireObj) {
     wireObj.first_name = cst_encode_String(apiObj.firstName);
     wireObj.last_name = cst_encode_String(apiObj.lastName);
@@ -451,9 +475,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       BookMetaData apiObj, wire_cst_book_meta_data wireObj) {
     wireObj.isbn = cst_encode_String(apiObj.isbn);
     wireObj.title = cst_encode_opt_String(apiObj.title);
-    wireObj.authors = cst_encode_list_author(apiObj.authors);
+    wireObj.authors = cst_encode_opt_list_author(apiObj.authors);
     wireObj.blurb = cst_encode_opt_String(apiObj.blurb);
-    wireObj.keywords = cst_encode_list_String(apiObj.keywords);
+    wireObj.keywords = cst_encode_opt_list_String(apiObj.keywords);
     wireObj.price_cent = cst_encode_opt_box_autoadd_i_32(apiObj.priceCent);
   }
 
@@ -644,6 +668,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_opt_box_autoadd_item_state(
       ItemState? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_opt_list_String(List<String>? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_opt_list_author(List<Author>? self, SseSerializer serializer);
 
   @protected
   void sse_encode_point(Point self, SseSerializer serializer);

@@ -52,6 +52,9 @@ dev_dependencies:
   json_serializable: ^6.6.1
   ffigen: 8.0.2
   device_info_plus: ^9.1.1
+  flutter_linter:
+    git:
+      url: https://github.com/pixelshot91/flutter_linter.git
 
 flutter:
   uses-material-design: true

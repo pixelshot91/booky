@@ -115,6 +115,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   ItemState? dco_decode_opt_box_autoadd_item_state(dynamic raw);
 
   @protected
+  List<String>? dco_decode_opt_list_String(dynamic raw);
+
+  @protected
+  List<Author>? dco_decode_opt_list_author(dynamic raw);
+
+  @protected
   Point dco_decode_point(dynamic raw);
 
   @protected
@@ -240,6 +246,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       SseDeserializer deserializer);
 
   @protected
+  List<String>? sse_decode_opt_list_String(SseDeserializer deserializer);
+
+  @protected
+  List<Author>? sse_decode_opt_list_author(SseDeserializer deserializer);
+
+  @protected
   Point sse_decode_point(SseDeserializer deserializer);
 
   @protected
@@ -291,9 +303,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     return [
       cst_encode_String(raw.isbn),
       cst_encode_opt_String(raw.title),
-      cst_encode_list_author(raw.authors),
+      cst_encode_opt_list_author(raw.authors),
       cst_encode_opt_String(raw.blurb),
-      cst_encode_list_String(raw.keywords),
+      cst_encode_opt_list_String(raw.keywords),
       cst_encode_opt_box_autoadd_i_32(raw.priceCent)
     ];
   }
@@ -428,6 +440,16 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   int? cst_encode_opt_box_autoadd_item_state(ItemState? raw) {
     return raw == null ? null : cst_encode_box_autoadd_item_state(raw);
+  }
+
+  @protected
+  List<dynamic>? cst_encode_opt_list_String(List<String>? raw) {
+    return raw == null ? null : cst_encode_list_String(raw);
+  }
+
+  @protected
+  List<dynamic>? cst_encode_opt_list_author(List<Author>? raw) {
+    return raw == null ? null : cst_encode_list_author(raw);
   }
 
   @protected
@@ -575,6 +597,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_opt_box_autoadd_item_state(
       ItemState? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_opt_list_String(List<String>? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_opt_list_author(List<Author>? self, SseSerializer serializer);
 
   @protected
   void sse_encode_point(Point self, SseSerializer serializer);
