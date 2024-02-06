@@ -1,22 +1,32 @@
 # Booky
 
-Booky is an application to help publish second-hand book.
-It enable taking multiple picture of the book(s). Add books state (brand new, worn out), add the weight (for shipping), then extract the ISBN from the barcode in the pictures to find the books metadata.
+Booky is an application to help publish ads for second-hand book.
+It enables taking multiple picture of the book(s). Specify the books state (brand new, worn out), add the weight (for shipping), then extract the ISBN from the barcode in the pictures to find the books metadata.  
+In the 'Enrichment' step, it query several websites to get the books metadata (title, authors, blurb, keywords and price).  
+Booky then automatically create a compelling ad with all the relevant information.
 
-It is then very easy to create a compelling ad to sell your book.
+| A bunch of books                                                           | Use Booky to take picture of the book, and gather metadata                         | Publish your book                                                        |
+|----------------------------------------------------------------------------|------------------------------------------------------------------------------------|--------------------------------------------------------------------------|
+| <img alt="abstract image of a book stack" src="doc/images/book_stack.svg"> | <img alt="screenshot of Booky showing published book" src="doc/images/booky.webp"> | <img alt="screenshot of ads created by Booky" src="doc/images/lbc.webp"> |
+
+## Flowchart
 
 <p align="center">
-<img alt="screenshot of Booky homescreen" src="doc/images/bunle_selection.webp" width=30%>
+<img alt="Flowchat of the process of publishing a book with Booky" src="doc/images/flowchart.svg" >
 </p>
 
 ## Enrichment
+
 Booky will scrape various websites to find metadata like:
+
 - Title
-- Author
+- Authors
 - Blurb. A book blurb is a short promotional description, whereas a synopsis summarizes the twists, turns, and conclusion of the story.
 - Keywords or genres
+- Market price
 
 ### Example using Babelio as source
+
 #### Input
 
 ```rust
@@ -130,22 +140,29 @@ $ ls /media/phone
 ```
 
 Then launch Booky with:
+
 ```
 $ flutter run --flavor noDrive -d linux
 ```
 
 ### Launching the test suite
+
 #### OBS
-##### Setup of Virtual camera
-OBS home page: <https://obsproject.com/>
 
 Some test require to simulate a camera. Booky use OBS virtual camera to mock the real camera.
+
+OBS home page: <https://obsproject.com/>
+
+##### Setup of Virtual camera
+
 OBS virtual camera need v4l2loopback module which may not be enabled.
 
 If it is not enabled, you should see this log when launching OBS:
+
 ```
 warning: v4l2loopback not installed, virtual camera disabled
 ```
+
 And the button `Start virutal camera` will not appear.
 
 To enable it, run
@@ -169,11 +186,13 @@ sudo modprobe v4l2loopback devices=63 video_nr=13 card_label='OBS Virtual Camera
 ```
 
 then restart virtual cam and cold boot the emulator.
-
 ###### Importing scene
+
 OBS does not provide a convenient way to create portable scene, because all scene contain absolute path to the sources.
-To be able to use relative path, Booky use OBS Scene Transporter.
+To be able to use relative path, Booky use OBS Scene Transporter.  
+Use this fork version of OBS scene transporter as it also bundle the scripts along all the other resources
 <https://github.com/pixelshot91/obs-scene-transporter>
 
 # License
-[Icon by Freepik](https://www.freepik.com/icon/books_562132)
+[Icon by Freepik](https://www.freepik.com/icon/books_562132)  
+[Illustrative image by Freepik](https://www.freepik.com/free-vector/hand-drawn-flat-design-stack-books_24005145.htm)
