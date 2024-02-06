@@ -12,7 +12,7 @@ Booky then automatically create a compelling ad with all the relevant informatio
 ## Flowchart
 
 <p align="center">
-<img alt="Flowchat of the process of publishing a book with Booky" src="doc/images/flowchart.svg" >
+<img alt="Flowchart of the process of publishing a book with Booky" src="doc/images/flowchart.svg" >
 </p>
 
 ## Enrichment
@@ -82,7 +82,7 @@ Clone the 3 OpenCV repo:
 - https://github.com/pixelshot91/open_cv_barcode_book_metadata_finder  
   (fork of https://github.com/opencv/opencv_contrib.git)  
   Contain the barcode contrib module
-- https://github.com/opencv/opencv_extra.git (optionnal, contain the test data to test OpenCV)
+- https://github.com/opencv/opencv_extra.git (optional, contain the test data to test OpenCV)
 
 ```shell
 $ cd <open_cv>/
@@ -131,7 +131,8 @@ Exception: Gradle build failed to produce an .apk file. It's likely that this fi
 (See <https://github.com/flutter/flutter/issues/22856> for issue about this cryptic message and the use of default flavor)
 
 #### On Linux
-First connect your phonem then mount its content on /media/phone.  
+
+First connect your phone then mount its content on /media/phone.  
 You can mount your phone with [adbfs-rootless](https://github.com/spion/adbfs-rootless)
 ```
 $ ./adbfs /media/phone/
