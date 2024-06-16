@@ -2,7 +2,7 @@ default: gen lint
 
 gen:
     flutter pub get
-    flutter_rust_bridge_codegen
+    flutter_rust_bridge_codegen generate
 
 lint:
     cd rust && cargo fmt
