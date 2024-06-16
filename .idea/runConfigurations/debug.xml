@@ -1,6 +1,9 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="debug" type="FlutterRunConfigurationType" factoryName="Flutter">
     <option name="buildFlavor" value="noDrive" />
+    <option name="envs">
+      <entry key="RUST_BACKTRACE" value="1" />
+    </option>
     <option name="filePath" value="$PROJECT_DIR$/lib/main.dart" />
     <method v="2" />
   </configuration>

@@ -534,7 +534,7 @@ class _BundleWidgetState extends State<BundleWidget> {
     cachedMergedMd = widget.bundle.getMergedMetadata();
   }
 
-  Widget _buildTitleLine(rust.BundleMetaData? bundleMergedMD) {
+  Widget _buildTitleLine(rust.BundleMetaData? bundleMergedMD, Bundle bundle) {
     if (bundleMergedMD == null) {
       return const Row(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -553,7 +553,8 @@ class _BundleWidgetState extends State<BundleWidget> {
       );
     }
     final firstBook = bundleMergedMD.books.firstOrNull;
-    if (firstBook == null) return const Text('No book identified');
+    if (firstBook == null) return const Text('No ISBN');
+
     return Row(children: [
       if (bundleMergedMD.books.length > 1) _NumberOfBookBadge(bundleMergedMD.books.length),
       Expanded(
@@ -561,10 +562,19 @@ class _BundleWidgetState extends State<BundleWidget> {
         children: [
           firstBook.title.ifIs(
               notnull: (t) => TextWithTooltip(t),
-              nul: () => const Text(
+              nul: () {
+                if (bundle.autoMetadataFile.existsSync()) {
+                  return const Text(
                     'No title found',
                     style: TextStyle(fontStyle: FontStyle.italic),
-                  )),
+                  );
+                } else {
+                  return const Text(
+                    'Metadata from provider have not been downloaded yet',
+                    style: TextStyle(fontStyle: FontStyle.italic),
+                  );
+                }
+              }),
         ],
       )),
       bundleMergedMD.books
@@ -582,7 +592,7 @@ class _BundleWidgetState extends State<BundleWidget> {
             future: cachedMergedMd,
             builder: (bundleMergedMD) => Column(
               children: [
-                _buildTitleLine(bundleMergedMD),
+                _buildTitleLine(bundleMergedMD, widget.bundle),
                 Expanded(
                   child: Row(
                     children: [
@@ -767,6 +777,7 @@ class MetadataIcons extends StatelessWidget {
     final allBooksHaveAuthor = books.every((b) => (b.authors ?? []).length > 0);
     final allBooksHaveBlurb = books.every((b) => (b.blurb?.length ?? 0) > 0);
     final allBooksHaveKeywords = books.every((b) => (b.keywords ?? []).length > 0);
+    // print('allBooksHaveKeywords = $allBooksHaveKeywords, keyword ${books.map((b) => b.keywords)}');
     final allBooksHavePrice = books.every((b) => b.priceCent != null);
 
     return Column(

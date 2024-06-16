@@ -179,7 +179,7 @@ extension BundleMetaDataExt on rust.BundleMetaData {
 
     /// Add new ISBNs
     newISBNs.whereNot((newISBN) => books.any((book) => book.isbn == newISBN.str)).forEach((newISBN) {
-      books.add(rust.BookMetaData(isbn: newISBN.str, authors: [], keywords: [], priceCent: null));
+      books.add(rust.BookMetaData(isbn: newISBN.str));
     });
   }
 }
