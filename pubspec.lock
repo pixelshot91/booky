@@ -952,7 +952,7 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "4.1.0"
-  rust_builder:
+  rust_lib_booky:
     dependency: "direct main"
     description:
       path: rust_builder

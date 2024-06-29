@@ -38,9 +38,11 @@ dependencies:
   uuid: ^4.4.0
   path_provider: ^2.1.0
   scroll_to_index: ^3.0.1
-  rust_builder:
-    path: rust_builder
+  #  rust_builder:
+  #    path: rust_builder
   equatable: ^2.0.5
+  rust_lib_booky:
+    path: rust_builder
 
 dev_dependencies:
   flutter_test:
