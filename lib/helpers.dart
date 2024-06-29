@@ -12,7 +12,8 @@ final defaultScrollShadowColor = Colors.black.withOpacity(0.8);
 
 void showInSnackBar(BuildContext context, String message) {
   if (context.mounted) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
   }
 }
 
@@ -38,17 +39,20 @@ Widget recaseContextMenuBuilder(
     ContextMenuButtonItem(
         label: 'Sentence case',
         onPressed: () => editableTextState.userUpdateTextEditingValue(
-            TextEditingValue(text: editableTextState.textEditingValue.text.sentenceCase),
+            TextEditingValue(
+                text: editableTextState.textEditingValue.text.sentenceCase),
             SelectionChangedCause.toolbar)),
     ContextMenuButtonItem(
         label: 'lower case',
         onPressed: () => editableTextState.userUpdateTextEditingValue(
-            TextEditingValue(text: editableTextState.textEditingValue.text.toLowerCase()),
+            TextEditingValue(
+                text: editableTextState.textEditingValue.text.toLowerCase()),
             SelectionChangedCause.toolbar)),
     ContextMenuButtonItem(
         label: 'UPPER CASE',
         onPressed: () => editableTextState.userUpdateTextEditingValue(
-            TextEditingValue(text: editableTextState.textEditingValue.text.toUpperCase()),
+            TextEditingValue(
+                text: editableTextState.textEditingValue.text.toUpperCase()),
             SelectionChangedCause.toolbar)),
   ]);
 
@@ -106,7 +110,10 @@ class TextWithTooltip extends StatelessWidget {
       message: text,
       child: Text(text,
           softWrap: false,
-          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, overflow: TextOverflow.fade)),
+          style: const TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              overflow: TextOverflow.fade)),
     );
   }
 }
@@ -119,7 +126,10 @@ class FutureWidget<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder(future: future, builder: (context, snap) => AsyncSnapshotWidget(snap: snap, builder: builder));
+    return FutureBuilder(
+        future: future,
+        builder: (context, snap) =>
+            AsyncSnapshotWidget(snap: snap, builder: builder));
   }
 }
 
@@ -162,7 +172,8 @@ extension FileExt on File {
   // Same as File.rename but check that the destination file does not exist to prevent overwriting it
   Future<File> safeRename(String newPath) async {
     if (await File(newPath).exists()) {
-      throw FileSystemException("File '$newPath' already exist. Cannot rename source file '$path'");
+      throw FileSystemException(
+          "File '$newPath' already exist. Cannot rename source file '$path'");
     }
     return await rename(newPath);
   }
@@ -175,10 +186,13 @@ extension AuthorExt on rust.Author {
 extension BundleMetaDataExt on rust.BundleMetaData {
   void setISBN(List<ISBN> newISBNs) {
     /// Remove ISBNs that were deleted
-    books.removeWhere((book) => newISBNs.contains(ISBN.fromString(book.isbn)!) == false);
+    books.removeWhere(
+        (book) => newISBNs.contains(ISBN.fromString(book.isbn)!) == false);
 
     /// Add new ISBNs
-    newISBNs.whereNot((newISBN) => books.any((book) => book.isbn == newISBN.str)).forEach((newISBN) {
+    newISBNs
+        .whereNot((newISBN) => books.any((book) => book.isbn == newISBN.str))
+        .forEach((newISBN) {
       books.add(rust.BookMetaData(isbn: newISBN.str));
     });
   }
@@ -212,13 +226,20 @@ extension MapExt<K, V> on Iterable<MapEntry<K, V>> {
 }
 
 extension IterableListExt<T> on Iterable<List<T>> {
-  List<T> biggest() => fold([], (biggest, element) => element.length > biggest.length ? element : biggest);
+  List<T> biggest() => fold(
+      [],
+      (biggest, element) =>
+          element.length > biggest.length ? element : biggest);
 }
 
 extension IterableStringExt on Iterable<String> {
-  String? biggest() => fold(null, (biggest, element) => element.length > (biggest?.length ?? 0) ? element : biggest);
+  String? biggest() => fold(
+      null,
+      (biggest, element) =>
+          element.length > (biggest?.length ?? 0) ? element : biggest);
 }
 
 extension StringExt on String {
-  bool containsIgnoringCase(String needle) => toLowerCase().contains(needle.toLowerCase());
+  bool containsIgnoringCase(String needle) =>
+      toLowerCase().contains(needle.toLowerCase());
 }

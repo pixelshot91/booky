@@ -20,7 +20,10 @@ class BarcodeLabel extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Expanded(child: SelectableText(isbn.str, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold))),
+        Expanded(
+            child: SelectableText(isbn.str,
+                style: const TextStyle(
+                    fontSize: 13, fontWeight: FontWeight.bold))),
         IconButton(onPressed: onDeletePressed, icon: const Icon(Icons.delete))
       ],
     );
@@ -87,7 +90,9 @@ class ISBN extends Equatable {
 /// This is because the ISBNDecoder may generate the wrong ISBN on some frame
 class ISBNManager {
   ISBNManager(Iterable<ISBN> initialISBNs) {
-    _registeredISBNs = initialISBNs.map((isbn) => MapEntry<ISBN, BarcodeDetection>(isbn, SureDetection())).toMap();
+    _registeredISBNs = initialISBNs
+        .map((isbn) => MapEntry<ISBN, BarcodeDetection>(isbn, SureDetection()))
+        .toMap();
   }
 
   // TODO: Should be a list to preserve order
@@ -105,12 +110,16 @@ class ISBNManager {
   }
 
   void addUnsureISBN(ISBN isbn, {required void Function() onBarcodeConfirmed}) {
-    _registeredISBNs.update(isbn, (oldDetection) => oldDetection.increaseCounter(onBarcodeConfirmed),
+    _registeredISBNs.update(isbn,
+        (oldDetection) => oldDetection.increaseCounter(onBarcodeConfirmed),
         ifAbsent: () => UnsureDetection());
   }
 
   List<ISBN> getSureISBNs() {
-    return _registeredISBNs.entries.where((entry) => entry.value is SureDetection).map((e) => e.key).toList();
+    return _registeredISBNs.entries
+        .where((entry) => entry.value is SureDetection)
+        .map((e) => e.key)
+        .toList();
   }
 
   void remove(ISBN isbn) {
@@ -173,25 +182,30 @@ class _ISBNsEditorState extends State<ISBNsEditor> {
               ],
               autovalidateMode: AutovalidateMode.always,
               validator: (s) => ISBN.validator(s!),
-              decoration: const InputDecoration(hintText: 'Type manually the ISBN here'),
+              decoration: const InputDecoration(
+                  hintText: 'Type manually the ISBN here'),
               onChanged: (typedISBN) {
                 setState(() {
                   manualISBN = ISBN.fromString(typedISBN);
                 });
               },
-              onFieldSubmitted: manualISBN?.let<void Function(String)>((manualISBN) => (_) {
-                    setState(() {
-                      // TODO: add confirmation sound
-                      widget.isbnManager.addSureISBN(manualISBN, onSureTransition: () {});
-                    });
-                    controller.clear();
-                    widget.onISBNsChanged();
-                  })),
+              onFieldSubmitted:
+                  manualISBN?.let<void Function(String)>((manualISBN) => (_) {
+                        setState(() {
+                          // TODO: add confirmation sound
+                          widget.isbnManager
+                              .addSureISBN(manualISBN, onSureTransition: () {});
+                        });
+                        controller.clear();
+                        widget.onISBNsChanged();
+                      })),
           () {
             if (constraints.hasBoundedHeight) {
               return Expanded(child: isbnListWidget);
             } else {
-              return ConstrainedBox(constraints: const BoxConstraints(maxHeight: 170), child: isbnListWidget);
+              return ConstrainedBox(
+                  constraints: const BoxConstraints(maxHeight: 170),
+                  child: isbnListWidget);
             }
           }(),
         ]);

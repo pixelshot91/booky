@@ -21,7 +21,8 @@ class ISBNDecodingWidget extends StatefulWidget {
 }
 
 class _ISBNDecodingWidgetState extends State<ISBNDecodingWidget> {
-  KtMutableMap<String, Future<rust.BarcodeDetectResults>> decodedIsbns = KtMutableMap.empty();
+  KtMutableMap<String, Future<rust.BarcodeDetectResults>> decodedIsbns =
+      KtMutableMap.empty();
 
   late Future<ISBNManager> isbnManager;
 
@@ -35,13 +36,15 @@ class _ISBNDecodingWidgetState extends State<ISBNDecodingWidget> {
       Future(() async {
         final images = await widget.step.bundle.images;
         images.forEach((image) {
-          decodedIsbns[image.fullScale.path] = rust.detectBarcodeInImage(imgPath: image.fullScale.path);
+          decodedIsbns[image.fullScale.path] =
+              rust.detectBarcodeInImage(imgPath: image.fullScale.path);
         });
       });
     }
     isbnManager = Future(() async {
       final manualMetaData = await widget.step.bundle.getManualMetadata();
-      return ISBNManager(manualMetaData.books.map((b) => ISBN.fromString(b.isbn)!));
+      return ISBNManager(
+          manualMetaData.books.map((b) => ISBN.fromString(b.isbn)!));
     });
   }
 
@@ -53,7 +56,8 @@ class _ISBNDecodingWidgetState extends State<ISBNDecodingWidget> {
         future: isbnManager,
         builder: (isbnManager) => LayoutBuilder(
           builder: (BuildContext context, BoxConstraints constraints) => Flex(
-            direction: constraints.maxWidth > 600 ? Axis.horizontal : Axis.vertical,
+            direction:
+                constraints.maxWidth > 600 ? Axis.horizontal : Axis.vertical,
             children: [
               SizedBox(
                 width: 300,
@@ -88,49 +92,71 @@ class _ISBNDecodingWidgetState extends State<ISBNDecodingWidget> {
                                           child: ImageWidget(img.fullScale),
                                         )),
                                     FutureWidget(
-                                        future: decodedIsbns[img.fullScale.path] ?? Future(() => null),
+                                        future:
+                                            decodedIsbns[img.fullScale.path] ??
+                                                Future(() => null),
                                         builder: (results) {
-                                          if (results == null) return const Text('No result');
+                                          if (results == null)
+                                            return const Text('No result');
                                           return Column(
                                               children: results.results.map(
                                             (result) {
-                                              final maybeIsbn = ISBN.fromString(result.value);
+                                              final maybeIsbn =
+                                                  ISBN.fromString(result.value);
 
                                               return Padding(
-                                                padding: const EdgeInsets.all(8.0),
+                                                padding:
+                                                    const EdgeInsets.all(8.0),
                                                 child: Row(
-                                                  mainAxisSize: MainAxisSize.min,
+                                                  mainAxisSize:
+                                                      MainAxisSize.min,
                                                   children: [
                                                     () {
                                                       if (maybeIsbn != null) {
                                                         final isbn = maybeIsbn;
                                                         return ElevatedButton(
-                                                            onPressed: isbnManager.contains(isbn)
+                                                            onPressed: isbnManager
+                                                                    .contains(
+                                                                        isbn)
                                                                 ? null
                                                                 : () async {
                                                                     // TODO: add confirmation sound
 
-                                                                    isbnManager.addSureISBN(isbn,
-                                                                        onSureTransition: () {});
-                                                                    setState(() {});
-                                                                    _addISBNAndSave(isbnManager);
+                                                                    isbnManager.addSureISBN(
+                                                                        isbn,
+                                                                        onSureTransition:
+                                                                            () {});
+                                                                    setState(
+                                                                        () {});
+                                                                    _addISBNAndSave(
+                                                                        isbnManager);
                                                                   },
-                                                            child: Text(isbn.str));
+                                                            child:
+                                                                Text(isbn.str));
                                                       } else {
-                                                        if (result.value.isEmpty) {
+                                                        if (result
+                                                            .value.isEmpty) {
                                                           return const Text(
                                                             'Unable to decode',
-                                                            style: TextStyle(fontStyle: FontStyle.italic),
+                                                            style: TextStyle(
+                                                                fontStyle:
+                                                                    FontStyle
+                                                                        .italic),
                                                           );
                                                         }
                                                         // Not an ISBN, still displayed it but without button
-                                                        return Text(result.value,
+                                                        return Text(
+                                                            result.value,
                                                             style: const TextStyle(
-                                                                decoration: TextDecoration.lineThrough));
+                                                                decoration:
+                                                                    TextDecoration
+                                                                        .lineThrough));
                                                       }
                                                     }(),
                                                     const SizedBox(width: 20),
-                                                    ISBNPreview(imgFile: img.fullScale, result: result),
+                                                    ISBNPreview(
+                                                        imgFile: img.fullScale,
+                                                        result: result),
                                                   ],
                                                 ),
                                               );
@@ -190,8 +216,10 @@ class _ISBNPreviewState extends State<ISBNPreview> {
 
     /// Add some space around the barcode to be sure the text ISBN will be in the frame
     const padding = 50;
-    final topLeft = widget.result.corners[1].toImgPoint() + image.Point(-padding, -padding);
-    final topRight = widget.result.corners[2].toImgPoint() + image.Point(padding, -padding);
+    final topLeft =
+        widget.result.corners[1].toImgPoint() + image.Point(-padding, -padding);
+    final topRight =
+        widget.result.corners[2].toImgPoint() + image.Point(padding, -padding);
     barcodeWidth = topRight.x - topLeft.x;
     translate = Vector3(-topLeft.x.toDouble(), -topLeft.y.toDouble(), 0.0);
   }
@@ -211,9 +239,10 @@ class _ISBNPreviewState extends State<ISBNPreview> {
                 minScale: 0.01,
                 // Allow to scale down so much that the image does not fill the viewport anymore
                 boundaryMargin: const EdgeInsets.all(500.0),
-                transformationController: TransformationController(Matrix4.identity()
-                  ..scale(maxWidth / barcodeWidth)
-                  ..translate(translate)),
+                transformationController:
+                    TransformationController(Matrix4.identity()
+                      ..scale(maxWidth / barcodeWidth)
+                      ..translate(translate)),
                 constrained: false,
                 child: ImageWidget(widget.imgFile),
               ),

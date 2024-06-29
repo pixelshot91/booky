@@ -92,8 +92,10 @@ class _DropZoneState extends State<_DropZone> {
                 borderRadius: BorderRadius.circular(10),
                 child: Container(
                     color: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
-                    child: Text('${event.session.items.length} images selected')),
+                    padding:
+                        const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
+                    child:
+                        Text('${event.session.items.length} images selected')),
               ),
             ),
           ),
@@ -104,7 +106,8 @@ class _DropZoneState extends State<_DropZone> {
   }
 
   Future<void> _onPerformDrop(PerformDropEvent event) async {
-    final pathsRaw = await event.session.items.first.dataReader!.readValue(Formats.plainText);
+    final pathsRaw = await event.session.items.first.dataReader!
+        .readValue(Formats.plainText);
     final paths = pathsRaw!.split('\n');
     final imgsPath = paths.where((e) => e.isNotEmpty).map((rawPath) {
       print('A${rawPath}B');

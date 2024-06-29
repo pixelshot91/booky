@@ -69,7 +69,8 @@ class _CameraWidgetInitState extends State<CameraWidgetInit> {
             initialWeight: metadata.weightGrams,
             initialItemState: metadata.itemState,
             // TODO: convert directly in Rust
-            initialBarcodes: metadata.books.map((b) => ISBN.fromString(b.isbn)!),
+            initialBarcodes:
+                metadata.books.map((b) => ISBN.fromString(b.isbn)!),
           );
         });
   }
@@ -91,7 +92,8 @@ class CameraWidget extends StatefulWidget {
   State<CameraWidget> createState() => _CameraWidgetState();
 }
 
-class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver, TickerProviderStateMixin {
+class _CameraWidgetState extends State<CameraWidget>
+    with WidgetsBindingObserver, TickerProviderStateMixin {
   CameraDescription? cameraDescription;
 
   CameraController? _controller;
@@ -104,9 +106,11 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
   // Used to signal when the imageProcessing pipeline finish processing the current frame
   Completer<void>? imageProcessingCompleter;
 
-  final BarcodeScanner _barcodeScanner = BarcodeScanner(formats: [BarcodeFormat.ean13]);
+  final BarcodeScanner _barcodeScanner =
+      BarcodeScanner(formats: [BarcodeFormat.ean13]);
 
-  final Debouncer saveFormDebouncer = Debouncer(delay: const Duration(milliseconds: 500));
+  final Debouncer saveFormDebouncer =
+      Debouncer(delay: const Duration(milliseconds: 500));
 
   @override
   void initState() {
@@ -180,9 +184,12 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
                         controller: _controller,
                         barcodeScanner: _barcodeScanner,
                         onImageTaken: (img_lib.Image imageTaken) async {
-                          final fullScaleImageFile = await widget.bundle.appendNewImage(imageTaken);
-                          final inputImage = InputImage.fromFilePath(fullScaleImageFile.fullScale.path);
-                          final barcodes = await _barcodeScanner.processImage(inputImage);
+                          final fullScaleImageFile =
+                              await widget.bundle.appendNewImage(imageTaken);
+                          final inputImage = InputImage.fromFilePath(
+                              fullScaleImageFile.fullScale.path);
+                          final barcodes =
+                              await _barcodeScanner.processImage(inputImage);
 
                           _filterBarcode(barcodes).forEach((isbn) {
                             isbnManager.addSureISBN(
@@ -198,7 +205,8 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
                         },
                         onBarcodeLiveDetected: (List<Barcode> barcodes) {
                           _filterBarcode(barcodes).forEach((isbn) {
-                            isbnManager.addUnsureISBN(isbn, onBarcodeConfirmed: () {
+                            isbnManager.addUnsureISBN(isbn,
+                                onBarcodeConfirmed: () {
                               _onBarcodeDetected();
                               _debouncedSaveMetadata();
                             });
@@ -231,9 +239,12 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
                 ),
               ),
               DropdownButtonFormField<rust.ItemState>(
-                decoration: const InputDecoration(icon: Icon(Icons.diamond), labelText: 'Book state'),
+                decoration: const InputDecoration(
+                    icon: Icon(Icons.diamond), labelText: 'Book state'),
                 value: itemState,
-                items: rust.ItemState.values.map((s) => DropdownMenuItem(value: s, child: Text(s.loc))).toList(),
+                items: rust.ItemState.values
+                    .map((s) => DropdownMenuItem(value: s, child: Text(s.loc)))
+                    .toList(),
                 onChanged: (state) {
                   setState(() {
                     itemState = state;
@@ -263,7 +274,8 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
       }
     }(), builder: (images) {
       if (images == null) {
-        return const Center(child: Text('Tap the camera preview to take a picture'));
+        return const Center(
+            child: Text('Tap the camera preview to take a picture'));
       }
       return _thumbnailWidget(images);
     });
@@ -288,7 +300,8 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
                       onVerticalDrag: () async {
                         final res = await widget.bundle.deleteImage(image);
                         if (!res && mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                          ScaffoldMessenger.of(context)
+                              .showSnackBar(const SnackBar(
                             content: Text('Error while saving image'),
                           ));
                           return;
@@ -312,7 +325,8 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
         manualMd.weightGrams = weightGrams;
         manualMd.itemState = itemState;
 
-        await rust.setManualMetadataForBundle(bundlePath: widget.bundle.directory.path, bundleMetadata: manualMd);
+        await rust.setManualMetadataForBundle(
+            bundlePath: widget.bundle.directory.path, bundleMetadata: manualMd);
       } on PanicException catch (e) {
         // ignore: do_not_use_unsafe_string_interpolation
         print('Error while saving metadata. e = $e');
@@ -341,7 +355,8 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
                       builder: (cameras) => SimpleDialog(
                           title: const Text('Select camera'),
                           children: cameras
-                              .where((c) => c.lensDirection == CameraLensDirection.back)
+                              .where((c) =>
+                                  c.lensDirection == CameraLensDirection.back)
                               .map((c) => SimpleDialogOption(
                                     onPressed: () => _onNewCameraSelected(c),
                                     child: Text('Camera ${c.name}'),
@@ -361,7 +376,8 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
     if (mounted) {
       setState(() {});
     }
-    AudioPlayer().play(AssetSource('sounds/success.mp3'), mode: PlayerMode.lowLatency);
+    AudioPlayer()
+        .play(AssetSource('sounds/success.mp3'), mode: PlayerMode.lowLatency);
   }
 
   Future<void> _onNewCameraSelected(CameraDescription cameraDescription) async {
@@ -380,7 +396,9 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
       // Set to ResolutionPreset.high. Do NOT set it to ResolutionPreset.max because for some phones does NOT work.
       ResolutionPreset.high,
       enableAudio: false,
-      imageFormatGroup: Platform.isAndroid ? ImageFormatGroup.nv21 : ImageFormatGroup.bgra8888,
+      imageFormatGroup: Platform.isAndroid
+          ? ImageFormatGroup.nv21
+          : ImageFormatGroup.bgra8888,
     );
 
     _controller = cameraController;
@@ -397,7 +415,8 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
             break;
           case 'CameraAccessDeniedWithoutPrompt':
             // iOS only
-            showInSnackBar(context, 'Please go to Settings app to enable camera access.');
+            showInSnackBar(
+                context, 'Please go to Settings app to enable camera access.');
             break;
           case 'CameraAccessRestricted':
             // iOS only
@@ -408,7 +427,8 @@ class _CameraWidgetState extends State<CameraWidget> with WidgetsBindingObserver
             break;
           case 'AudioAccessDeniedWithoutPrompt':
             // iOS only
-            showInSnackBar(context, 'Please go to Settings app to enable audio access.');
+            showInSnackBar(
+                context, 'Please go to Settings app to enable audio access.');
             break;
           case 'AudioAccessRestricted':
             // iOS only

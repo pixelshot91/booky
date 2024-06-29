@@ -4,18 +4,19 @@ class CenteredTrackShape extends RoundedRectSliderTrackShape {
   const CenteredTrackShape();
 
   @override
-  void paint(PaintingContext context,
-      Offset offset, {
-        required RenderBox parentBox,
-        required SliderThemeData sliderTheme,
-        required Animation<double> enableAnimation,
-        required TextDirection textDirection,
-        required Offset thumbCenter,
-        Offset? secondaryOffset,
-        bool isDiscrete = false,
-        bool isEnabled = false,
-        double additionalActiveTrackHeight = 2,
-      }) {
+  void paint(
+    PaintingContext context,
+    Offset offset, {
+    required RenderBox parentBox,
+    required SliderThemeData sliderTheme,
+    required Animation<double> enableAnimation,
+    required TextDirection textDirection,
+    required Offset thumbCenter,
+    Offset? secondaryOffset,
+    bool isDiscrete = false,
+    bool isEnabled = false,
+    double additionalActiveTrackHeight = 2,
+  }) {
     assert(sliderTheme.disabledActiveTrackColor != null);
     assert(sliderTheme.disabledInactiveTrackColor != null);
     assert(sliderTheme.activeTrackColor != null);
@@ -30,10 +31,12 @@ class CenteredTrackShape extends RoundedRectSliderTrackShape {
 
     // Assign the track segment paints, which are leading: active and
     // trailing: inactive.
-    final ColorTween activeTrackColorTween =
-    ColorTween(begin: sliderTheme.disabledActiveTrackColor, end: sliderTheme.activeTrackColor);
-    final ColorTween inactiveTrackColorTween =
-    ColorTween(begin: sliderTheme.disabledInactiveTrackColor, end: sliderTheme.inactiveTrackColor);
+    final ColorTween activeTrackColorTween = ColorTween(
+        begin: sliderTheme.disabledActiveTrackColor,
+        end: sliderTheme.activeTrackColor);
+    final ColorTween inactiveTrackColorTween = ColorTween(
+        begin: sliderTheme.disabledInactiveTrackColor,
+        end: sliderTheme.inactiveTrackColor);
     final Paint activePaint = Paint()
       ..color = activeTrackColorTween.evaluate(enableAnimation)!;
     final Paint inactivePaint = Paint()
@@ -47,7 +50,8 @@ class CenteredTrackShape extends RoundedRectSliderTrackShape {
       isDiscrete: isDiscrete,
     );
     final Radius trackRadius = Radius.circular(trackRect.height / 2);
-    final Radius activeTrackRadius = Radius.circular((trackRect.height + additionalActiveTrackHeight) / 2);
+    final Radius activeTrackRadius =
+        Radius.circular((trackRect.height + additionalActiveTrackHeight) / 2);
 
     context.canvas.drawRRect(
       RRect.fromRectAndRadius(trackRect, activeTrackRadius),

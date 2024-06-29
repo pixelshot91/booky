@@ -42,7 +42,8 @@ class AdEditingWidget extends StatelessWidget {
     if (authors == null || authors.length == 0) return '';
 
     if (authors.length == 1) return ' de ${authors[0].toText()}';
-    if (authors.length == 2) return ' de ${authors[0].toText()} et ${authors[1].toText()}';
+    if (authors.length == 2)
+      return ' de ${authors[0].toText()} et ${authors[1].toText()}';
 
     // TODO: handle more than 2 authors
     print('Warning: more than 2 authors, only show the first one');
@@ -50,11 +51,13 @@ class AdEditingWidget extends StatelessWidget {
   }
 
   String _bookFormat(rust.BookMetaData book, {bool withISBN = false}) {
-    return '"${book.title ?? 'livre'}"${fmtAuthors(book.authors)}' + (withISBN ? ' (ISBN: ${book.isbn})' : '');
+    return '"${book.title ?? 'livre'}"${fmtAuthors(book.authors)}' +
+        (withISBN ? ' (ISBN: ${book.isbn})' : '');
   }
 
   String? _getDescription(Iterable<rust.BookMetaData> metadataFromIsbn) {
-    final booksWithBlurb = metadataFromIsbn.where((entry) => entry.blurb?.isNotEmpty == true);
+    final booksWithBlurb =
+        metadataFromIsbn.where((entry) => entry.blurb?.isNotEmpty == true);
     if (booksWithBlurb.length == 0) {
       return null;
     } else if (booksWithBlurb.length == 1) {
@@ -66,7 +69,9 @@ class AdEditingWidget extends StatelessWidget {
       }
       return 'Résumé:\n' + titleAndAuthor + onlyBookWithBlurb.blurb!;
     } else {
-      final blurbs = booksWithBlurb.map((entry) => _bookFormat(entry) + ':\n' + entry.blurb!).join('\n\n');
+      final blurbs = booksWithBlurb
+          .map((entry) => _bookFormat(entry) + ':\n' + entry.blurb!)
+          .join('\n\n');
       return 'Résumés:\n' + blurbs;
     }
   }
@@ -78,7 +83,8 @@ class AdEditingWidget extends StatelessWidget {
       _ShippingCostIfWeightIsUnder(maxWeightGram: 2000, priceCent: 499),
       _ShippingCostIfWeightIsUnder(maxWeightGram: 5000, priceCent: 649),
     ];
-    final shippingCost = shippingCosts.firstWhere((sc) => sc.maxWeightGram > grams);
+    final shippingCost =
+        shippingCosts.firstWhere((sc) => sc.maxWeightGram > grams);
     return shippingCost.priceCent;
   }
 
@@ -91,7 +97,12 @@ class AdEditingWidget extends StatelessWidget {
       if (bundleMetaData == null) {
         // TODO: Use better default value when no information is known on the bundle (use null instead of 0)
         return Ad(
-            title: '', description: '', priceCent: 0, weightGrams: 0, itemState: rust.ItemState.medium, imgs: images);
+            title: '',
+            description: '',
+            priceCent: 0,
+            weightGrams: 0,
+            itemState: rust.ItemState.medium,
+            imgs: images);
       }
       final books = bundleMetaData.books;
 
@@ -103,25 +114,33 @@ class AdEditingWidget extends StatelessWidget {
 
       var description = '';
 
-      final bookTitles = books.map((md) => _bookFormat(md, withISBN: true)).join('\n');
+      final bookTitles =
+          books.map((md) => _bookFormat(md, withISBN: true)).join('\n');
       description += bookTitles + '\n\n';
 
       _getDescription(books)?.let((d) => description += d + '\n\n');
 
       description += personal_info.customMessage;
 
-      final keywords = books.map((entry) => entry.keywords ?? []).expand((kw) => kw).toSet().join(', ');
+      final keywords = books
+          .map((entry) => entry.keywords ?? [])
+          .expand((kw) => kw)
+          .toSet()
+          .join(', ');
       if (keywords.isNotEmpty) {
         description += '\n\nMots-clés:\n' + keywords;
       }
 
-      final totalPriceIncludingShipping = books.map((e) => e.priceCent ?? 0).sum;
-      final weightGramsWithWrapping = (bundleMetaData.weightGrams! * 1.2).toInt();
-      var totalPriceExcludingShipping =
-          totalPriceIncludingShipping - _estimatedShippingCost(grams: weightGramsWithWrapping);
+      final totalPriceIncludingShipping =
+          books.map((e) => e.priceCent ?? 0).sum;
+      final weightGramsWithWrapping =
+          (bundleMetaData.weightGrams! * 1.2).toInt();
+      var totalPriceExcludingShipping = totalPriceIncludingShipping -
+          _estimatedShippingCost(grams: weightGramsWithWrapping);
 
       const minimumSellingPrice = 100;
-      totalPriceExcludingShipping = max(totalPriceExcludingShipping, minimumSellingPrice);
+      totalPriceExcludingShipping =
+          max(totalPriceExcludingShipping, minimumSellingPrice);
 
       return Ad(
           title: title,
@@ -153,8 +172,10 @@ class AdEditingWidget2 extends StatefulWidget {
 
 class _AdEditingWidget2State extends State<AdEditingWidget2> {
   late final titleController = TextEditingController(text: widget.ad.title);
-  late final descriptionController = TextEditingController(text: widget.ad.description);
-  late final priceController = TextEditingController(text: widget.ad.priceCent.divide(100).toString());
+  late final descriptionController =
+      TextEditingController(text: widget.ad.description);
+  late final priceController =
+      TextEditingController(text: widget.ad.priceCent.divide(100).toString());
 
   Widget _nonCopyableField(IconData icon, Widget child) {
     const iconColor = Color(0xff898989);
@@ -188,7 +209,10 @@ class _AdEditingWidget2State extends State<AdEditingWidget2> {
                 ),
                 style: const TextStyle(fontSize: 30),
               )),
-              _nonCopyableField(Icons.diamond, SizedBox(width: 300, child: _LBCStyledState(widget.ad.itemState))),
+              _nonCopyableField(
+                  Icons.diamond,
+                  SizedBox(
+                      width: 300, child: _LBCStyledState(widget.ad.itemState))),
               CopyableTextField(TextFormField(
                 controller: descriptionController,
                 maxLines: null,
@@ -208,9 +232,11 @@ class _AdEditingWidget2State extends State<AdEditingWidget2> {
               )),
               _nonCopyableField(
                 Icons.scale,
-                SizedBox(width: 300, child: _LBCStyledWeight(widget.ad.weightGrams)),
+                SizedBox(
+                    width: 300, child: _LBCStyledWeight(widget.ad.weightGrams)),
               ),
-              _nonCopyableField(Icons.collections, DraggableFilesWidget(images: widget.ad.imgs)),
+              _nonCopyableField(Icons.collections,
+                  DraggableFilesWidget(images: widget.ad.imgs)),
               Center(
                 child: ElevatedButton(
                     onPressed: () async {
@@ -225,7 +251,8 @@ class _AdEditingWidget2State extends State<AdEditingWidget2> {
                       widget.bundle.overwriteMetadata(manualMd);
                       final initialDirectory = widget.bundle.directory;
                       final segments = path.split(initialDirectory.path);
-                      segments[segments.length - 2] = common.BundleType.published.getDirName;
+                      segments[segments.length - 2] =
+                          common.BundleType.published.getDirName;
                       final finalDirectory = Directory(path.joinAll(segments));
                       await initialDirectory.rename(finalDirectory.path);
                       if (mounted) {
@@ -234,7 +261,8 @@ class _AdEditingWidget2State extends State<AdEditingWidget2> {
                           action: SnackBarAction(
                               label: 'Undo',
                               onPressed: () async {
-                                await finalDirectory.rename(initialDirectory.path);
+                                await finalDirectory
+                                    .rename(initialDirectory.path);
                               }),
                         ));
                         // TODO: Use named route to avoid poping the entire route stack
@@ -255,7 +283,8 @@ class _AdEditingWidget2State extends State<AdEditingWidget2> {
 }
 
 class _ShippingCostIfWeightIsUnder {
-  _ShippingCostIfWeightIsUnder({required this.maxWeightGram, required this.priceCent});
+  _ShippingCostIfWeightIsUnder(
+      {required this.maxWeightGram, required this.priceCent});
 
   final int maxWeightGram;
   final int priceCent;
@@ -295,6 +324,8 @@ class _LBCStyledWeight extends StatelessWidget {
       _WeightCategory(maxWeight: 20000, description: 'De 10 kg à 20 kg'),
       _WeightCategory(maxWeight: 20000, description: 'De 20 kg à 30 kg'),
     ];
-    return LBCRadioButton(weightCategories.firstWhere((c) => c.maxWeight > weightGrams).description);
+    return LBCRadioButton(weightCategories
+        .firstWhere((c) => c.maxWeight > weightGrams)
+        .description);
   }
 }

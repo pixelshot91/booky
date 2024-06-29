@@ -22,7 +22,9 @@ import 'enrichment.dart';
 import 'metadata_collecting.dart';
 
 PopupMenuItem<void> _popUpMenuIconText(
-        {required IconData icon, required String label, required void Function() onPressed}) =>
+        {required IconData icon,
+        required String label,
+        required void Function() onPressed}) =>
     PopupMenuItem<void>(
         onTap: onPressed,
         child: Row(
@@ -63,7 +65,8 @@ class CustomSearchHintDelegate extends SearchDelegate<String> {
   @override
   PreferredSizeWidget buildBottom(BuildContext context) => PreferredSize(
       preferredSize: const Size.fromHeight(50),
-      child: StatefulBuilder(builder: (BuildContext context, StateSetter setState) {
+      child: StatefulBuilder(
+          builder: (BuildContext context, StateSetter setState) {
         return Padding(
           padding: const EdgeInsets.all(8.0),
           child: Row(
@@ -103,7 +106,8 @@ class CustomSearchHintDelegate extends SearchDelegate<String> {
   Widget _buildSuggestions(BuildContext context) => FutureWidget(
         future: bundlesWithMD,
         builder: (bundlesWithMD) {
-          if (bundlesWithMD == null) return const Text('Error while fetching bundles');
+          if (bundlesWithMD == null)
+            return const Text('Error while fetching bundles');
 
           if (query.isEmpty) {
             return Center(
@@ -114,19 +118,26 @@ class CustomSearchHintDelegate extends SearchDelegate<String> {
           }
 
           final bundlesMatchingISBN = matchOnISBN
-              ? bundlesWithMD.where((b) => b.md?.books.any((book) => book.isbn.contains(query)) ?? false)
+              ? bundlesWithMD.where((b) =>
+                  b.md?.books.any((book) => book.isbn.contains(query)) ?? false)
               : const Iterable<BundleMetaDataWithIndex>.empty();
           final bundlesMatchingTitle = matchOnTitle
-              ? bundlesWithMD
-                  .where((b) => b.md?.books.any((book) => book.title?.containsIgnoringCase(query) ?? false) ?? false)
-              : const Iterable<BundleMetaDataWithIndex>.empty();
-          final Iterable<BundleMetaDataWithIndex> bundlesMatchingAuthor = matchOnAuthor
               ? bundlesWithMD.where((b) =>
-                  b.md?.books.any((book) => (book.authors ?? [])
-                      .any((author) => '${author.firstName} ${author.lastName}'.containsIgnoringCase(query))) ??
+                  b.md?.books.any((book) =>
+                      book.title?.containsIgnoringCase(query) ?? false) ??
                   false)
               : const Iterable<BundleMetaDataWithIndex>.empty();
-          final bundleMatching = bundlesMatchingISBN.followedBy(bundlesMatchingTitle).followedBy(bundlesMatchingAuthor);
+          final Iterable<BundleMetaDataWithIndex> bundlesMatchingAuthor =
+              matchOnAuthor
+                  ? bundlesWithMD.where((b) =>
+                      b.md?.books.any((book) => (book.authors ?? []).any(
+                          (author) => '${author.firstName} ${author.lastName}'
+                              .containsIgnoringCase(query))) ??
+                      false)
+                  : const Iterable<BundleMetaDataWithIndex>.empty();
+          final bundleMatching = bundlesMatchingISBN
+              .followedBy(bundlesMatchingTitle)
+              .followedBy(bundlesMatchingAuthor);
           return ListView.builder(
             itemBuilder: (context, index) {
               final b = bundleMatching.elementAt(index);
@@ -188,12 +199,14 @@ class _BundleSelectionState extends State<BundleSelection> {
   void initState() {
     super.initState();
     gridViewController = AutoScrollController(
-        viewportBoundaryGetter: () => Rect.fromLTRB(0, 0, 0, MediaQuery.of(context).padding.bottom),
+        viewportBoundaryGetter: () =>
+            Rect.fromLTRB(0, 0, 0, MediaQuery.of(context).padding.bottom),
         axis: Axis.vertical);
   }
 
   Future<void> _compressImages() async {
-    (await _listBundles())?.let((bundles) => _compressedAllBundleImages(bundles));
+    (await _listBundles())
+        ?.let((bundles) => _compressedAllBundleImages(bundles));
   }
 
   @override
@@ -207,10 +220,15 @@ class _BundleSelectionState extends State<BundleSelection> {
               icon: const Icon(Icons.search),
               onPressed: () {
                 // Process all the bundleMD once when the searchbar open
-                final bundlesWithMD = Future<List<BundleMetaDataWithIndex>?>(() async {
+                final bundlesWithMD =
+                    Future<List<BundleMetaDataWithIndex>?>(() async {
                   final bundlesDir = widget.repo.getDir(bundleType);
-                  final mds = await rust.getMergedMetadataForAllBundles(bundlesDir: bundlesDir.path);
-                  return mds.mapIndexed((index, element) => BundleMetaDataWithIndex(index, element)).toList();
+                  final mds = await rust.getMergedMetadataForAllBundles(
+                      bundlesDir: bundlesDir.path);
+                  return mds
+                      .mapIndexed((index, element) =>
+                          BundleMetaDataWithIndex(index, element))
+                      .toList();
                 });
                 showSearch(
                     context: context,
@@ -246,8 +264,9 @@ class _BundleSelectionState extends State<BundleSelection> {
                     final bundleList = await _listBundles();
                     if (bundleList == null) {
                       if (mounted) {
-                        ScaffoldMessenger.of(context)
-                            .showSnackBar(const SnackBar(content: Text('Error while listing bundles')));
+                        ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                                content: Text('Error while listing bundles')));
                       }
                       return;
                     }
@@ -257,11 +276,13 @@ class _BundleSelectionState extends State<BundleSelection> {
                         .let((futures) => Future.wait(futures));
                     if (mounted) {
                       if (res.every((e) => e)) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('All automatic metadata have been invalidated')));
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                            content: Text(
+                                'All automatic metadata have been invalidated')));
                       } else {
-                        ScaffoldMessenger.of(context)
-                            .showSnackBar(const SnackBar(content: Text('Error while invalidating automatic metadata')));
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                            content: Text(
+                                'Error while invalidating automatic metadata')));
                       }
                     }
                   },
@@ -274,8 +295,11 @@ class _BundleSelectionState extends State<BundleSelection> {
       floatingActionButton: FloatingActionButton(
           child: const Icon(Icons.camera),
           onPressed: () async {
-            await Navigator.push(context,
-                MaterialPageRoute<void>(builder: (context) => CameraWidgetInit(ShootMultipleBundle(widget.repo))));
+            await Navigator.push(
+                context,
+                MaterialPageRoute<void>(
+                    builder: (context) =>
+                        CameraWidgetInit(ShootMultipleBundle(widget.repo))));
             _refreshBundleList();
           }),
       body: SafeArea(
@@ -308,10 +332,16 @@ class _BundleSelectionState extends State<BundleSelection> {
       ),
       bottomNavigationBar: BottomNavigationBar(
           items: const [
-            BottomNavigationBarItem(icon: Icon(Icons.book_outlined), activeIcon: Icon(Icons.book), label: 'To publish'),
-            BottomNavigationBarItem(icon: Icon(Icons.shelves), label: 'Published'),
             BottomNavigationBarItem(
-                icon: Icon(Icons.delete_outlined), activeIcon: Icon(Icons.delete), label: 'Deleted'),
+                icon: Icon(Icons.book_outlined),
+                activeIcon: Icon(Icons.book),
+                label: 'To publish'),
+            BottomNavigationBarItem(
+                icon: Icon(Icons.shelves), label: 'Published'),
+            BottomNavigationBarItem(
+                icon: Icon(Icons.delete_outlined),
+                activeIcon: Icon(Icons.delete),
+                label: 'Deleted'),
           ],
           currentIndex: bundleType.index,
           onTap: (index) {
@@ -336,7 +366,10 @@ class _BundleSelectionState extends State<BundleSelection> {
         }
         return;
       }
-      final List<String> isbns = (await bundle.getManualMetadata()).books.map((book) => book.isbn).toList();
+      final List<String> isbns = (await bundle.getManualMetadata())
+          .books
+          .map((book) => book.isbn)
+          .toList();
 
       try {
         await rust.getMetadataFromIsbns(
@@ -360,8 +393,14 @@ class _BundleSelectionState extends State<BundleSelection> {
 
   Future<Iterable<Bundle>?> _listBundles() async {
     try {
-      final dirs = await widget.repo.getDir(bundleType).list().whereType<Directory>().toList();
-      return dirs.sorted((d1, d2) => d1.path.compareTo(d2.path)).map((d) => Bundle(d));
+      final dirs = await widget.repo
+          .getDir(bundleType)
+          .list()
+          .whereType<Directory>()
+          .toList();
+      return dirs
+          .sorted((d1, d2) => d1.path.compareTo(d2.path))
+          .map((d) => Bundle(d));
     } catch (e) {
       if (e is PathNotFoundException || e is FileSystemException) {
         // ignore: do_not_use_unsafe_string_interpolation
@@ -406,16 +445,20 @@ class _BundleSelectionState extends State<BundleSelection> {
     final autoMdCollectedBundleNb = this.autoMdCollectedBundleNb;
     return Column(
       children: [
-        if (compressedBundleNb != null) ProgressIndicator('Compressing', total: bundleNb, itemDone: compressedBundleNb),
+        if (compressedBundleNb != null)
+          ProgressIndicator('Compressing',
+              total: bundleNb, itemDone: compressedBundleNb),
         if (autoMdCollectedBundleNb != null)
-          ProgressIndicator('Collecting autoMetadata', total: bundleNb, itemDone: autoMdCollectedBundleNb),
+          ProgressIndicator('Collecting autoMetadata',
+              total: bundleNb, itemDone: autoMdCollectedBundleNb),
         Expanded(
           child: ScrollShadow(
             color: defaultScrollShadowColor,
             size: 30,
             child: GridView.extent(
               controller: gridViewController,
-              padding: const EdgeInsets.only(bottom: 2 * kFloatingActionButtonMargin + 48),
+              padding: const EdgeInsets.only(
+                  bottom: 2 * kFloatingActionButtonMargin + 48),
               maxCrossAxisExtent: 500,
               childAspectRatio: 2,
               children: bundles
@@ -430,14 +473,17 @@ class _BundleSelectionState extends State<BundleSelection> {
                           widget.repo,
                           bundle,
                           refreshParent: _refreshBundleList,
-                          downloadMetadataForBundles: _downloadMetadataForBundles,
+                          downloadMetadataForBundles:
+                              _downloadMetadataForBundles,
                         ),
                         onTap: () async {
                           await Navigator.push(
                               context,
                               MaterialPageRoute<void>(
                                   builder: (context) =>
-                                      BooksMetadataCollectingWidget(step: MetadataCollectingStep(bundle: bundle))));
+                                      BooksMetadataCollectingWidget(
+                                          step: MetadataCollectingStep(
+                                              bundle: bundle))));
                           _refreshBundleList();
                         },
                       )))
@@ -473,7 +519,8 @@ class _BundleSelectionState extends State<BundleSelection> {
 }
 
 class ProgressIndicator extends StatelessWidget {
-  const ProgressIndicator(this.description, {required this.total, required this.itemDone});
+  const ProgressIndicator(this.description,
+      {required this.total, required this.itemDone});
 
   final String description;
   final int? total;
@@ -504,7 +551,9 @@ class ProgressIndicator extends StatelessWidget {
 
 class BundleWidget extends StatefulWidget {
   const BundleWidget(this.repo, this.bundle,
-      {required this.refreshParent, super.key, required this.downloadMetadataForBundles});
+      {required this.refreshParent,
+      super.key,
+      required this.downloadMetadataForBundles});
 
   final common.BookyRepo repo;
   final Bundle bundle;
@@ -556,7 +605,8 @@ class _BundleWidgetState extends State<BundleWidget> {
     if (firstBook == null) return const Text('No ISBN');
 
     return Row(children: [
-      if (bundleMergedMD.books.length > 1) _NumberOfBookBadge(bundleMergedMD.books.length),
+      if (bundleMergedMD.books.length > 1)
+        _NumberOfBookBadge(bundleMergedMD.books.length),
       Expanded(
           child: Column(
         children: [
@@ -577,10 +627,10 @@ class _BundleWidgetState extends State<BundleWidget> {
               }),
         ],
       )),
-      bundleMergedMD.books
-          .map((b) => b.priceCent)
-          .whereNotNull()
-          .let((prices) => prices.isEmpty ? const Text('?') : Text('${prices.sum ~/ 100} €')),
+      bundleMergedMD.books.map((b) => b.priceCent).whereNotNull().let(
+          (prices) => prices.isEmpty
+              ? const Text('?')
+              : Text('${prices.sum ~/ 100} €')),
     ]);
   }
 
@@ -597,12 +647,15 @@ class _BundleWidgetState extends State<BundleWidget> {
                   child: Row(
                     children: [
                       if (bundleMergedMD != null) MetadataIcons(bundleMergedMD),
-                      Expanded(child: ScrollableBundleImages(widget.bundle, Axis.horizontal)),
+                      Expanded(
+                          child: ScrollableBundleImages(
+                              widget.bundle, Axis.horizontal)),
                       _ActionButtons(
                           repo: widget.repo,
                           bundle: widget.bundle,
                           refreshParent: widget.refreshParent,
-                          downloadMetadataForBundles: widget.downloadMetadataForBundles),
+                          downloadMetadataForBundles:
+                              widget.downloadMetadataForBundles),
                     ],
                   ),
                 ),
@@ -635,7 +688,8 @@ class _ActionButtons extends StatelessWidget {
                 _popUpMenuIconText(
                   icon: Icons.open_in_new,
                   label: 'Open in file explorer',
-                  onPressed: () => Process.run('pcmanfm', [bundle.directory.path]),
+                  onPressed: () =>
+                      Process.run('pcmanfm', [bundle.directory.path]),
                 ),
               _popUpMenuIconText(
                 icon: Icons.camera_alt,
@@ -646,7 +700,8 @@ class _ActionButtons extends StatelessWidget {
                     await Navigator.push(
                         context,
                         MaterialPageRoute<void>(
-                            builder: (context) => CameraWidgetInit(EditOneBundle(bundle.directory))));
+                            builder: (context) => CameraWidgetInit(
+                                EditOneBundle(bundle.directory))));
                     refreshParent();
                   });
                 },
@@ -660,7 +715,8 @@ class _ActionButtons extends StatelessWidget {
                     await Navigator.push(
                         context,
                         MaterialPageRoute<void>(
-                            builder: (context) => ISBNDecodingWidget(step: ISBNDecodingStep(bundle: bundle))));
+                            builder: (context) => ISBNDecodingWidget(
+                                step: ISBNDecodingStep(bundle: bundle))));
                     refreshParent();
                   });
                 },
@@ -679,7 +735,9 @@ class _ActionButtons extends StatelessWidget {
                   final res = await bundle.removeAutoMetadata();
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                      content: Text(res ? 'Automatic Metadata deleted' : 'Error while deleting automatic metadata'),
+                      content: Text(res
+                          ? 'Automatic Metadata deleted'
+                          : 'Error while deleting automatic metadata'),
                     ));
                   }
                   refreshParent();
@@ -691,17 +749,20 @@ class _ActionButtons extends StatelessWidget {
                 onPressed: () async {
                   final initialDirectoryLocation = bundle.directory;
                   final segments = path.split(initialDirectoryLocation.path);
-                  segments[segments.length - 2] = common.BundleType.deleted.getDirName;
+                  segments[segments.length - 2] =
+                      common.BundleType.deleted.getDirName;
                   final destination = path.joinAll(segments);
                   try {
-                    final finalDirectoryLocation = await initialDirectoryLocation.rename(destination);
+                    final finalDirectoryLocation =
+                        await initialDirectoryLocation.rename(destination);
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                         content: const Text('Deleted'),
                         action: SnackBarAction(
                             label: 'Undo',
                             onPressed: () async {
-                              await finalDirectoryLocation.rename(initialDirectoryLocation.path);
+                              await finalDirectoryLocation
+                                  .rename(initialDirectoryLocation.path);
                               refreshParent();
                             }),
                       ));
@@ -726,8 +787,8 @@ class _ActionButtons extends StatelessWidget {
               await Navigator.push(
                   context,
                   MaterialPageRoute<void>(
-                      builder: (context) =>
-                          BooksMetadataCollectingWidget(step: MetadataCollectingStep(bundle: bundle))));
+                      builder: (context) => BooksMetadataCollectingWidget(
+                          step: MetadataCollectingStep(bundle: bundle))));
               refreshParent();
             },
             icon: const Icon(Icons.send),
@@ -747,7 +808,9 @@ class _NumberOfBookBadge extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(left: 2.0, right: 4.0),
       child: Container(
-          decoration: const BoxDecoration(borderRadius: BorderRadius.all(Radius.circular(10)), color: Colors.black87),
+          decoration: const BoxDecoration(
+              borderRadius: BorderRadius.all(Radius.circular(10)),
+              color: Colors.black87),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 6.0),
             child: Text(
@@ -776,7 +839,8 @@ class MetadataIcons extends StatelessWidget {
     final allBooksHaveTitle = books.every((b) => (b.title?.length ?? 0) > 0);
     final allBooksHaveAuthor = books.every((b) => (b.authors ?? []).length > 0);
     final allBooksHaveBlurb = books.every((b) => (b.blurb?.length ?? 0) > 0);
-    final allBooksHaveKeywords = books.every((b) => (b.keywords ?? []).length > 0);
+    final allBooksHaveKeywords =
+        books.every((b) => (b.keywords ?? []).length > 0);
     // print('allBooksHaveKeywords = $allBooksHaveKeywords, keyword ${books.map((b) => b.keywords)}');
     final allBooksHavePrice = books.every((b) => b.priceCent != null);
 

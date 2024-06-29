@@ -6,7 +6,8 @@ class UIBundleWidget {
     _checkFinderUniqueness();
   }
 
-  UIBundleWidget.fromListPosition(int index, this.tester) : finder = find.byKey(ValueKey(index)) {
+  UIBundleWidget.fromListPosition(int index, this.tester)
+      : finder = find.byKey(ValueKey(index)) {
     _checkFinderUniqueness();
   }
 
@@ -18,7 +19,8 @@ class UIBundleWidget {
   }
 
   Future<void> _openPopUpMenu() async {
-    final popUpMenuButtonFinder = find.descendant(of: finder, matching: find.byType(PopupMenuButton<void>));
+    final popUpMenuButtonFinder = find.descendant(
+        of: finder, matching: find.byType(PopupMenuButton<void>));
     await tester.tap(popUpMenuButtonFinder.first);
     await tester.pumpAndSettle(const Duration(seconds: 1));
   }

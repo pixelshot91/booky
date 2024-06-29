@@ -36,7 +36,8 @@ class BookyRepo {
 
   Directory root;
 
-  Directory getDir(BundleType bundleType) => root.joinDir(bundleType.getDirName);
+  Directory getDir(BundleType bundleType) =>
+      root.joinDir(bundleType.getDirName);
 }
 
 extension DirectoryExt on Directory {
@@ -45,7 +46,8 @@ extension DirectoryExt on Directory {
   File joinFile(String f) => File(path.join(this.path, f));
 }
 
-final externalDeviceRepo = Directory('/media/phone/storage/emulated/0/Android/data/fr.pimoid.booky/files');
+final externalDeviceRepo = Directory(
+    '/media/phone/storage/emulated/0/Android/data/fr.pimoid.booky/files');
 // final externalDeviceRepo = Directory('/home/julien/Perso/LeBonCoin/chain_automatisation/booky/extra/mock_data/basic/');
 
 extension ItemStateExt on rust.ItemState {

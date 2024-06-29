@@ -18,7 +18,8 @@ import 'helper.dart';
 //  The only way to give some message to this main is through the driver.requestData
 //  https://stackoverflow.com/questions/46475450/how-to-pass-an-environment-variable-to-a-flutter-driver-test
 void main() {
-  final IntegrationTestWidgetsFlutterBinding binding = IntegrationTestWidgetsFlutterBinding.ensureInitialized();
+  final IntegrationTestWidgetsFlutterBinding binding =
+      IntegrationTestWidgetsFlutterBinding.ensureInitialized();
   final tests = {
     'basic_screenshot': basicScreenshot,
     'searchbar': searchBar,
@@ -59,7 +60,8 @@ void addIsbn(final IntegrationTestWidgetsFlutterBinding binding) {
     await tester.pumpAndSettle();
     await ss.capture('home');
 
-    final Finder bundlesFinder = find.byWidgetPredicate((widget) => widget is BundleWidget);
+    final Finder bundlesFinder =
+        find.byWidgetPredicate((widget) => widget is BundleWidget);
     final bundles = tester.widgetList<BundleWidget>(bundlesFinder);
     print('bundles.length = ${bundles.length}');
     // expect(bundles.length, equals(8));
@@ -67,7 +69,8 @@ void addIsbn(final IntegrationTestWidgetsFlutterBinding binding) {
     await tester.pumpAndSettle(const Duration(seconds: 1));
     expect(find.byType(GridView), findsOneWidget);
 
-    await tester.dragUntilVisible(find.byKey(const ValueKey(7)), find.byType(GridView), const Offset(0, -500));
+    await tester.dragUntilVisible(find.byKey(const ValueKey(7)),
+        find.byType(GridView), const Offset(0, -500));
 
     await tester.pumpAndSettle(const Duration(seconds: 1));
     await ss.capture('drag_Until_Bundle_Visible');
@@ -75,7 +78,8 @@ void addIsbn(final IntegrationTestWidgetsFlutterBinding binding) {
     final find7thBundle = find.byKey(const ValueKey(7));
     expect(find7thBundle, findsOneWidget);
 
-    final popUpMenuButtonFinder = find.descendant(of: find7thBundle, matching: find.byType(PopupMenuButton<void>));
+    final popUpMenuButtonFinder = find.descendant(
+        of: find7thBundle, matching: find.byType(PopupMenuButton<void>));
     await tester.tap(popUpMenuButtonFinder.first);
     await tester.pumpAndSettle(const Duration(seconds: 1));
     await ss.capture('open_PopUpMenu');
@@ -104,7 +108,10 @@ void addIsbn(final IntegrationTestWidgetsFlutterBinding binding) {
     await ss.capture('isbn_is_submitted');
     // controller is null
     // expect(tester.widget<TextFormField>(textFieldFinder).controller?.text.isEmpty, isTrue);
-    expect(find.byWidgetPredicate((widget) => widget is SelectableText && widget.data == isbnToAdd), findsOneWidget);
+    expect(
+        find.byWidgetPredicate(
+            (widget) => widget is SelectableText && widget.data == isbnToAdd),
+        findsOneWidget);
 
     await tester.pageBack();
     await tester.pumpAndSettle(const Duration(seconds: 1));
@@ -114,7 +121,10 @@ void addIsbn(final IntegrationTestWidgetsFlutterBinding binding) {
     await UIBundleWidget.fromListPosition(7, tester).goToISBNDecoding();
 
     await ss.capture('open_isbn_decoding_again');
-    expect(find.byWidgetPredicate((widget) => widget is SelectableText && widget.data == isbnToAdd), findsOneWidget);
+    expect(
+        find.byWidgetPredicate(
+            (widget) => widget is SelectableText && widget.data == isbnToAdd),
+        findsOneWidget);
 
     final deleteIconFinder = find.byIcon(Icons.delete);
     expect(deleteIconFinder, findsOneWidget);
@@ -160,18 +170,23 @@ void searchBar(final IntegrationTestWidgetsFlutterBinding binding) {
     await tester.pumpAndSettle(const Duration(seconds: 3));
     await ss.capture('open_search_bar');
 
-    final findSearchBarTextField = find
-        .byWidgetPredicate((widget) => widget is TextField && widget.decoration?.hintText == 'Search all the bundles');
+    final findSearchBarTextField = find.byWidgetPredicate((widget) =>
+        widget is TextField &&
+        widget.decoration?.hintText == 'Search all the bundles');
     expect(findSearchBarTextField, findsOneWidget);
     await tester.enterText(findSearchBarTextField, 'epitre');
     await tester.pumpAndSettle(const Duration(seconds: 1));
 
     await ss.capture('type_in_search_bar');
-    final resultTitleToFind = find.byWidgetPredicate((widget) => widget is Text && widget.data!.startsWith(bookTitle));
+    final resultTitleToFind = find.byWidgetPredicate(
+        (widget) => widget is Text && widget.data!.startsWith(bookTitle));
     expect(resultTitleToFind, findsOneWidget);
 
-    final resultRow =
-        find.ancestor(of: resultTitleToFind, matching: find.byWidgetPredicate((widget) => widget is Row)).first;
+    final resultRow = find
+        .ancestor(
+            of: resultTitleToFind,
+            matching: find.byWidgetPredicate((widget) => widget is Row))
+        .first;
     expect(resultRow, findsOneWidget);
 
     final seeInListTextButtonFinder = find.descendant(
@@ -188,7 +203,10 @@ void searchBar(final IntegrationTestWidgetsFlutterBinding binding) {
 
     await ss.capture('tap_see_in_list');
     // Now that we tapped on 'See in list', the book should be visible
-    expect(find.byWidgetPredicate((widget) => widget is Text && widget.data!.startsWith(bookTitle)), findsOneWidget);
+    expect(
+        find.byWidgetPredicate(
+            (widget) => widget is Text && widget.data!.startsWith(bookTitle)),
+        findsOneWidget);
   });
 }
 
@@ -280,7 +298,8 @@ void cameraTakePicture(IntegrationTestWidgetsFlutterBinding binding) {
         ),
         findsOneWidget);
 
-    await tester.tap(find.descendant(of: barcodeLabelFinder, matching: find.byIcon(Icons.delete)));
+    await tester.tap(find.descendant(
+        of: barcodeLabelFinder, matching: find.byIcon(Icons.delete)));
     await tester.pumpAndSettle(const Duration(seconds: 1));
     await ss.capture('after_delete_isbn');
     expect(barcodeLabelFinder, findsNothing);
@@ -301,14 +320,21 @@ void editBundle(IntegrationTestWidgetsFlutterBinding binding) {
     Finder getWeightFieldFinder() {
       return find.byWidgetPredicate((widget) {
         if (widget is! TextFormField) return false;
-        return find.descendant(of: find.byWidget(widget), matching: find.text('Weight in grams')).hasFoundOne();
+        return find
+            .descendant(
+                of: find.byWidget(widget),
+                matching: find.text('Weight in grams'))
+            .hasFoundOne();
       }).single();
     }
 
     Finder getitemStateFieldFinder() {
       return find.byWidgetPredicate((widget) {
         if (widget is! DropdownButton) return false;
-        return find.descendant(of: find.byWidget(widget), matching: find.text('Book state')).hasFoundOne();
+        return find
+            .descendant(
+                of: find.byWidget(widget), matching: find.text('Book state'))
+            .hasFoundOne();
       }).single();
     }
 
@@ -324,10 +350,14 @@ void editBundle(IntegrationTestWidgetsFlutterBinding binding) {
     await ss.capture('edit_bundle');
     {
       final weightFieldFinder = getWeightFieldFinder();
-      find.descendant(of: weightFieldFinder, matching: find.text('490')).single();
+      find
+          .descendant(of: weightFieldFinder, matching: find.text('490'))
+          .single();
 
       final itemStateFieldFinder = getitemStateFieldFinder();
-      find.descendant(of: itemStateFieldFinder, matching: find.text('Good')).single();
+      find
+          .descendant(of: itemStateFieldFinder, matching: find.text('Good'))
+          .single();
 
       await tester.enterText(weightFieldFinder, '123');
       await tester.tap(itemStateFieldFinder);
@@ -348,10 +378,15 @@ void editBundle(IntegrationTestWidgetsFlutterBinding binding) {
     await ss.capture('edit_bundle_after_modif_and_reload');
     {
       final weightFieldFinder = getWeightFieldFinder();
-      find.descendant(of: weightFieldFinder, matching: find.text('123')).single();
+      find
+          .descendant(of: weightFieldFinder, matching: find.text('123'))
+          .single();
 
       final itemStateFieldFinder = getitemStateFieldFinder();
-      find.descendant(of: itemStateFieldFinder, matching: find.text('Brand New')).single();
+      find
+          .descendant(
+              of: itemStateFieldFinder, matching: find.text('Brand New'))
+          .single();
     }
   });
 }

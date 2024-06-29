@@ -20,12 +20,14 @@ class _DraggableFilesWidgetState extends State<DraggableFilesWidget> {
   @override
   void initState() {
     super.initState();
-    dragItemKeys = widget.images.map((_) => GlobalKey<DragItemWidgetState>()).toList();
+    dragItemKeys =
+        widget.images.map((_) => GlobalKey<DragItemWidgetState>()).toList();
   }
 
   @override
   Widget build(BuildContext context) => DraggableWidget(
-        dragItemsProvider: (context) => dragItemKeys.map((e) => e.currentState!).toList(),
+        dragItemsProvider: (context) =>
+            dragItemKeys.map((e) => e.currentState!).toList(),
         child: Column(
           children: [
             Row(
@@ -34,9 +36,13 @@ class _DraggableFilesWidgetState extends State<DraggableFilesWidget> {
                         padding: const EdgeInsets.all(8.0),
                         child: DragItemWidget(
                             key: dragItemKeys[index],
-                            dragItemProvider: (_) => DragItem()..add(Formats.uri(NamedUri(img.imageToExport.uri))),
+                            dragItemProvider: (_) => DragItem()
+                              ..add(
+                                  Formats.uri(NamedUri(img.imageToExport.uri))),
                             allowedOperations: () => const [DropOperation.copy],
-                            child: SizedBox(height: 200, child: ImageWidget(img.thumbnail))),
+                            child: SizedBox(
+                                height: 200,
+                                child: ImageWidget(img.thumbnail))),
                       ))
                   .toList(),
             ),

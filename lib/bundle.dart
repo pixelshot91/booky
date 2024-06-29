@@ -73,7 +73,9 @@ class Bundle {
 
   Future<List<MultiResImage>> get images async {
     final fullScaleImgFiles = await directory.listImages();
-    return fullScaleImgFiles.map((img) => MultiResImage(fullScale: img)).toList();
+    return fullScaleImgFiles
+        .map((img) => MultiResImage(fullScale: img))
+        .toList();
   }
 
   Directory get imagesToExportDir => directory.joinDir(_exportDirName);
@@ -94,10 +96,12 @@ class Bundle {
     await directory.create(recursive: true);
     final numberOfImages = (await images).length;
 
-    final fullScaleImageFile = directory.joinFile(_numberToImageFileName(numberOfImages));
+    final fullScaleImageFile =
+        directory.joinFile(_numberToImageFileName(numberOfImages));
     final multiResImg = MultiResImage(fullScale: fullScaleImageFile);
 
-    final fullScaleRes = await img_lib.encodeJpgFile(fullScaleImageFile.path, imageTaken);
+    final fullScaleRes =
+        await img_lib.encodeJpgFile(fullScaleImageFile.path, imageTaken);
     if (!fullScaleRes) {
       print('error while saving full scale image');
     }
@@ -118,21 +122,26 @@ class Bundle {
       return false;
     }
 
-    Future<void> removeImageAndDecreaseNumberOfFollowingImages(Iterable<File> imgs, int imageNumberToDelete) async {
+    Future<void> removeImageAndDecreaseNumberOfFollowingImages(
+        Iterable<File> imgs, int imageNumberToDelete) async {
       await imgs.elementAt(imageNumberToDelete).delete();
       // rename all the following images so they all have consecutive number
       await Future.forEach(imgs.skip(imageNumberToDelete + 1), (File f) async {
         final imgNumber = _pathToNumber(f.path);
-        final newPath = f.parent.joinFile(_numberToImageFileName(imgNumber - 1));
+        final newPath =
+            f.parent.joinFile(_numberToImageFileName(imgNumber - 1));
         await f.safeRename(newPath.path);
       });
       // Clear the cache of all changed images (the one deleted and all the one after)
-      await Future.wait(imgs.skip(imageNumberToDelete).map((img) => FileImage(img).evict()));
+      await Future.wait(
+          imgs.skip(imageNumberToDelete).map((img) => FileImage(img).evict()));
     }
 
     await Future.wait([
-      removeImageAndDecreaseNumberOfFollowingImages(images.map((img) => img.fullScale), imageNumberToDelete),
-      removeImageAndDecreaseNumberOfFollowingImages(images.map((img) => img.thumbnail), imageNumberToDelete)
+      removeImageAndDecreaseNumberOfFollowingImages(
+          images.map((img) => img.fullScale), imageNumberToDelete),
+      removeImageAndDecreaseNumberOfFollowingImages(
+          images.map((img) => img.thumbnail), imageNumberToDelete)
     ]);
 
     return true;
@@ -141,7 +150,8 @@ class Bundle {
   File get metadataFile => directory.joinFile('metadata.json');
 
   Future<void> overwriteMetadata(rust.BundleMetaData md) async {
-    rust.setManualMetadataForBundle(bundlePath: directory.path, bundleMetadata: md);
+    rust.setManualMetadataForBundle(
+        bundlePath: directory.path, bundleMetadata: md);
   }
 
   Future<bool> removeAutoMetadata() async {
@@ -149,8 +159,10 @@ class Bundle {
       print('Nothing to do');
       return true;
     }
-    final destinationName =
-        path.withoutExtension(autoMetadataFile.path) + '_backup_' + common.nowAsFileName() + '.json';
+    final destinationName = path.withoutExtension(autoMetadataFile.path) +
+        '_backup_' +
+        common.nowAsFileName() +
+        '.json';
     await File(autoMetadataFile.path).rename(destinationName);
     return true;
   }
@@ -174,11 +186,13 @@ class Bundle {
 }
 
 extension _DirExt on Directory {
-  Future<List<File>> listImages() =>
-      list().whereType<File>().where((file) => path.extension(file.path) == '.jpg').sortByName();
+  Future<List<File>> listImages() => list()
+      .whereType<File>()
+      .where((file) => path.extension(file.path) == '.jpg')
+      .sortByName();
 }
 
 extension _ListFileExt on Stream<File> {
-  Future<List<File>> sortByName() async =>
-      (await toList()).sorted((f1, f2) => path.basename(f1.path).compareTo(path.basename(f2.path)));
+  Future<List<File>> sortByName() async => (await toList()).sorted(
+      (f1, f2) => path.basename(f1.path).compareTo(path.basename(f2.path)));
 }

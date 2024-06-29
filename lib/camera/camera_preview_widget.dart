@@ -77,7 +77,8 @@ class _CameraPreviewWidgetState extends State<CameraPreviewWidget> {
                 cameraController,
                 child: LayoutBuilder(
                   builder: (context, boxConstraints) => GestureDetector(
-                    onTapDown: (TapDownDetails details) async => _onViewFinderTap(details, boxConstraints),
+                    onTapDown: (TapDownDetails details) async =>
+                        _onViewFinderTap(details, boxConstraints),
                     child: AbsorbPointer(
                       child: Stack(
                         fit: StackFit.passthrough,
@@ -97,17 +98,22 @@ class _CameraPreviewWidgetState extends State<CameraPreviewWidget> {
                   child: SliderTheme(
                     data: SliderThemeData(
                         trackShape: const CenteredTrackShape(),
-                        thumbColor: _cropValue == 0 ? Colors.blue.shade200 : Colors.blue),
+                        thumbColor: _cropValue == 0
+                            ? Colors.blue.shade200
+                            : Colors.blue),
                     child: Slider(
                         min: -maxCropRatio,
                         max: maxCropRatio,
                         value: _cropValue,
-                        onChanged: (newValue) => setState(() => _cropValue = newValue)),
+                        onChanged: (newValue) =>
+                            setState(() => _cropValue = newValue)),
                   ),
                 ),
                 IconButton(
                     tooltip: 'Use full frame',
-                    onPressed: _cropValue == 0 ? null : () => setState(() => _cropValue = 0),
+                    onPressed: _cropValue == 0
+                        ? null
+                        : () => setState(() => _cropValue = 0),
                     icon: const Icon(Icons.fullscreen)),
               ],
             ),
@@ -117,7 +123,9 @@ class _CameraPreviewWidgetState extends State<CameraPreviewWidget> {
                   child: SliderTheme(
                     data: SliderThemeData(
                         trackShape: const CenteredTrackShape(),
-                        thumbColor: _exposureOffset == 0 ? Colors.blue.shade200 : Colors.blue),
+                        thumbColor: _exposureOffset == 0
+                            ? Colors.blue.shade200
+                            : Colors.blue),
                     child: Slider(
                         min: -1.0,
                         max: 1.0,
@@ -125,11 +133,15 @@ class _CameraPreviewWidgetState extends State<CameraPreviewWidget> {
                         onChanged: (newValue) async {
                           setState(() => _exposureOffset = newValue);
 
-                          final minExposure = await cameraController.getMinExposureOffset();
-                          final maxExposure = await cameraController.getMaxExposureOffset();
+                          final minExposure =
+                              await cameraController.getMinExposureOffset();
+                          final maxExposure =
+                              await cameraController.getMaxExposureOffset();
 
-                          final remapExposure = remap(_exposureOffset, -1.0, 1.0, minExposure, maxExposure);
-                          await cameraController.setExposureOffset(remapExposure);
+                          final remapExposure = remap(_exposureOffset, -1.0,
+                              1.0, minExposure, maxExposure);
+                          await cameraController
+                              .setExposureOffset(remapExposure);
                         }),
                   ),
                 ),
@@ -166,12 +178,14 @@ class _CameraPreviewWidgetState extends State<CameraPreviewWidget> {
     }
   }
 
-  double remap(double value, double oldMin, double oldMax, double newMin, double newMax) {
+  double remap(double value, double oldMin, double oldMax, double newMin,
+      double newMax) {
     final normalizedValue = (value - oldMin) / (oldMax - oldMin);
     return normalizedValue * (newMax - newMin) + newMin;
   }
 
-  void _onViewFinderTap(TapDownDetails details, BoxConstraints constraints) async {
+  void _onViewFinderTap(
+      TapDownDetails details, BoxConstraints constraints) async {
     final CameraController? cameraController = widget.controller;
     if (cameraController == null) {
       return;
@@ -196,7 +210,8 @@ class _CameraPreviewWidgetState extends State<CameraPreviewWidget> {
         return;
       }
 
-      AudioPlayer().play(AssetSource('sounds/take_picture.mp3'), mode: PlayerMode.lowLatency);
+      AudioPlayer().play(AssetSource('sounds/take_picture.mp3'),
+          mode: PlayerMode.lowLatency);
       final image = await maybeCrop(file);
       widget.onImageTaken(image);
     });
@@ -263,13 +278,15 @@ class _CameraPreviewWidgetState extends State<CameraPreviewWidget> {
         Expanded(
             flex: croppedFlex ~/ 2,
             child: Container(
-              decoration: BoxDecoration(color: disabledColor, border: firstBorder),
+              decoration:
+                  BoxDecoration(color: disabledColor, border: firstBorder),
             )),
         Expanded(flex: AOIFlex, child: const SizedBox.shrink()),
         Expanded(
             flex: croppedFlex ~/ 2,
             child: Container(
-              decoration: BoxDecoration(color: disabledColor, border: secondBorder),
+              decoration:
+                  BoxDecoration(color: disabledColor, border: secondBorder),
             )),
       ],
     );
@@ -304,14 +321,16 @@ class _CameraPreviewWidgetState extends State<CameraPreviewWidget> {
         DeviceOrientation.portraitDown: 180,
         DeviceOrientation.landscapeRight: 270,
       };
-      var rotationCompensation = orientations[controller.value.deviceOrientation];
+      var rotationCompensation =
+          orientations[controller.value.deviceOrientation];
       if (rotationCompensation == null) return null;
       if (camera.lensDirection == CameraLensDirection.front) {
         // front-facing
         rotationCompensation = (sensorOrientation + rotationCompensation) % 360;
       } else {
         // back-facing
-        rotationCompensation = (sensorOrientation - rotationCompensation + 360) % 360;
+        rotationCompensation =
+            (sensorOrientation - rotationCompensation + 360) % 360;
       }
       rotation = InputImageRotationValue.fromRawValue(rotationCompensation);
       // print('rotationCompensation: $rotationCompensation');

@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 
 class BarcodeLiveDetectionButton extends StatelessWidget {
-  const BarcodeLiveDetectionButton({super.key, required this.onBarcodeDetectStart, required this.onBarcodeDetectStop});
+  const BarcodeLiveDetectionButton(
+      {super.key,
+      required this.onBarcodeDetectStart,
+      required this.onBarcodeDetectStop});
 
   final void Function() onBarcodeDetectStart;
   final void Function() onBarcodeDetectStop;

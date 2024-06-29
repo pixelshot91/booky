@@ -21,7 +21,8 @@ class _RandomColorState extends State<RandomColor> {
   void initState() {
     super.initState();
     print('XXX RandomColor(title=${widget.title}) initState');
-    color = Color((math.Random().nextDouble() * 0xFFFFFF).toInt()).withOpacity(1.0);
+    color =
+        Color((math.Random().nextDouble() * 0xFFFFFF).toInt()).withOpacity(1.0);
   }
 
   @override

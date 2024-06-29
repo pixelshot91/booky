@@ -42,7 +42,8 @@ class BooksMetadataCollectingWidget extends StatefulWidget {
   final MetadataCollectingStep step;
 
   @override
-  State<BooksMetadataCollectingWidget> createState() => _BooksMetadataCollectingWidgetState();
+  State<BooksMetadataCollectingWidget> createState() =>
+      _BooksMetadataCollectingWidgetState();
 }
 
 class _Metadata {
@@ -52,7 +53,8 @@ class _Metadata {
   final _BookControllerSet bookControllerSet;
 }
 
-class _BooksMetadataCollectingWidgetState extends State<BooksMetadataCollectingWidget> {
+class _BooksMetadataCollectingWidgetState
+    extends State<BooksMetadataCollectingWidget> {
   KtMap<String, _Metadata>? controllers;
 
   @override
@@ -60,21 +62,30 @@ class _BooksMetadataCollectingWidgetState extends State<BooksMetadataCollectingW
     super.initState();
 
     Future(() async {
-      final autoMd = await rust.getAutoMetadataFromBundle(path: widget.step.bundle.autoMetadataFile.path);
-      final mergeMd = await rust.getMergedMetadataForBundle(bundlePath: widget.step.bundle.directory.path);
+      final autoMd = await rust.getAutoMetadataFromBundle(
+          path: widget.step.bundle.autoMetadataFile.path);
+      final mergeMd = await rust.getMergedMetadataForBundle(
+          bundlePath: widget.step.bundle.directory.path);
       final map = Map.fromEntries(autoMd.map((entry) {
         final bookControllerSet = _BookControllerSet();
-        final mergeMDForBook = mergeMd.books.singleWhere((book) => book.isbn == entry.isbn);
-        bookControllerSet.titleTextFieldController.text = mergeMDForBook.title ?? '';
-        bookControllerSet.authorsTextFieldController.text = _authorsToString((mergeMDForBook.authors ?? []));
-        bookControllerSet.blurbTextFieldController.text = mergeMDForBook.blurb ?? '';
-        bookControllerSet.keywordsTextFieldController.text = _keywordsToString((mergeMDForBook.keywords ?? []));
-        bookControllerSet.priceTextFieldController.text = mergeMDForBook.priceCent?.divide(100).toString() ?? '';
+        final mergeMDForBook =
+            mergeMd.books.singleWhere((book) => book.isbn == entry.isbn);
+        bookControllerSet.titleTextFieldController.text =
+            mergeMDForBook.title ?? '';
+        bookControllerSet.authorsTextFieldController.text =
+            _authorsToString((mergeMDForBook.authors ?? []));
+        bookControllerSet.blurbTextFieldController.text =
+            mergeMDForBook.blurb ?? '';
+        bookControllerSet.keywordsTextFieldController.text =
+            _keywordsToString((mergeMDForBook.keywords ?? []));
+        bookControllerSet.priceTextFieldController.text =
+            mergeMDForBook.priceCent?.divide(100).toString() ?? '';
         return MapEntry(
             entry.isbn,
             _Metadata(
-                providerMetadatas:
-                    entry.metadatas.map((md) => MapEntry(md.provider, md.metadata)).let((e) => Map.fromEntries(e)),
+                providerMetadatas: entry.metadatas
+                    .map((md) => MapEntry(md.provider, md.metadata))
+                    .let((e) => Map.fromEntries(e)),
                 bookControllerSet: bookControllerSet));
       })).kt;
 
@@ -82,7 +93,8 @@ class _BooksMetadataCollectingWidgetState extends State<BooksMetadataCollectingW
         setState(() {
           // Use the order from metadata.json, and not the one coming from autoMd
           // (which is out of order because the json is a map so the Rust parser may not respect the order)
-          controllers = Map.fromEntries(mergeMd.books.map((b) => MapEntry(b.isbn, map[b.isbn]!))).kt;
+          controllers = Map.fromEntries(
+              mergeMd.books.map((b) => MapEntry(b.isbn, map[b.isbn]!))).kt;
         });
       }
     });
@@ -101,7 +113,8 @@ class _BooksMetadataCollectingWidgetState extends State<BooksMetadataCollectingW
                     Card(
                       child: SizedBox(
                         width: 100,
-                        child: ScrollableBundleImages(widget.step.bundle, Axis.vertical),
+                        child: ScrollableBundleImages(
+                            widget.step.bundle, Axis.vertical),
                       ),
                     ),
                     Expanded(
@@ -119,26 +132,42 @@ class _BooksMetadataCollectingWidgetState extends State<BooksMetadataCollectingW
                               padding: const EdgeInsets.all(8.0),
                               child: ElevatedButton(
                                   onPressed: () async {
-                                    final bundleMetadata = await rust.getMergedMetadataForBundle(
-                                        bundlePath: widget.step.bundle.directory.path);
+                                    final bundleMetadata =
+                                        await rust.getMergedMetadataForBundle(
+                                            bundlePath: widget
+                                                .step.bundle.directory.path);
                                     bundleMetadata.books.forEach((book) {
-                                      final bookController = controllers[book.isbn]!.bookControllerSet;
-                                      book.title = bookController.titleTextFieldController.text;
-                                      book.authors = _stringToAuthors(bookController.authorsTextFieldController.text);
-                                      book.blurb = bookController.blurbTextFieldController.text;
-                                      book.keywords =
-                                          _stringToKeywords(bookController.keywordsTextFieldController.text);
-                                      book.priceCent = double.parse(bookController.priceTextFieldController.text)
+                                      final bookController =
+                                          controllers[book.isbn]!
+                                              .bookControllerSet;
+                                      book.title = bookController
+                                          .titleTextFieldController.text;
+                                      book.authors = _stringToAuthors(
+                                          bookController
+                                              .authorsTextFieldController.text);
+                                      book.blurb = bookController
+                                          .blurbTextFieldController.text;
+                                      book.keywords = _stringToKeywords(
+                                          bookController
+                                              .keywordsTextFieldController
+                                              .text);
+                                      book.priceCent = double.parse(
+                                              bookController
+                                                  .priceTextFieldController
+                                                  .text)
                                           .multiply(100)
                                           .round();
                                     });
                                     await rust.setManualMetadataForBundle(
-                                        bundlePath: widget.step.bundle.directory.path, bundleMetadata: bundleMetadata);
+                                        bundlePath:
+                                            widget.step.bundle.directory.path,
+                                        bundleMetadata: bundleMetadata);
                                     if (context.mounted) {
                                       Navigator.push(
                                           context,
                                           MaterialPageRoute<void>(
-                                              builder: (context) => AdEditingWidget(
+                                              builder: (context) =>
+                                                  AdEditingWidget(
                                                       step: AdEditingStep(
                                                     bundle: widget.step.bundle,
                                                   ))));
@@ -156,35 +185,47 @@ class _BooksMetadataCollectingWidgetState extends State<BooksMetadataCollectingW
 }
 
 class _BookControllerSet {
-  final TextEditingController titleTextFieldController = TextEditingController();
-  final TextEditingController authorsTextFieldController = TextEditingController();
-  final TextEditingController blurbTextFieldController = TextEditingController();
-  final TextEditingController keywordsTextFieldController = TextEditingController();
-  final TextEditingController priceTextFieldController = TextEditingController();
+  final TextEditingController titleTextFieldController =
+      TextEditingController();
+  final TextEditingController authorsTextFieldController =
+      TextEditingController();
+  final TextEditingController blurbTextFieldController =
+      TextEditingController();
+  final TextEditingController keywordsTextFieldController =
+      TextEditingController();
+  final TextEditingController priceTextFieldController =
+      TextEditingController();
 }
 
 String _keywordsToString(List<String> keywords) => keywords.join(', ');
 
 List<String> _stringToKeywords(String s) => s.split(', ').toList();
 
-String _authorsToString(List<rust.Author> authors) => authors.map((a) => a.toText()).join('\n');
+String _authorsToString(List<rust.Author> authors) =>
+    authors.map((a) => a.toText()).join('\n');
 
 List<rust.Author> _stringToAuthors(String s) {
   if (s.isEmpty) return [];
-  return s.split('\n').map((line) => rust.Author(firstName: '', lastName: line)).toList();
+  return s
+      .split('\n')
+      .map((line) => rust.Author(firstName: '', lastName: line))
+      .toList();
 }
 
 class _BookMetadataCollectingWidget extends StatefulWidget {
-  const _BookMetadataCollectingWidget({required this.isbn, required this.metadatas});
+  const _BookMetadataCollectingWidget(
+      {required this.isbn, required this.metadatas});
 
   final String isbn;
   final _Metadata metadatas;
 
   @override
-  State<_BookMetadataCollectingWidget> createState() => _BookMetadataCollectingWidgetState();
+  State<_BookMetadataCollectingWidget> createState() =>
+      _BookMetadataCollectingWidgetState();
 }
 
-class _BookMetadataCollectingWidgetState extends State<_BookMetadataCollectingWidget> {
+class _BookMetadataCollectingWidgetState
+    extends State<_BookMetadataCollectingWidget> {
   /*@override
   void initState() {
     super.initState();
@@ -205,43 +246,53 @@ class _BookMetadataCollectingWidgetState extends State<_BookMetadataCollectingWi
   }*/
 
   void _updateManualTitle(String newTitle) {
-    setState(() => widget.metadatas.bookControllerSet.titleTextFieldController.text = newTitle);
+    setState(() => widget
+        .metadatas.bookControllerSet.titleTextFieldController.text = newTitle);
   }
 
   void _updateManualAuthors(String newAuthors) {
-    setState(() => widget.metadatas.bookControllerSet.authorsTextFieldController.text = newAuthors);
+    setState(() => widget.metadatas.bookControllerSet.authorsTextFieldController
+        .text = newAuthors);
   }
 
   void _updateManualBlurb(String newBlurb) {
-    setState(() => widget.metadatas.bookControllerSet.blurbTextFieldController.text = newBlurb);
+    setState(() => widget
+        .metadatas.bookControllerSet.blurbTextFieldController.text = newBlurb);
   }
 
   void _updateManualKeywords(String newKeywords) {
-    setState(() => widget.metadatas.bookControllerSet.keywordsTextFieldController.text = newKeywords);
+    setState(() => widget.metadatas.bookControllerSet
+        .keywordsTextFieldController.text = newKeywords);
   }
 
   @override
   Widget build(BuildContext context) {
-    const columnHeaderStyle = TextStyle(fontSize: 20, fontWeight: FontWeight.bold);
+    const columnHeaderStyle =
+        TextStyle(fontSize: 20, fontWeight: FontWeight.bold);
     const providers = rust.ProviderEnum.values;
-    final iter = providers.map((provider) => widget.metadatas.providerMetadatas[provider]);
+    final iter = providers
+        .map((provider) => widget.metadatas.providerMetadatas[provider]);
     return Card(
       margin: const EdgeInsets.all(10),
       child: Padding(
         padding: const EdgeInsets.all(8.0),
         child: Column(
           children: [
-            SelectableText('ISBN: ${widget.isbn}', style: const TextStyle(fontSize: 30, fontWeight: FontWeight.bold)),
+            SelectableText('ISBN: ${widget.isbn}',
+                style:
+                    const TextStyle(fontSize: 30, fontWeight: FontWeight.bold)),
             Table(
               children: [
                 TableRow(
                     children: [
                   const Text('Manual', style: columnHeaderStyle),
-                  ...providers.map((rust.ProviderEnum p) => Text(p.loc, style: columnHeaderStyle))
+                  ...providers.map((rust.ProviderEnum p) =>
+                      Text(p.loc, style: columnHeaderStyle))
                 ].map((e) => Center(child: e)).toList()),
                 TableRow(children: [
                   TextFormField(
-                    controller: widget.metadatas.bookControllerSet.titleTextFieldController,
+                    controller: widget
+                        .metadatas.bookControllerSet.titleTextFieldController,
                     maxLines: null,
                     contextMenuBuilder: recaseContextMenuBuilder,
                     decoration: const InputDecoration(
@@ -260,7 +311,8 @@ class _BookMetadataCollectingWidgetState extends State<_BookMetadataCollectingWi
                 ]),
                 TableRow(children: [
                   TextFormField(
-                    controller: widget.metadatas.bookControllerSet.authorsTextFieldController,
+                    controller: widget
+                        .metadatas.bookControllerSet.authorsTextFieldController,
                     maxLines: null,
                     decoration: const InputDecoration(
                       icon: Icon(Icons.person),
@@ -280,7 +332,8 @@ class _BookMetadataCollectingWidgetState extends State<_BookMetadataCollectingWi
                 ]),
                 TableRow(children: [
                   TextFormField(
-                    controller: widget.metadatas.bookControllerSet.blurbTextFieldController,
+                    controller: widget
+                        .metadatas.bookControllerSet.blurbTextFieldController,
                     maxLines: null,
                     decoration: const InputDecoration(
                       icon: Icon(Icons.description),
@@ -300,7 +353,8 @@ class _BookMetadataCollectingWidgetState extends State<_BookMetadataCollectingWi
                 ]),
                 TableRow(children: [
                   TextFormField(
-                    controller: widget.metadatas.bookControllerSet.keywordsTextFieldController,
+                    controller: widget.metadatas.bookControllerSet
+                        .keywordsTextFieldController,
                     maxLines: null,
                     decoration: const InputDecoration(
                       icon: Icon(Icons.manage_search),
@@ -320,9 +374,11 @@ class _BookMetadataCollectingWidgetState extends State<_BookMetadataCollectingWi
                 ]),
                 TableRow(children: [
                   TextFormField(
-                    controller: widget.metadatas.bookControllerSet.priceTextFieldController,
+                    controller: widget
+                        .metadatas.bookControllerSet.priceTextFieldController,
                     inputFormatters: [
-                      FilteringTextInputFormatter.allow(RegExp(r'[0-9]+[,.]{0,1}[0-9]*')),
+                      FilteringTextInputFormatter.allow(
+                          RegExp(r'[0-9]+[,.]{0,1}[0-9]*')),
                     ],
                     decoration: const InputDecoration(
                       icon: Icon(Icons.euro),

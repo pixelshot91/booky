@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 
 class DraggableWidget extends StatefulWidget {
-  const DraggableWidget({required super.key, required this.child, required this.onVerticalDrag});
+  const DraggableWidget(
+      {required super.key, required this.child, required this.onVerticalDrag});
 
   final Widget child;
   final void Function() onVerticalDrag;
@@ -19,7 +20,10 @@ class _DraggableWidgetState extends State<DraggableWidget> {
       child: showDismiss
           ? Stack(
               fit: StackFit.expand,
-              children: [widget.child, ColoredBox(color: Colors.white.withOpacity(0.8))],
+              children: [
+                widget.child,
+                ColoredBox(color: Colors.white.withOpacity(0.8))
+              ],
             )
           : widget.child,
       onVerticalDragStart: (details) {

@@ -35,9 +35,13 @@ class BarcodeDetectorPainter extends CustomPainter {
 
     for (final Barcode barcode in barcodes) {
       final ParagraphBuilder builder = ParagraphBuilder(
-        ParagraphStyle(textAlign: TextAlign.left, fontSize: 16, textDirection: TextDirection.ltr),
+        ParagraphStyle(
+            textAlign: TextAlign.left,
+            fontSize: 16,
+            textDirection: TextDirection.ltr),
       );
-      builder.pushStyle(ui.TextStyle(color: Colors.lightGreenAccent, background: background));
+      builder.pushStyle(
+          ui.TextStyle(color: Colors.lightGreenAccent, background: background));
       builder.addText(barcode.displayValue ?? 'unknown_barcode_value');
       builder.pop();
 
@@ -105,13 +109,19 @@ class BarcodeDetectorPainter extends CustomPainter {
           ..layout(ParagraphConstraints(
             width: (right - left).abs(),
           )),
-        Offset(Platform.isAndroid && cameraLensDirection == CameraLensDirection.front ? right : left, top),
+        Offset(
+            Platform.isAndroid &&
+                    cameraLensDirection == CameraLensDirection.front
+                ? right
+                : left,
+            top),
       );
     }
   }
 
   @override
   bool shouldRepaint(BarcodeDetectorPainter oldDelegate) {
-    return oldDelegate.imageSize != imageSize || oldDelegate.barcodes != barcodes;
+    return oldDelegate.imageSize != imageSize ||
+        oldDelegate.barcodes != barcodes;
   }
 }

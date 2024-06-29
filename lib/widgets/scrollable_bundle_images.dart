@@ -73,7 +73,9 @@ class _ScrollableBundleImagesState extends State<ScrollableBundleImages> {
                                       onTap: () {
                                         showDialog<void>(
                                             context: context,
-                                            builder: (context) => Center(child: ImageWidget(img.fullScale)));
+                                            builder: (context) => Center(
+                                                child: ImageWidget(
+                                                    img.fullScale)));
                                       },
                                       child: ImageWidget(img.thumbnail)))
                                   .intersperse(_Gap(8.0, widget.axis))
