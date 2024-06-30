@@ -6,6 +6,7 @@
 // Static analysis wrongly picks the IO variant, thus ignore this
 // ignore_for_file: argument_type_not_assignable
 
+import 'api/api.dart';
 import 'api/simple.dart';
 import 'dart:async';
 import 'dart:convert';
@@ -21,10 +22,122 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   });
 
   @protected
+  AnyhowException dco_decode_AnyhowException(dynamic raw);
+
+  @protected
   String dco_decode_String(dynamic raw);
 
   @protected
+  CommandExt dco_decode_TraitDef_CommandExt(dynamic raw);
+
+  @protected
+  Author dco_decode_author(dynamic raw);
+
+  @protected
+  BarcodeDetectResult dco_decode_barcode_detect_result(dynamic raw);
+
+  @protected
+  BarcodeDetectResults dco_decode_barcode_detect_results(dynamic raw);
+
+  @protected
+  BookMetaData dco_decode_book_meta_data(dynamic raw);
+
+  @protected
+  BookMetaDataFromProvider dco_decode_book_meta_data_from_provider(dynamic raw);
+
+  @protected
+  BookMetaDataFromProvider dco_decode_box_autoadd_book_meta_data_from_provider(
+      dynamic raw);
+
+  @protected
+  BundleMetaData dco_decode_box_autoadd_bundle_meta_data(dynamic raw);
+
+  @protected
+  int dco_decode_box_autoadd_i_32(dynamic raw);
+
+  @protected
+  ItemState dco_decode_box_autoadd_item_state(dynamic raw);
+
+  @protected
+  BundleMetaData dco_decode_bundle_meta_data(dynamic raw);
+
+  @protected
+  double dco_decode_f_32(dynamic raw);
+
+  @protected
+  int dco_decode_i_32(dynamic raw);
+
+  @protected
+  ISBNMetadataPair dco_decode_isbn_metadata_pair(dynamic raw);
+
+  @protected
+  ItemState dco_decode_item_state(dynamic raw);
+
+  @protected
+  List<String> dco_decode_list_String(dynamic raw);
+
+  @protected
+  List<Author> dco_decode_list_author(dynamic raw);
+
+  @protected
+  List<BarcodeDetectResult> dco_decode_list_barcode_detect_result(dynamic raw);
+
+  @protected
+  List<BookMetaData> dco_decode_list_book_meta_data(dynamic raw);
+
+  @protected
+  List<ISBNMetadataPair> dco_decode_list_isbn_metadata_pair(dynamic raw);
+
+  @protected
+  List<BundleMetaData?> dco_decode_list_opt_box_autoadd_bundle_meta_data(
+      dynamic raw);
+
+  @protected
+  List<Point> dco_decode_list_point(dynamic raw);
+
+  @protected
+  Float32List dco_decode_list_prim_f_32_strict(dynamic raw);
+
+  @protected
   Uint8List dco_decode_list_prim_u_8_strict(dynamic raw);
+
+  @protected
+  List<ProviderMetadataPair> dco_decode_list_provider_metadata_pair(
+      dynamic raw);
+
+  @protected
+  String? dco_decode_opt_String(dynamic raw);
+
+  @protected
+  BookMetaDataFromProvider?
+      dco_decode_opt_box_autoadd_book_meta_data_from_provider(dynamic raw);
+
+  @protected
+  BundleMetaData? dco_decode_opt_box_autoadd_bundle_meta_data(dynamic raw);
+
+  @protected
+  int? dco_decode_opt_box_autoadd_i_32(dynamic raw);
+
+  @protected
+  ItemState? dco_decode_opt_box_autoadd_item_state(dynamic raw);
+
+  @protected
+  List<String>? dco_decode_opt_list_String(dynamic raw);
+
+  @protected
+  List<Author>? dco_decode_opt_list_author(dynamic raw);
+
+  @protected
+  Point dco_decode_point(dynamic raw);
+
+  @protected
+  ProviderEnum dco_decode_provider_enum(dynamic raw);
+
+  @protected
+  ProviderMetadataPair dco_decode_provider_metadata_pair(dynamic raw);
+
+  @protected
+  int dco_decode_u_16(dynamic raw);
 
   @protected
   int dco_decode_u_8(dynamic raw);
@@ -33,10 +146,130 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void dco_decode_unit(dynamic raw);
 
   @protected
+  AnyhowException sse_decode_AnyhowException(SseDeserializer deserializer);
+
+  @protected
   String sse_decode_String(SseDeserializer deserializer);
 
   @protected
+  Author sse_decode_author(SseDeserializer deserializer);
+
+  @protected
+  BarcodeDetectResult sse_decode_barcode_detect_result(
+      SseDeserializer deserializer);
+
+  @protected
+  BarcodeDetectResults sse_decode_barcode_detect_results(
+      SseDeserializer deserializer);
+
+  @protected
+  BookMetaData sse_decode_book_meta_data(SseDeserializer deserializer);
+
+  @protected
+  BookMetaDataFromProvider sse_decode_book_meta_data_from_provider(
+      SseDeserializer deserializer);
+
+  @protected
+  BookMetaDataFromProvider sse_decode_box_autoadd_book_meta_data_from_provider(
+      SseDeserializer deserializer);
+
+  @protected
+  BundleMetaData sse_decode_box_autoadd_bundle_meta_data(
+      SseDeserializer deserializer);
+
+  @protected
+  int sse_decode_box_autoadd_i_32(SseDeserializer deserializer);
+
+  @protected
+  ItemState sse_decode_box_autoadd_item_state(SseDeserializer deserializer);
+
+  @protected
+  BundleMetaData sse_decode_bundle_meta_data(SseDeserializer deserializer);
+
+  @protected
+  double sse_decode_f_32(SseDeserializer deserializer);
+
+  @protected
+  int sse_decode_i_32(SseDeserializer deserializer);
+
+  @protected
+  ISBNMetadataPair sse_decode_isbn_metadata_pair(SseDeserializer deserializer);
+
+  @protected
+  ItemState sse_decode_item_state(SseDeserializer deserializer);
+
+  @protected
+  List<String> sse_decode_list_String(SseDeserializer deserializer);
+
+  @protected
+  List<Author> sse_decode_list_author(SseDeserializer deserializer);
+
+  @protected
+  List<BarcodeDetectResult> sse_decode_list_barcode_detect_result(
+      SseDeserializer deserializer);
+
+  @protected
+  List<BookMetaData> sse_decode_list_book_meta_data(
+      SseDeserializer deserializer);
+
+  @protected
+  List<ISBNMetadataPair> sse_decode_list_isbn_metadata_pair(
+      SseDeserializer deserializer);
+
+  @protected
+  List<BundleMetaData?> sse_decode_list_opt_box_autoadd_bundle_meta_data(
+      SseDeserializer deserializer);
+
+  @protected
+  List<Point> sse_decode_list_point(SseDeserializer deserializer);
+
+  @protected
+  Float32List sse_decode_list_prim_f_32_strict(SseDeserializer deserializer);
+
+  @protected
   Uint8List sse_decode_list_prim_u_8_strict(SseDeserializer deserializer);
+
+  @protected
+  List<ProviderMetadataPair> sse_decode_list_provider_metadata_pair(
+      SseDeserializer deserializer);
+
+  @protected
+  String? sse_decode_opt_String(SseDeserializer deserializer);
+
+  @protected
+  BookMetaDataFromProvider?
+      sse_decode_opt_box_autoadd_book_meta_data_from_provider(
+          SseDeserializer deserializer);
+
+  @protected
+  BundleMetaData? sse_decode_opt_box_autoadd_bundle_meta_data(
+      SseDeserializer deserializer);
+
+  @protected
+  int? sse_decode_opt_box_autoadd_i_32(SseDeserializer deserializer);
+
+  @protected
+  ItemState? sse_decode_opt_box_autoadd_item_state(
+      SseDeserializer deserializer);
+
+  @protected
+  List<String>? sse_decode_opt_list_String(SseDeserializer deserializer);
+
+  @protected
+  List<Author>? sse_decode_opt_list_author(SseDeserializer deserializer);
+
+  @protected
+  Point sse_decode_point(SseDeserializer deserializer);
+
+  @protected
+  ProviderEnum sse_decode_provider_enum(SseDeserializer deserializer);
+
+  @protected
+  ProviderMetadataPair sse_decode_provider_metadata_pair(
+      SseDeserializer deserializer);
+
+  @protected
+  int sse_decode_u_16(SseDeserializer deserializer);
 
   @protected
   int sse_decode_u_8(SseDeserializer deserializer);
@@ -45,26 +278,144 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_decode_unit(SseDeserializer deserializer);
 
   @protected
-  int sse_decode_i_32(SseDeserializer deserializer);
-
-  @protected
   bool sse_decode_bool(SseDeserializer deserializer);
 
   @protected
+  void sse_encode_AnyhowException(
+      AnyhowException self, SseSerializer serializer);
+
+  @protected
   void sse_encode_String(String self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_author(Author self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_barcode_detect_result(
+      BarcodeDetectResult self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_barcode_detect_results(
+      BarcodeDetectResults self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_book_meta_data(BookMetaData self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_book_meta_data_from_provider(
+      BookMetaDataFromProvider self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_box_autoadd_book_meta_data_from_provider(
+      BookMetaDataFromProvider self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_box_autoadd_bundle_meta_data(
+      BundleMetaData self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_box_autoadd_i_32(int self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_box_autoadd_item_state(
+      ItemState self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_bundle_meta_data(
+      BundleMetaData self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_f_32(double self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_i_32(int self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_isbn_metadata_pair(
+      ISBNMetadataPair self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_item_state(ItemState self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_String(List<String> self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_author(List<Author> self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_barcode_detect_result(
+      List<BarcodeDetectResult> self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_book_meta_data(
+      List<BookMetaData> self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_isbn_metadata_pair(
+      List<ISBNMetadataPair> self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_opt_box_autoadd_bundle_meta_data(
+      List<BundleMetaData?> self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_point(List<Point> self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_prim_f_32_strict(
+      Float32List self, SseSerializer serializer);
 
   @protected
   void sse_encode_list_prim_u_8_strict(
       Uint8List self, SseSerializer serializer);
 
   @protected
+  void sse_encode_list_provider_metadata_pair(
+      List<ProviderMetadataPair> self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_opt_String(String? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_opt_box_autoadd_book_meta_data_from_provider(
+      BookMetaDataFromProvider? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_opt_box_autoadd_bundle_meta_data(
+      BundleMetaData? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_opt_box_autoadd_i_32(int? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_opt_box_autoadd_item_state(
+      ItemState? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_opt_list_String(List<String>? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_opt_list_author(List<Author>? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_point(Point self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_provider_enum(ProviderEnum self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_provider_metadata_pair(
+      ProviderMetadataPair self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_u_16(int self, SseSerializer serializer);
+
+  @protected
   void sse_encode_u_8(int self, SseSerializer serializer);
 
   @protected
   void sse_encode_unit(void self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_i_32(int self, SseSerializer serializer);
 
   @protected
   void sse_encode_bool(bool self, SseSerializer serializer);

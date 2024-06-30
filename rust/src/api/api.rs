@@ -1,9 +1,4 @@
-use flutter_rust_bridge::frb;
-
-pub fn myTest() {
-    println!("Hello");
-}
-/* use anyhow::{Ok, Result};
+use anyhow::{Ok, Result};
 use flutter_rust_bridge::frb;
 use futures::future::join_all;
 use itertools::Itertools;
@@ -495,4 +490,3 @@ pub fn get_metadata_from_provider(
 ) -> Option<crate::api::api::BookMetaDataFromProvider> {
     gen_provider(provider).get_book_metadata_from_isbn(&isbn)
 }
- */
