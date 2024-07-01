@@ -76,8 +76,17 @@ In the first response, we don't have a publisher, in the second we have.
 In the first response, the title use a big C for "Cité", but in the second, it use a small 'c'
 
 ## Contributing
+
+### Build with Nix
+
+```shell
+nix develop --extra-experimental-features 'nix-command flakes' --ignore-environment --command bash --norc
+```
+
 ### Build the barcode detector binary
+
 Clone the 3 OpenCV repo:
+
 - https://github.com/opencv/opencv.git (main repo)
 - https://github.com/pixelshot91/open_cv_barcode_book_metadata_finder  
   (fork of https://github.com/opencv/opencv_contrib.git)  
