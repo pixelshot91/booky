@@ -14,6 +14,9 @@
         pkgs = import nixpkgs {
           inherit system overlays;
         };
+        flutter_rust_bridge_codegen = import ./nix/flutter_rust_bridge_codegen.nix {
+                  inherit pkgs;
+                };
       in
       {
         devShells.default = with pkgs; mkShell {
@@ -21,14 +24,20 @@
             openssl
             pkg-config
             eza
+            which
+            strace
             fd
             # It would be cleaner to take the toolchain version directly from the toolchain.toml file, but the option describe in oxalica/rust-overlay README does not work
             # rust-bin.fromRustupToolchainFile ./rust-toolchain
 
             rust-bin.stable."1.79.0".default
+
+            flutter_rust_bridge_codegen
           ];
 
           shellHook = ''
+            # Prevent cargo 'install --list' to escape Nix isolation
+            # export CARGO_INSTALL_ROOT=/home/julien/Perso/LeBonCoin/chain_automatisation/booky/.cargo
             alias ls=eza
             alias find=fd
           '';
