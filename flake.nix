@@ -27,12 +27,17 @@
             which
             strace
             fd
+            flutter
             # It would be cleaner to take the toolchain version directly from the toolchain.toml file, but the option describe in oxalica/rust-overlay README does not work
             # rust-bin.fromRustupToolchainFile ./rust-toolchain
 
             rust-bin.stable."1.79.0".default
 
             flutter_rust_bridge_codegen
+
+            # Personal preference
+            # TODO: move somewhere else
+            fish
           ];
 
           shellHook = ''
