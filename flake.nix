@@ -28,6 +28,9 @@
             strace
             fd
             flutter
+
+            # For super_native_extension
+            gtk3
             # It would be cleaner to take the toolchain version directly from the toolchain.toml file, but the option describe in oxalica/rust-overlay README does not work
             # rust-bin.fromRustupToolchainFile ./rust-toolchain
 
