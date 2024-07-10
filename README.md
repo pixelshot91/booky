@@ -83,6 +83,12 @@ In the first response, the title use a big C for "Cité", but in the second, it 
 nix develop --extra-experimental-features 'nix-command flakes' --ignore-environment --command bash --norc
 ```
 
+If you want to use fish as your shell into Nix, run:
+```shell
+nix develop --offline --no-net --ignore-environment --command fish --no-config -C "fish_config theme choose Lava"
+```
+You will get better history navigation, colors and command auto-completions
+
 ### Build the barcode detector binary
 
 Clone the 3 OpenCV repo:
